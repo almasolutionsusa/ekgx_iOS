@@ -2,7 +2,8 @@
 //  ECGxApp.swift
 //  ECGx
 //
-//  Created by Qusai Asaad on 12/03/2026.
+//  Application entry point. Bootstraps the DI container and navigation
+//  coordinator, then mounts the root view into the window.
 //
 
 import SwiftUI
@@ -10,12 +11,39 @@ import CoreData
 
 @main
 struct ECGxApp: App {
+
+    // MARK: - App-level State
+
+    @State private var router      = AppRouter()
+    @State private var diContainer = AppDIContainer()
+    @AppStorage("isDarkMode") private var isDarkMode = false
+
     let persistenceController = PersistenceController.shared
+
+    init() {
+        #if DEBUG
+        for family in UIFont.familyNames.sorted() {
+            for name in UIFont.fontNames(forFamilyName: family) {
+                if name.contains("Montserrat") || name.contains("Roboto") {
+                    print("✅ Font loaded: \(name)")
+                }
+            }
+        }
+        #endif
+    }
+
+    // MARK: - Scene
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView()
+                .environment(router)
+                .environment(diContainer)
                 .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .preferredColorScheme(isDarkMode ? .dark : .light)
+                // Kiosk chrome reduction
+                .statusBarHidden(true)
+                .persistentSystemOverlays(.hidden)
         }
     }
 }

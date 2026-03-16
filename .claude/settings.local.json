@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gem list:*)",
+      "Bash(gem install:*)",
+      "Bash(find '/Users/qusaiasaad/Documents/iOS Projects/ECGx' -name *.xcodeproj -prune -o -name *.plist -print)",
+      "Bash(find '/Users/qusaiasaad/Documents/iOS Projects/ECGx' -type f -name *.plist)",
+      "Bash(find '/Users/qusaiasaad/Documents/iOS Projects/ECGx' -type f -name *Info*)",
+      "Bash(xcodebuild -scheme ECGx -destination 'platform=iOS Simulator,name=iPad Pro 13-inch \\(M4\\)' -quiet build)"
+    ]
+  }
+}
