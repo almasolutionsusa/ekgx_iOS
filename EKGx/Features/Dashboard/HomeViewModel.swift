@@ -65,9 +65,21 @@ final class HomeViewModel {
     // MARK: - Dependencies
 
     private let router: AppRouter
+    private let deviceService: DeviceServiceProtocol
 
-    init(router: AppRouter) {
+    init(router: AppRouter, deviceService: DeviceServiceProtocol) {
         self.router = router
+        self.deviceService = deviceService
+        // Sync initial state from the service (device may already be connected)
+        deviceState = deviceService.currentState
+    }
+
+    /// Call from HomeView .onAppear — re-registers the callback every time we return to home.
+    func activate() {
+        deviceState = deviceService.currentState
+        deviceService.onConnectionStateChanged = { [weak self] state in
+            withAnimation { self?.deviceState = state }
+        }
     }
 
     // MARK: - Menu
@@ -84,16 +96,11 @@ final class HomeViewModel {
 
     func connectDevice() {
         guard deviceState == .disconnected else { return }
-        withAnimation { deviceState = .searching }
-        // Simulate BLE scan then connect (replace with real BLE service)
-        Task {
-            try? await Task.sleep(nanoseconds: 2_000_000_000)
-            withAnimation { deviceState = .connected }
-        }
+        deviceService.connect()
     }
 
     func disconnectDevice() {
-        withAnimation { deviceState = .disconnected }
+        deviceService.disconnect()
     }
 
     // MARK: - Feature Navigation
@@ -130,6 +137,8 @@ final class HomeViewModel {
     }
 
     // MARK: - Computed Helpers
+
+    var isDeviceConnected: Bool { deviceState == .connected }
 
     var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>1. Basic</key>
+        <array>
+            <string>100-ECG non disponibile</string>
+            <string>201-Seganle rumoroso</string>
+            <string>202-Controlla derivazioni periferiche</string>
+            <string>203-Controlla derivazioni toraciche</string>
+            <string>301-RA/RL invertite? Verifica elettrodi periferici</string>
+            <string>302-Derivazioni periferiche inverite</string>
+            <string>321-RA/LA invertite? Verifica elettrodi periferici</string>
+            <string>322-RA/LL invertite? Verifica elettrodi periferici</string>
+            <string>303-Verifica V1 - V3 errore di connessione</string>
+            <string>304-Verifica V4 - V6 errore di connessione</string>
+            <string>400-Eventi con durata QRS maggiore di 120 ms</string>
+            <string>500-Fibrillazione atriale o flutter</string>
+            <string>601-Pacemaker ventricolare o bicamerale</string>
+            <string>602-pacemaker atriale</string>
+        </array>
+        <key>2. Rhythm</key>
+        <array>
+            <string>1000-Ritmo sinusale (SR)</string>
+            <string>1001-Ritmo sinusale normale (NSR)</string>
+            <string>1002-Bradicardia sinusale (SB)</string>
+            <string>1003-Tachicardia sinusale (ST)</string>
+            <string>1004-Aritmia sinusale (SAR)</string>
+            <string>1010-Battiti ectopici sopraventricolari (ESVC)</string>
+            <string>1011-Bigeminismo atriale (ABG)</string>
+            <string>1012-Trigeminismo atriale (ATG)</string>
+            <string>1013-coppie atriali (DEAC)</string>
+            <string>1016-Frequenti battiti ectopici atriali (FEAC)</string>
+            <string>1017-Runs brevi di battiti ectopici atriali (SREAC)</string>
+            <string>1018-Runs lunghi di battiti  ectopici atriali (LREAC)</string>
+            <string>1020-Battiti  sopraventricolari aberranti (ASVC)</string>
+            <string>1030-Battiti ectopici ventricolari (EVC)</string>
+            <string>1031-Coppie ventricolari (DEVC)</string>
+            <string>1032-Battiti coalescenti ectopici ventricolari (CEVC)</string>
+            <string>1033-Battiti ectopici ventricolari polimorfi (PEVC)</string>
+            <string>1034-Bigeminismo ventricolare (VBG)</string>
+            <string>1035-Trigeminismo ventricolare (VTG)</string>
+            <string>1036-Frequenti battiti ectopici ventricolari (FEVC)</string>
+            <string>1037-Runs brevi di battiti ectopici ventricolari (SREVC)</string>
+            <string>1038-Runs lunghi di battiti ectopici ventricolari (LREVC)</string>
+            <string>1040-Pause (possibile arresto o blocco senoatriale)</string>
+            <string>1050-Ridotta variabilità della freq. cardiaca (RHRV)</string>
+            <string>1060-variabilità della freq. Cardiaca in aumento (IHRV)</string>
+            <string>1100-Wandering pacemaker atriale (WAP)</string>
+            <string>1200-Ritmo giunzionale (JR)</string>
+            <string>1201-Ritmo giunzionale, frequenza 45-64 bpm</string>
+            <string>1202-Bradicardia giunzionale (JBR)</string>
+            <string>1203-Accelerato ritmo giunzionale</string>
+            <string>1300-Ritmo ectopico atriale (EAR)</string>
+            <string>1301-Ritmo ectopico atriale, frequanza 50-90 bpm</string>
+            <string>1302-Bradicardia ectopioca atriale (EABR)</string>
+            <string>1303-Tachicardia atriale ectopica (EAT)</string>
+            <string>1311-Probabile ectopia atriale focale sininistra</string>
+            <string>1304-Ritmo del seno coronarico (CSR)</string>
+            <string>1400-Tachicardia sopraventricolare o QRS stretto (SVT)</string>
+            <string>1401-Tachicardia sopraventricolare, freq.meno 130 bpm</string>
+            <string>1402-Tachicardia sopraventricolare, freq. &gt; 130 bpm </string>
+            <string>1403-Tachicardia sopraventricolare</string>
+            <string>1500-Flutter atriale o fibrillazione (AFLF)</string>
+            <string>1501-Flutter atriale tipo 1 (AFL1)</string>
+            <string>1502-Flutter atriale tipo 2 (AFL2)</string>
+            <string>1503-Fibrillazione atriale (AF)</string>
+            <string>1531-Fibrillazione atriale con bassa risposta ventricolare</string>
+            <string>1532-Fibrillazione atriale con alta risposta ventricolare</string>
+            <string>1533-Fibrillazione atriale e ritmo giunziionale</string>
+            <string>1504-Fibrillazione atriale/flutter con possibile conduzione dominante AV</string>
+            <string>1600-Pacemaker (PM)</string>
+            <string>1601-Pacemaker ventricolare (VPM) o pacemaker bicamerale (CPM)</string>
+            <string>1602-Pacemaker atriale (APM)</string>
+            <string>1700-Tachicardia ventricolare (VT)</string>
+            <string>1701-Ritmo da scappamento ventricolare (VER)</string>
+            <string>1702-Ritmo idioventricolare accelerato (AIVR)</string>
+            <string>1703-Flutter ventricolare (VF)</string>
+            <string>1704-Fibrillazione ventricolare (VF)</string>
+            <string>1801-Tachicardia estrema (Ext)</string>
+            <string>1802-Bradicardia estrema (ExB)</string>
+            <string>1900-Altra classificazione di ritmo irregolare</string>
+        </array>
+        <key>3. Atrioventricular Conduction Abnormalities</key>
+        <array>
+            <string>2100-Blocco AV di I° (AVB1)</string>
+            <string>2200-Blocco AV di II° (AVB2)</string>
+            <string>2201-Blocco AV di II° tipo Wenckbach o MOBITZ (AVB2W)</string>
+            <string>2202-Blocco AV di II° tipo Mobitz2 (AVB2S)</string>
+            <string>2203-Blocco AV multiplo di II° (AVB2M)</string>
+            <string>2301-Blocco AV (completo) di III° (AVB3)</string>
+            <string>2330-Blocco AV di III° (completo) con QRS stretto</string>
+            <string>2331-Blocco AV di III° (completo) con QRS largo</string>
+            <string>2332-Blocco AV di III° (completo) con QRS largo e frequenza ventricolare lenta</string>
+            <string>2400-Sindrome di Wolff-Parkinson-White (WPW)</string>
+            <string>2500-Intervallo PR corto</string>
+        </array>
+        <key>4. Ventricular Conduction Disturbances</key>
+        <array>
+            <string>3100-Blocco di branca sinistra (LBBB)</string>
+            <string>3101-LBBB con possibile IMA</string>
+            <string>3200-Blocco di branca destra (RBBB)</string>
+            <string>3201-RBBB con possibile IMA</string>
+            <string>3300-ritardo indeterminato della conduzione ventricolare (IVCD)</string>
+            <string>3301-IVCD con possibile IMA</string>
+            <string>3401-blocco incompleto di branca destra (IRBBB)</string>
+            <string>3402-blocco incompleto di branca sinistra (ILBBB)</string>
+            <string>3500-Blocco fascicolare anteriore sinistro (LAFB)</string>
+            <string>3501-Probabile blocco fascicolare anteriore sinistro (PLAFB)</string>
+            <string>3502-Blocco fascicolare posteriore sinistro (LPFB)</string>
+            <string>3700-Sindrome di Brugada</string>
+            <string>3701-Sindrome di Brugada, tipo 1</string>
+            <string>3702-Sindrome di Brugada, tipo2</string>
+            <string>3703-Sindrome di Brugada, tipo 3</string>
+            <string>3800-QRS frammentato</string>
+        </array>
+        <key>5. Repolarization abnormalities</key>
+        <array>
+            <string>4100-Ripolarizzazione ventricolare prolungata</string>
+            <string>4101-Marginale prolungamento della ripolarizzazione ventricolare</string>
+            <string>4102-Prolungamento della ripolarizzazione ventricolare</string>
+            <string>4201-Ripolarizzazione precoce (ER)</string>
+            <string>4202-Probabile ripolarizzazione precoce</string>
+        </array>
+        <key>6. Myocardial Infarction/Ischemia</key>
+        <array>
+            <string>5001-Scarsa progressione dell'onda R</string>
+            <string>5002-Onda Q anormale</string>
+            <string>5100-IMA Q con ampie onde Q</string>
+            <string>5101-IMA laterale Q con ampie onde Q</string>
+            <string>5102-IMA inferiore Q con ampie onde Q</string>
+            <string>5103-IMA settale Q con ampie onde Q</string>
+            <string>5104-IMA anteriore Q con ampie onde Q</string>
+            <string>5105-IMA postero-laterale (PL)</string>
+            <string>5200-IMA Q con moderate onde Q  e con anomalie ST-T </string>
+            <string>5201-IMA laterale Q con moderate onde Q e con anomalie ST-T </string>
+            <string>5202-IMA inferiore Q con moderate onde Q e anomalie ST-T</string>
+            <string>5203-IMA settale Q con moderate onde Q e anomalie ST-T</string>
+            <string>5204-IMA anteriore Q con moderate onde Q e anomalie ST-T</string>
+            <string>5205-Probabile IMA postero-laterale con anomalie ST-T</string>
+            <string>5300-Posssibile IMA Q con moderate onde Q e senza anomalie ST-T</string>
+            <string>5301-Possibile IMA laterale Q con moderate onde Q e senza anomalie ST-T</string>
+            <string>5302-Possibile IMA inferiore Q con moderate onde Q e senza anomalie ST-T</string>
+            <string>5303-Posssibile IMA settale Q con moderate onde Q e senza anomalie ST-T</string>
+            <string>5304-Possibile IMA anteriore Q con moderate onde Q e senza anomalie ST-T</string>
+            <string>5305-Probabile IMA postero-laterale senza anomalie ST-T</string>
+            <string>5400-Possibile IMA Q con onde Q minori e con anomalie ST-T</string>
+            <string>5401-Possibile IMA laterale Q con onde Q minori e con anomalie ST-T</string>
+            <string>5402-Possibile IMA inferiore Q con onde Q minori e con anomalie ST-T</string>
+            <string>5403-Possibile IMA settale Q con onde Q minori e con anomalie ST-T</string>
+            <string>5404-Possibile IMA anteriore Q con onde Q minori e con anomalie ST-T </string>
+            <string>5405-Possibile IMA postero-laterale</string>
+            <string>5500-Anomalie ST</string>
+            <string>5600-Inversione onda T</string>
+            <string>5601-Onda T piatta</string>
+            <string>5700-Onde Q minori</string>
+            <string>5800-Anomalie ST-T minori</string>
+        </array>
+        <key>7. Ventricular Hypertrophy and Atrial Enlargement</key>
+        <array>
+            <string>6100-Ipertrofia ventricolare sinistra</string>
+            <string>6101-Ipertrofia ventricolare sinistra con anomalie ST-T</string>
+            <string>6201-Allaregamento atriale sinistro</string>
+            <string>6301-Ipertrofia ventricolare destra</string>
+            <string>6401-Allargamento atriale destro</string>
+        </array>
+        <key>8. Axis deviation</key>
+        <array>
+            <string>7100-Deviazione assiale sinistra del QRS</string>
+            <string>7200-Marcata deviazione assiale destra del QRS</string>
+            <string>7300-Deviazione assiale destra del QRS</string>
+            <string>7400-Estrema deviazione assiale destra</string>
+            <string>7500-Asse QRS indeterminato</string>
+            <string>7601-Angolo QRS-T ampio</string>
+            <string>7602-Angolo QRS-T molto ampio</string>
+        </array>
+        <key>9. Other abnormalities</key>
+        <array>
+            <string>8100-Destrocardia (controlla gli elettrodi)</string>
+            <string>8200-Basso voltaggio del QRS (LOW)</string>
+            <string>8201-Basso voltaggio del QRS nelle derivazioni periferiche (LLW)</string>
+            <string>8202-Basso voltaggio del QRS nelle derivazioni precordiali CLW)</string>
+            <string>8301-Rotazione in senso antiorario (CCW)</string>
+            <string>8302-Rotazione in senso orario (CW)</string>
+            <string>8400-Onda T alta (HT)</string>
+            <string>8500-Slivellamento del segmento ST (STE)</string>
+        </array>
+    </dict>
+</plist>

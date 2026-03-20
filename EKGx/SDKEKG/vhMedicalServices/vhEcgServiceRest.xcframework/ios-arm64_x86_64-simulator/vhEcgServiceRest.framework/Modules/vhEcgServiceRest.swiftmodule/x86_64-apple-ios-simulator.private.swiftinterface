@@ -1,0 +1,39 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.1 effective-5.10 (swiftlang-6.1.0.110.21 clang-1700.0.13.3)
+// swift-module-flags: -target x86_64-apple-ios13.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name vhEcgServiceRest
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -interface-compiler-version 6.1
+import Foundation
+import Swift
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+@_exported import vhEcgServiceRest
+@_inheritsConvenienceInitializers @objc open class PickInfo : ObjectiveC.NSObject {
+  @objc deinit
+  @objc open func setData(I: [Swift.Int16], II: [Swift.Int16], pos: [Swift.Int32], fs: Swift.Int16) -> Swift.Bool
+  @objc open func QRSaxis(pos1: Swift.Int32, pos2: Swift.Int32) -> Swift.Float
+  @objc open func hr(pos1: Swift.Int32, pos2: Swift.Int32) -> Swift.Int16
+  @objc override dynamic public init()
+}
+@_inheritsConvenienceInitializers @objc public class AnalysisResult : ObjectiveC.NSObject {
+  @objc public var autoInterpretationCodes: [Swift.String]?
+  @objc public var minnesotaCodes: [Swift.String]?
+  @objc public var template: [[Swift.Float]]?
+  public var hr: Swift.Int?
+  @objc public var heartBeatRate: Swift.String?
+  @objc public var measurement: [[Swift.String : Swift.String]]?
+  @objc public var onoff: [[Swift.Int]]?
+  @objc public var error: Swift.String?
+  @objc public var parameters: Swift.String?
+  @objc public var RRs: [Swift.Float]?
+  @objc public var beatPositions: [Swift.Int]?
+  @objc public var beatTypes: [Swift.String]?
+  @objc override dynamic public init()
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @objc public class Analyzer : ObjectiveC.NSObject {
+  @objc override dynamic public init()
+  @objc public func analyze(data: [[Swift.Float]], sampling: Swift.Int, age: Swift.Int, ageUnit: Swift.String, gender: Swift.String, newBornMode: Swift.Int, backRecording: Swift.Bool) -> vhEcgServiceRest.AnalysisResult
+  @objc public func analyzeManual(data: [[Swift.Float]], sampling: Swift.Int, age: Swift.Int, ageUnit: Swift.String, gender: Swift.String, newBornMode: Swift.Int, backRecording: Swift.Bool, lead: Swift.Int, onOff: Swift.UnsafeMutablePointer<Swift.Int16>?, onOffs: Swift.UnsafeMutablePointer<Swift.UnsafeMutablePointer<Swift.Int16>?>?) -> vhEcgServiceRest.AnalysisResult
+  @objc deinit
+}

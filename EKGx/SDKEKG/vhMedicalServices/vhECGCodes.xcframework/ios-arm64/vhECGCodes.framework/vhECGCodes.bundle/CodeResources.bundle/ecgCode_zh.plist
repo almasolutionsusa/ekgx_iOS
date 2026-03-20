@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>1. 基本评价</key>
+	<array>
+		<string>100-无心电信号</string>
+		<string>201-记录质量差</string>
+		<string>202-肢导信号缺失</string>
+		<string>203-胸导信号缺失</string>
+		<string>301-右手/右腿接反? (检查肢导连接)</string>
+		<string>302-肢导其它导联交换 (检查肢导连接)</string>
+		<string>321-左右手接反? (检查肢导连接)</string>
+		<string>322-右手/左腿接反? (检查肢导连接)</string>
+		<string>303-胸导V1-V3连接有误? (ECG可诊断)</string>
+		<string>304-胸导V4-V6连接有误? (ECG可诊断)</string>
+		<string>400-QRS间期大于120ms</string>
+		<string>500-心房房颤/扑动</string>
+		<string>601-心室或双腔起搏器</string>
+		<string>602-心房起搏器</string>
+	</array>
+	<key>2. 节律</key>
+	<array>
+		<string>1000-窦性心律</string>
+		<string>1001-正常窦性心律</string>
+		<string>1002-窦性心动过缓</string>
+		<string>1003-窦性心动过速</string>
+		<string>1004-窦性心律失常</string>
+		<string>1010-室上性期前收缩</string>
+		<string>1011-房性期前收缩二联律</string>
+		<string>1012-房性期前收缩三联律</string>
+		<string>1013-成对室上性期前收缩</string>
+		<string>1016-频发室上性期前收缩</string>
+		<string>1017-短阵室上性期前收缩</string>
+		<string>1018-长阵室上性期前收缩</string>
+		<string>1020-异形室上性期前收缩</string>
+		<string>1030-室性期前收缩</string>
+		<string>1031-成对室性期前收缩</string>
+		<string>1032-室性期前收缩RonT</string>
+		<string>1033-多形室性期前收缩</string>
+		<string>1034-室性期前收缩二联律</string>
+		<string>1035-室性期前收缩三联律</string>
+		<string>1036-频发室性期前收缩</string>
+		<string>1037-短阵室性期前收缩</string>
+		<string>1038-长阵室性期前收缩</string>
+		<string>1040-窦房阻滞或停搏</string>
+		<string>1050-心率变异性降低</string>
+		<string>1060-心率变异性提高</string>
+		<string>1100-游走性心房起搏点</string>
+		<string>1200-交界性节律</string>
+		<string>1201-交界性异位节律</string>
+		<string>1202-交界性心动过缓</string>
+		<string>1203-加速性交界性节律</string>
+		<string>1300-房性节律</string>
+		<string>1301-房性异位节律</string>
+		<string>1302-房性异位心动过缓</string>
+		<string>1303-房性异位心动过速</string>
+		<string>1311-可能左心房节律</string>
+		<string>1304-冠状静脉窦节律</string>
+		<string>1400-室上性或宽QRS心动过速</string>
+		<string>1401-室上性心动过速，心率低于130 bpm</string>
+		<string>1402-室上性心动过速, 心率130 bpm以上</string>
+		<string>1403-室上性心动过速</string>
+		<string>1500-心房扑动或心房颤动</string>
+		<string>1501-心房扑动</string>
+		<string>1502-心房扑动伴快速F波</string>
+		<string>1503-心房颤动</string>
+		<string>1531-心房颤动伴慢速心室响应</string>
+		<string>1532-心房颤动伴快速心室响应</string>
+		<string>1533-心房颤动伴房室分离或交界性节律</string>
+		<string>1504-心房颤动/扑动，可能房室传导为主</string>
+		<string>1600-心脏起搏器</string>
+		<string>1601-心室起搏器或双腔起搏器</string>
+		<string>1602-心房起搏器</string>
+		<string>1700-室性心动过速</string>
+		<string>1701-室性逸博心律</string>
+		<string>1702-加速性室性自主心律</string>
+		<string>1703-心室扑动</string>
+		<string>1704-心室颤动</string>
+		<string>1801-显著心动过速</string>
+		<string>1802-显著心动过缓</string>
+		<string>1900-其它异常节律</string>
+	</array>
+	<key>3. 房室传导异常</key>
+	<array>
+		<string>2100-I度房室传导阻滞</string>
+		<string>2200-II度房室传导阻滞</string>
+		<string>2201-II度房室传导阻滞，文氏或莫氏一型</string>
+		<string>2202-II度房室传导阻滞，莫氏二型</string>
+		<string>2203-II度房室传导阻滞，成倍型</string>
+		<string>2301-III度(完全性)房室传导阻滞</string>
+		<string>2330-III度(完全性)房室传导阻滞伴窄QRS复合波</string>
+		<string>2331-III度(完全性)房室传导阻滞伴宽QRS复合波</string>
+		<string>2332-III度(完全性)房室传导阻滞伴宽QRS复合波和慢速心室率</string>
+		<string>2400-预激综合症(WPW)</string>
+		<string>2500-短PR间期</string>
+	</array>
+	<key>4. 心室传导障碍</key>
+	<array>
+		<string>3100-左束支传导阻滞</string>
+		<string>3101-左束支传导阻滞,可能心肌梗死</string>
+		<string>3200-右束支传导阻滞</string>
+		<string>3201-右束支传导阻滞,可能心肌梗死</string>
+		<string>3300-不确定的心室传导延迟</string>
+		<string>3301-不确定的心室传导延迟,可能心肌梗死</string>
+		<string>3401-不完全性右束支传导阻滞</string>
+		<string>3402-不完全性左束支传导阻滞</string>
+		<string>3500-左前分支阻滞</string>
+		<string>3501-可能左前分支阻滞</string>
+		<string>3502-左后分支阻滞</string>
+		<string>3700-Brugada症候群</string>
+		<string>3701-Brugada症候群, 类型一</string>
+		<string>3702-Brugada症候群, 类型二</string>
+		<string>3703-Brugada症候群, 类型三</string>
+		<string>3800-碎裂的QRS复合波</string>
+	</array>
+	<key>5. 复极异常</key>
+	<array>
+		<string>4100-心室复极延长</string>
+		<string>4101-可能心室复极延长</string>
+		<string>4102-心室复极延长</string>
+		<string>4201-早期复极</string>
+		<string>4202-可能早期复极</string>
+	</array>
+	<key>6. 心肌梗死或缺血</key>
+	<array>
+		<string>5001-R波上升不良</string>
+		<string>5002-异常Q波</string>
+		<string>5100-明显Q波(心肌梗死)</string>
+		<string>5101-明显Q波(侧壁心肌梗死)</string>
+		<string>5102-明显Q波(下壁心肌梗死)</string>
+		<string>5103-明显Q波(室间隔心肌梗死)</string>
+		<string>5104-明显Q波(前壁心肌梗死)</string>
+		<string>5105-后侧壁心肌梗死</string>
+		<string>5200-可见Q波伴ST-T异常(考虑心肌梗死)</string>
+		<string>5201-可见Q波伴ST-T异常(考虑侧壁心肌梗死)</string>
+		<string>5202-可见Q波伴ST-T异常(考虑下壁心肌梗死)</string>
+		<string>5203-可见Q波伴ST-T异常(考虑室间隔心肌梗死)</string>
+		<string>5204-可见Q波伴ST-T异常(考虑前壁心肌梗死)</string>
+		<string>5205-考虑后侧壁心肌梗死</string>
+		<string>5300-可见Q波无ST-T异常(可能心肌梗死)</string>
+		<string>5301-可见Q波无ST-T异常(可能侧壁心肌梗死)</string>
+		<string>5302-可见Q波无ST-T异常(可能下壁心肌梗死)</string>
+		<string>5303-可见Q波无ST-T异常(可能室间隔心肌梗死)</string>
+		<string>5304-可见Q波无ST-T异常(可能前壁心肌梗死)</string>
+		<string>5305-可能后侧壁心肌梗死</string>
+		<string>5400-轻度Q波伴ST-T异常(怀疑心肌梗死)</string>
+		<string>5401-轻度Q波伴ST-T异常(怀疑侧壁心肌梗死)</string>
+		<string>5402-轻度Q波伴ST-T异常(怀疑下壁心肌梗死)</string>
+		<string>5403-轻度Q波伴ST-T异常(怀疑室间隔心肌梗死)</string>
+		<string>5404-轻度Q波伴ST-T异常(怀疑前壁心肌梗死)</string>
+		<string>5405-怀疑后侧壁心肌梗死</string>
+		<string>5500-ST-T异常</string>
+		<string>5600-T波倒置</string>
+		<string>5601-T波低平</string>
+		<string>5700-轻度Q波</string>
+		<string>5800-轻度ST-T异常</string>
+	</array>
+	<key>7. 心室肥大和心房扩大</key>
+	<array>
+		<string>6100-左心室肥大</string>
+		<string>6101-左心室肥大伴ST-T异常</string>
+		<string>6201-左心房扩大</string>
+		<string>6301-右心室肥大</string>
+		<string>6401-右心房扩大</string>
+	</array>
+	<key>8. 心电轴偏转</key>
+	<array>
+		<string>7100-心电轴左偏</string>
+		<string>7200-心电轴显著右偏</string>
+		<string>7300-心电轴右偏</string>
+		<string>7400-心电轴极度右偏</string>
+		<string>7500-不确定心电轴</string>
+		<string>7601-宽QRS-T成角</string>
+		<string>7602-非常宽QRS-T成角</string>
+	</array>
+	<key>9. 其它异常情况</key>
+	<array>
+		<string>8100-右位心(检查肢导?)</string>
+		<string>8200-低电压</string>
+		<string>8201-肢导低电压</string>
+		<string>8202-胸导低电压</string>
+		<string>8301-逆钟向</string>
+		<string>8302-顺钟向</string>
+		<string>8400-高大T波</string>
+		<string>8500-ST段抬高</string>
+	</array>
+</dict>
+</plist>

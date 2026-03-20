@@ -23,6 +23,19 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		BE18D7832F6CD82200E8CEE9 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		BE97353D2F6367AF00F5DA12 /* EKGx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EKGx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE97354F2F6367B000F5DA12 /* EKGxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EKGxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -30,7 +43,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		BE97353F2F6367AF00F5DA13 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		BE97353F2F6367AF00F5DA13 /* Exceptions for "EKGx" folder in "EKGx" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -39,11 +52,25 @@
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
+/* Begin PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+		BE18D7842F6CD82200E8CEE9 /* Exceptions for "EKGx" folder in "Embed Frameworks" phase from "EKGx" target */ = {
+			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
+			attributesByRelativePath = {
+				SDKEKG/vhECGTrends.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+			};
+			buildPhase = BE18D7832F6CD82200E8CEE9 /* Embed Frameworks */;
+			membershipExceptions = (
+				SDKEKG/vhECGTrends.xcframework,
+			);
+		};
+/* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		BE97353F2F6367AF00F5DA12 /* EKGx */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				BE97353F2F6367AF00F5DA13 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+				BE97353F2F6367AF00F5DA13 /* Exceptions for "EKGx" folder in "EKGx" target */,
+				BE18D7842F6CD82200E8CEE9 /* Exceptions for "EKGx" folder in "Embed Frameworks" phase from "EKGx" target */,
 			);
 			path = EKGx;
 			sourceTree = "<group>";
@@ -85,12 +112,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		BE18D7802F6CD82200E8CEE9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		BE9735342F6367AF00F5DA12 = {
 			isa = PBXGroup;
 			children = (
 				BE97353F2F6367AF00F5DA12 /* EKGx */,
 				BE9735522F6367B000F5DA12 /* EKGxTests */,
 				BE97355C2F6367B000F5DA12 /* EKGxUITests */,
+				BE18D7802F6CD82200E8CEE9 /* Frameworks */,
 				BE97353E2F6367AF00F5DA12 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -115,6 +150,7 @@
 				BE9735392F6367AF00F5DA12 /* Sources */,
 				BE97353A2F6367AF00F5DA12 /* Frameworks */,
 				BE97353B2F6367AF00F5DA12 /* Resources */,
+				BE18D7832F6CD82200E8CEE9 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -193,7 +229,7 @@
 					};
 				};
 			};
-			buildConfigurationList = BE9735382F6367AF00F5DA12 /* Build configuration list for PBXProject "ECGx" */;
+			buildConfigurationList = BE9735382F6367AF00F5DA12 /* Build configuration list for PBXProject "EKGx" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -433,6 +469,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "EKGx/EKGx-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 2;
@@ -481,6 +518,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "EKGx/EKGx-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 2;
@@ -593,7 +631,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		BE9735382F6367AF00F5DA12 /* Build configuration list for PBXProject "ECGx" */ = {
+		BE9735382F6367AF00F5DA12 /* Build configuration list for PBXProject "EKGx" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BE9735612F6367B000F5DA12 /* Debug */,

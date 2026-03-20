@@ -1,0 +1,591 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.2.1 effective-5.10 (swiftlang-6.2.1.4.8 clang-1700.4.4.1)
+// swift-module-flags: -target arm64-apple-ios9.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name vhECGTrends
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2.1
+import Foundation
+import Swift
+import UIKit
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+@_exported import vhECGTrends
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers @objc @_Concurrency.MainActor @preconcurrency public class vhECGBackGroundView : UIKit.UIView {
+  @objc @_Concurrency.MainActor @preconcurrency public var pixPermm: Swift.Double {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var bg10mmColor: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var bg5mmColor: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var bg1mmColor: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var bg10mmWidth: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var bg5mmWidth: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var bg1mmWidth: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic public var frame: CoreFoundation.CGRect {
+    @objc get
+    @objc set
+  }
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic public func draw(_ rect: CoreFoundation.CGRect)
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers @objc @_Concurrency.MainActor @preconcurrency public class vhECGDrawView : UIKit.UIView {
+  @objc @_Concurrency.MainActor @preconcurrency public var mmPixel: Swift.Double {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var paperSpeed: vhECGTrends.vhEcgPaperSpeedType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var sensitivity: vhECGTrends.vhEcgSensitivityType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var standardType: vhECGTrends.vhEcgStandardType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var leadDisplay: vhECGTrends.vhEcgLeadDisplayType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var longLead: vhECGTrends.vhEcgLeadType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var leadModeType: vhECGTrends.vhEcgLeadModeType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var rate: Swift.Double {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var isHavBreath: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecgLineWidth: Swift.Double {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecgLineColor: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecgLostLineColor: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecgDotColor: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecgStandardColor: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public func resetEcgDrawView()
+  @objc @_Concurrency.MainActor @preconcurrency public func updateLeads(_ leads: [[Swift.Int16]], _ animate: Swift.Bool)
+  @objc @_Concurrency.MainActor @preconcurrency public func updateLeadsStatus(_ leadsStatus: [Swift.Bool])
+  @objc @_Concurrency.MainActor @preconcurrency public func updatePlaybackLeads(_ playbackLeads: [[[Swift.Int16]]])
+  @objc @_Concurrency.MainActor @preconcurrency public func updateBreaths(_ breaths: Swift.Double, _ animate: Swift.Bool)
+  @objc @_Concurrency.MainActor @preconcurrency public func updatePlaybackBreaths(_ breaths: [Swift.Double])
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic public func draw(_ rect: CoreFoundation.CGRect)
+  @objc deinit
+}
+@objc public enum vhEcgLeadModeType : Swift.Int {
+  case std
+  case std_rb
+  case f
+  case f_rb
+  public static let kTypes: [vhECGTrends.vhEcgLeadModeType]
+  public var title: Swift.String {
+    get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+@objc public enum vhEcgPaperSpeedType : Swift.Int {
+  case half
+  case normal
+  case double
+  public var speedValue: Swift.Double {
+    get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+@objc public enum vhEcgSensitivityType : Swift.Int {
+  case half
+  case normal
+  case double
+  public var value: Swift.Double {
+    get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+@objc public enum vhEcgLeadDisplayType : Swift.Int {
+  case lead_3x4
+  case lead_6x2
+  case lead_12x1
+  public static let kTypes: [vhECGTrends.vhEcgLeadDisplayType]
+  public var title: Swift.String {
+    get
+  }
+  public var displayLineCount: Swift.Int {
+    get
+  }
+  public var isShowLong: Swift.Bool {
+    get
+  }
+  public var totalLineCount: Swift.Double {
+    get
+  }
+  public var showTypes_std: [vhECGTrends.vhEcgLeadType] {
+    get
+  }
+  public var showTypes_f: [vhECGTrends.vhEcgLeadType] {
+    get
+  }
+  public var showTypes_fRB: [vhECGTrends.vhEcgLeadType] {
+    get
+  }
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+@objc public enum vhEcgStandardType : Swift.Int {
+  case auto
+  case show
+  case hidden
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+@objc public enum vhEcgLeadType : Swift.Int {
+  case I
+  case II
+  case III
+  case aVR
+  case aVL
+  case aVF
+  case V1
+  case V2
+  case V3
+  case V4
+  case V5
+  case V6
+  case V3R
+  case V4R
+  case V5R
+  case V7
+  case V8
+  case V9
+  case All
+  public static let kTypes_std: [vhECGTrends.vhEcgLeadType]
+  public static let kTypes_stdRB: [vhECGTrends.vhEcgLeadType]
+  public static let kTypes_f: [vhECGTrends.vhEcgLeadType]
+  public static let kTypes_fRB: [vhECGTrends.vhEcgLeadType]
+  public func getIdx(leadMode: vhECGTrends.vhEcgLeadModeType) -> Swift.Int
+  public func getTitle(leadMode: vhECGTrends.vhEcgLeadModeType) -> Swift.String
+  public static func getEcgLeadType(idx: Swift.Int, leadMode: vhECGTrends.vhEcgLeadModeType) -> vhECGTrends.vhEcgLeadType
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+@objc public protocol vhECGRealTimeViewDelegate : ObjectiveC.NSObjectProtocol {
+  @objc optional func ecgRefreshLeadHandler()
+  @objc optional func ecgLongLeadChange(type: vhECGTrends.vhEcgLeadType)
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers @objc @_Concurrency.MainActor @preconcurrency public class vhECGRealTimeView : UIKit.UIView {
+  @objc @_Concurrency.MainActor @preconcurrency public var isRecordData: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency weak public var delegate: (any vhECGTrends.vhECGRealTimeViewDelegate)?
+  @objc @_Concurrency.MainActor @preconcurrency public var background_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecg_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var lost_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecg_dot_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var standard_text_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecg_line_width: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var standard_style: vhECGTrends.vhEcgStandardType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var pix_per_mm: Swift.Double {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var rate: Swift.Double {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var leadDisplay: vhECGTrends.vhEcgLeadDisplayType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var paperSpeed: vhECGTrends.vhEcgPaperSpeedType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var sensitivity: vhECGTrends.vhEcgSensitivityType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var leadModeType: vhECGTrends.vhEcgLeadModeType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var longLead: vhECGTrends.vhEcgLeadType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var isHavBreath: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecgInfoStr: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_board_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_weak_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_board_line_width: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_line_width: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_weak_line_width: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic public init(frame: CoreFoundation.CGRect)
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic public var frame: CoreFoundation.CGRect {
+    @objc get
+    @objc set
+  }
+  @objc deinit
+}
+extension vhECGTrends.vhECGRealTimeView {
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func cleanViewCache()
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func updateLeads(_ values: [[Swift.Int16]])
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func updateBreaths(_ currentBreaths: Swift.Double)
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func updateLeadsStatus(_ values: [Swift.Bool])
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func playback_updateLeads(_ values: [[[Swift.Int16]]])
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func playback_updateBreaths(_ breaths: [Swift.Double])
+}
+@_inheritsConvenienceInitializers @objc open class vhECGSelectInfo : ObjectiveC.NSObject {
+  @objc public var title: Swift.String
+  @objc public var sign: Swift.Int
+  @objc override dynamic public init()
+  @objc deinit
+}
+@objc public enum vhECGSelectArrowType : Swift.Int {
+  case left
+  case right
+  case up
+  case down
+  case any
+  case unknown
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+@objc @_Concurrency.MainActor @preconcurrency open class vhECGSelectButtonController : UIKit.UITableViewController {
+  @objc @_Concurrency.MainActor @preconcurrency open var selectHandle: ((_ info: vhECGTrends.vhECGSelectInfo?) -> Swift.Void)?
+  @objc @_Concurrency.MainActor @preconcurrency open var popOver: UIKit.UIPopoverPresentationController?
+  @objc @_Concurrency.MainActor @preconcurrency open var dataSources: [vhECGTrends.vhECGSelectInfo] {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency open var selectStr: Swift.String
+  @objc @_Concurrency.MainActor @preconcurrency open var vSize: CoreFoundation.CGSize {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency open var itemHight: CoreFoundation.CGFloat
+  @objc @_Concurrency.MainActor @preconcurrency public init(sourceRect: CoreFoundation.CGRect, sourceView: UIKit.UIView, arrowType: vhECGTrends.vhECGSelectArrowType = .unknown)
+  @objc @_Concurrency.MainActor @preconcurrency open func ex_setItem(font: UIKit.UIFont, color: UIKit.UIColor, alignment: UIKit.NSTextAlignment, selectBgColor: UIKit.UIColor)
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic open func viewWillAppear(_ animated: Swift.Bool)
+  #if compiler(>=5.3) && $NonescapableTypes
+  @_Concurrency.MainActor @preconcurrency @objc required dynamic public init?(coder: Foundation.NSCoder)
+  #endif
+  @objc deinit
+}
+extension vhECGTrends.vhECGSelectButtonController {
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic open func numberOfSections(in tableView: UIKit.UITableView) -> Swift.Int
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic open func tableView(_ tableView: UIKit.UITableView, numberOfRowsInSection section: Swift.Int) -> Swift.Int
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic open func tableView(_ tableView: UIKit.UITableView, cellForRowAt indexPath: Foundation.IndexPath) -> UIKit.UITableViewCell
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic open func tableView(_ tableView: UIKit.UITableView, heightForRowAt indexPath: Foundation.IndexPath) -> CoreFoundation.CGFloat
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic open func tableView(_ tableView: UIKit.UITableView, didSelectRowAt indexPath: Foundation.IndexPath)
+}
+@objc public enum vhSelectButtonStyle : Swift.Int {
+  case normal = 0
+  case border = 1
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
+@_inheritsConvenienceInitializers @objc @_Concurrency.MainActor @preconcurrency open class vhECGSelectButtonView : UIKit.UIControl {
+  @objc @_Concurrency.MainActor @preconcurrency public var changeHandle: ((_ info: vhECGTrends.vhECGSelectInfo) -> Swift.Void)?
+  @objc @_Concurrency.MainActor @preconcurrency public var style: vhECGTrends.vhSelectButtonStyle {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var currentStr: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var currentIdx: Swift.Int
+  @objc @_Concurrency.MainActor @preconcurrency public var space: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic open var isUserInteractionEnabled: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var dataSources: [vhECGTrends.vhECGSelectInfo]
+  @objc @_Concurrency.MainActor @preconcurrency public var listViewSize: CoreFoundation.CGSize
+  @objc @_Concurrency.MainActor @preconcurrency convenience public init(ex_titleFont: UIKit.UIFont = UIFont.systemFont(ofSize: 16), titleColor: UIKit.UIColor = UIColor.black, titleAlignment: UIKit.NSTextAlignment = .left, itemFont: UIKit.UIFont = UIFont.systemFont(ofSize: 16), itemColor: UIKit.UIColor = UIColor.gray, itemAlignment: UIKit.NSTextAlignment = .center, itemSeleBgColor: UIKit.UIColor = UIColor.lightGray)
+  @objc @_Concurrency.MainActor @preconcurrency public func ex_setView(titleFont: UIKit.UIFont = UIFont.systemFont(ofSize: 16), titleColor: UIKit.UIColor = UIColor.black, titleAlignment: UIKit.NSTextAlignment = .center, itemFont: UIKit.UIFont = UIFont.systemFont(ofSize: 16), itemColor: UIKit.UIColor = UIColor.black, itemAlignment: UIKit.NSTextAlignment = .center, itemSeleBgColor: UIKit.UIColor = UIColor.lightGray)
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic public init(frame: CoreFoundation.CGRect)
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic open func layoutSubviews()
+  #if compiler(>=5.3) && $NonescapableTypes
+  @_Concurrency.MainActor @preconcurrency @objc required dynamic public init?(coder: Foundation.NSCoder)
+  #endif
+  @objc deinit
+}
+@objc public protocol vhECGTrendsViewDelegate : ObjectiveC.NSObjectProtocol {
+  @objc optional func ecgChangeShowMaxCount(maxDisplayCount: Swift.Int, maxLongCount: Swift.Int, maxBreathCount: Swift.Int)
+  @objc optional func ecgPaperSpeedChange(type: vhECGTrends.vhEcgPaperSpeedType)
+  @objc optional func ecgSensitivityChange(type: vhECGTrends.vhEcgSensitivityType)
+  @objc optional func ecgLeadDisplayChange(type: vhECGTrends.vhEcgLeadDisplayType)
+  @objc optional func ecgRefreshLeadHandler()
+  @objc optional func ecgLongLeadChange(type: vhECGTrends.vhEcgLeadType)
+  @objc optional func ecgLeadModeChange(type: vhECGTrends.vhEcgLeadModeType)
+  @objc optional func ecgPre_or_nextHandler(isPre: Swift.Bool)
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers @objc @_Concurrency.MainActor @preconcurrency public class vhECGTrendsView : UIKit.UIView {
+  @objc @_Concurrency.MainActor @preconcurrency public var isRecordData: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency weak public var delegate: (any vhECGTrends.vhECGTrendsViewDelegate)?
+  @objc @_Concurrency.MainActor @preconcurrency public var background_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecg_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var lost_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecg_dot_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var standard_text_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecg_line_width: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var standard_style: vhECGTrends.vhEcgStandardType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var pix_per_mm: Swift.Double {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var rate: Swift.Double {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var leadDisplay: vhECGTrends.vhEcgLeadDisplayType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var paperSpeed: vhECGTrends.vhEcgPaperSpeedType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var sensitivity: vhECGTrends.vhEcgSensitivityType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var leadModeType: vhECGTrends.vhEcgLeadModeType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var longLead: vhECGTrends.vhEcgLeadType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var isHavBreath: Swift.Bool {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var ecgInfoStr: Swift.String {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_board_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_weak_line_color: UIKit.UIColor {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_board_line_width: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_line_width: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var background_weak_line_width: CoreFoundation.CGFloat {
+    @objc get
+    @objc set
+  }
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic public var frame: CoreFoundation.CGRect {
+    @objc get
+    @objc set
+  }
+  @_Concurrency.MainActor @preconcurrency @objc override dynamic public init(frame: CoreFoundation.CGRect)
+  @objc deinit
+}
+extension vhECGTrends.vhECGTrendsView {
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func cleanViewCache()
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func updateLeads(_ values: [[Swift.Int16]])
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func updateBreaths(_ currentBreaths: Swift.Double)
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func updateLeadsStatus(_ values: [Swift.Bool])
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func playback_updateLeads(_ values: [[[Swift.Int16]]])
+  @objc @_Concurrency.MainActor @preconcurrency dynamic public func playback_updateBreaths(_ breaths: [Swift.Double])
+}
+extension vhECGTrends.vhECGTrendsView : vhECGTrends.vhECGRealTimeViewDelegate {
+  @_Concurrency.MainActor @preconcurrency @objc dynamic public func ecgRefreshLeadHandler()
+  @_Concurrency.MainActor @preconcurrency @objc dynamic public func ecgLongLeadChange(type: vhECGTrends.vhEcgLeadType)
+}
+extension vhECGTrends.vhEcgLeadModeType : Swift.Equatable {}
+extension vhECGTrends.vhEcgLeadModeType : Swift.Hashable {}
+extension vhECGTrends.vhEcgLeadModeType : Swift.RawRepresentable {}
+extension vhECGTrends.vhEcgPaperSpeedType : Swift.Equatable {}
+extension vhECGTrends.vhEcgPaperSpeedType : Swift.Hashable {}
+extension vhECGTrends.vhEcgPaperSpeedType : Swift.RawRepresentable {}
+extension vhECGTrends.vhEcgSensitivityType : Swift.Equatable {}
+extension vhECGTrends.vhEcgSensitivityType : Swift.Hashable {}
+extension vhECGTrends.vhEcgSensitivityType : Swift.RawRepresentable {}
+extension vhECGTrends.vhEcgLeadDisplayType : Swift.Equatable {}
+extension vhECGTrends.vhEcgLeadDisplayType : Swift.Hashable {}
+extension vhECGTrends.vhEcgLeadDisplayType : Swift.RawRepresentable {}
+extension vhECGTrends.vhEcgStandardType : Swift.Equatable {}
+extension vhECGTrends.vhEcgStandardType : Swift.Hashable {}
+extension vhECGTrends.vhEcgStandardType : Swift.RawRepresentable {}
+extension vhECGTrends.vhEcgLeadType : Swift.Equatable {}
+extension vhECGTrends.vhEcgLeadType : Swift.Hashable {}
+extension vhECGTrends.vhEcgLeadType : Swift.RawRepresentable {}
+extension vhECGTrends.vhECGSelectArrowType : Swift.Equatable {}
+extension vhECGTrends.vhECGSelectArrowType : Swift.Hashable {}
+extension vhECGTrends.vhECGSelectArrowType : Swift.RawRepresentable {}
+extension vhECGTrends.vhSelectButtonStyle : Swift.Equatable {}
+extension vhECGTrends.vhSelectButtonStyle : Swift.Hashable {}
+extension vhECGTrends.vhSelectButtonStyle : Swift.RawRepresentable {}

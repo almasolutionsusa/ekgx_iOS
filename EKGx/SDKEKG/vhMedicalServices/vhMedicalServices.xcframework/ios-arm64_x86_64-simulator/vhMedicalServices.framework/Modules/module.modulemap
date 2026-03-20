@@ -1,0 +1,6 @@
+framework module vhMedicalServices {
+  umbrella header "vhMedicalServices-umbrella.h"
+
+  export *
+  module * { export * }
+}

@@ -1,0 +1,50 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.1.2 effective-5.10 (swiftlang-6.1.2.1.2 clang-1700.0.13.5)
+// swift-module-flags: -target x86_64-apple-ios13.0-simulator -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name vhStressTemplLib
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -interface-compiler-version 6.1.2
+import Foundation
+import Swift
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+@_exported import vhStressTemplLib
+@_inheritsConvenienceInitializers @objc open class vhStressTemplLib : ObjectiveC.NSObject {
+  @objc deinit
+  @objc open func create(me: Swift.String, fs: Swift.Int16, chn: Swift.Int16, uVpb: Swift.Double, mutex_lock: Swift.Bool) -> Swift.Bool
+  @objc open func destroy()
+  @objc open func restTempl(templ: [[Swift.Int16]], posQ: Swift.Int16, posJ: Swift.Int16, postJms: Swift.Int16) -> [[Swift.Int16]]?
+  @objc open func getPos() -> [Swift.Int16]?
+  @objc open func match(data: [Swift.Int16]) -> [[Swift.Int16]]?
+  @objc open func getTempl() -> [[Swift.Int16]]?
+  @objc open func setPos(posZ: Swift.Int16, posJ: Swift.Int16)
+  @objc open func setPostJms(postJms: Swift.Int16)
+  @objc open func getSTslope() -> [Swift.Float]?
+  @objc open func getSTuv() -> [Swift.Int16]?
+  @objc open func getMeanHR(data1: Swift.Int16, data2: Swift.Int16, data3: Swift.Int16) -> Swift.Int16
+  @objc public static func getDuke(stressSeconds seconds: Swift.Int16, deepestSTwithmV mV: Swift.Float, anginaPectoris index: Swift.Int16) -> Swift.Int16
+  @objc public static func getPWC(power: [Swift.Float], andHR hr: [Swift.Float]) -> [Swift.Float]?
+  @objc override dynamic public init()
+}
+@_inheritsConvenienceInitializers @objc open class vhFiltersLib : ObjectiveC.NSObject {
+  @objc override dynamic public init()
+  @objc public init(me: Swift.String, fs: Swift.Int16, chn: Swift.Int16, freqLpass: Swift.Int16, freqNotch: Swift.Int16, smoothStrength: Swift.Int16)
+  @objc deinit
+  @objc open func create(me: Swift.String, fs: Swift.Int16, chn: Swift.Int16, freqLpass: Swift.Int16, freqNotch: Swift.Int16, smoothStrength: Swift.Int16) -> Swift.Bool
+  @objc open func update(fs: Swift.Int16, freqLpass: Swift.Int16, freqNotch: Swift.Int16, smoothStrength: Swift.Int16) -> Swift.Bool
+  @objc open func switchFilters(onOffLpass: Swift.Bool, onOffNotch: Swift.Bool, onOffSmooth: Swift.Bool)
+  @objc open func filters(data: [Swift.Int16]) -> [Swift.Int16]?
+}
+@objc open class vhMeanRRmsLib : ObjectiveC.NSObject {
+  @objc public init(fs: Swift.Int16, chn: Swift.Int16, freqNotch: Swift.Int16, uVpb: Swift.Double)
+  @objc open func create(fs: Swift.Int16, chn: Swift.Int16, freqNotch: Swift.Int16, uVpb: Swift.Double)
+  @objc open func meanRRms(data: [Swift.Int16]) -> Swift.Int16
+  @objc open func meanHR(data: [Swift.Int16]) -> Swift.Int16
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @objc open class vhDfsLib : ObjectiveC.NSObject {
+  @objc override dynamic public init()
+  @objc public init(me: Swift.String, chn: Swift.Int16, uVpb: Swift.Double)
+  @objc deinit
+  @objc open func create(me: Swift.String, chn: Swift.Int16, uVpb: Swift.Double) -> Swift.Bool
+  @objc open func getData(data: [Swift.Int16]) -> [Swift.Int16]?
+}

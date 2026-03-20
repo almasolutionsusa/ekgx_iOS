@@ -134,6 +134,7 @@ enum L10n {
         }
 
         enum Card {
+            static let deviceRequired = "home.card.deviceRequired".localized
             enum Recording {
                 static let title    = "home.card.recording.title".localized
                 static let subtitle = "home.card.recording.subtitle".localized
@@ -289,6 +290,40 @@ enum L10n {
             static let fieldLabel    = "settings.demo.fieldLabel".localized
             static let fieldPH       = "settings.demo.fieldPH".localized
             static let unlockButton  = "settings.demo.unlockButton".localized
+        }
+    }
+
+    // MARK: - Recording
+
+    enum Recording {
+        enum Nav {
+            static let backButton  = "recording.nav.backButton".localized
+        }
+        enum Exit {
+            static let title       = "recording.exit.title".localized
+            static let subtitle    = "recording.exit.subtitle".localized
+            static let keepButton  = "recording.exit.keepButton".localized
+            static let discardButton = "recording.exit.discardButton".localized
+        }
+        enum Done {
+            static let title       = "recording.done.title".localized
+            static let redoButton  = "recording.done.redoButton".localized
+            static let analysisButton = "recording.done.analysisButton".localized
+            static func durationLabel(_ elapsed: String) -> String {
+                String(format: "recording.done.durationLabel".localized, elapsed)
+            }
+        }
+        enum Controls {
+            static let leadLayout  = "recording.controls.leadLayout".localized
+            static let duration    = "recording.controls.duration".localized
+            static let reset       = "recording.controls.reset".localized
+            static let record      = "recording.controls.record".localized
+            static let stop        = "recording.controls.stop".localized
+            static let viewResult  = "recording.controls.viewResult".localized
+            static let elapsed     = "recording.controls.elapsed".localized
+        }
+        enum Stats {
+            static let bpm         = "recording.stats.bpm".localized
         }
     }
 

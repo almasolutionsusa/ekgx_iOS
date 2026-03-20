@@ -66,8 +66,15 @@ struct RootView: View {
                         removal: .move(edge: .trailing).combined(with: .opacity)
                     ))
 
-            case .ecgRecording,
-                 .ecgAnalysis,
+            case .ecgRecording(let patientId):
+                let patient = Patient.mockPatients.first { $0.uniqueId == patientId } ?? Patient.mockPatients[0]
+                RecordingView(viewModel: diContainer.makeRecordingViewModel(patient: patient, router: router))
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
+
+            case .ecgAnalysis,
                  .patientDetail,
                  .support,
                  .faq,

@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>1. Basic</key>
+	<array>
+		<string>100-ECG Mevcut değil </string>
+		<string>201-Yetersiz kalite</string>
+		<string>202-Eksik uzuv uçları</string>
+		<string>203-Eksik Göğüs uçları</string>
+		<string>301-RA/RL ters giriş? (Doğrulayın uzuv uçları  elektrotlar tekrar) </string>
+		<string>302-öteki limb lead Bağlantısı değiştirme ( geliştirilmesi ve ECG  Kodlamalı)</string>
+		<string>321-RA/LA ters giriş? (Doğrulayın uzuv uçları  elektrotlar tekrar) </string>
+		<string>322-RA/LL ters giriş? (Doğrulayın uzuv uçları  elektrotlar tekrar) </string>
+		<string>303-Düzeltilebilir Göğüs uçları V1-V3 Bağlantısı hata? (ECG kodlanabilir)</string>
+		<string>304-Düzeltilebilir Göğüs uçları V4-V6 Bağlantısı hata? (ECG kodlanabilir)</string>
+		<string>400-Herhangi bir şarta ile ORS dönemiaşırı 120 ms</string>
+		<string>500-Atriyum fibrilasyon veya çarpıntı</string>
+		<string>601-Ventriküler veya iki odalıElektronik kalp pilleri </string>
+		<string>602-Atriyum Elektronik kalp pilleri</string>
+	</array>
+	<key>2. Rhythm</key>
+	<array>
+		<string>1000-Sinüs ritmi (SR)</string>
+		<string>1001-Sinüs  ritmi(NSR)</string>
+		<string>1002-Sinüs bradikardi (SB)</string>
+		<string>1003-Sinüs taşikardi (ST)</string>
+		<string>1004-Sinüs aritmi (SAR)</string>
+		<string>1010-Ektopik (ectosinal) supraventriküler karmaşık (ESVC)</string>
+		<string>1011-Atriyum bigemine (ABG) </string>
+		<string>1012-Atriyum trigemine (ATG) </string>
+		<string>1013-çifti ektopik atriyal karmaşık(DEAC)</string>
+		<string>1016-Sıkca ektopik atriyal karmaşık(FEAC)</string>
+		<string>1017-Bazı dönem ektopik atriyal karmaşık(SREAC)</string>
+		<string>1018-Un dönem ektopik atriyal karmaşık(LREAC)</string>
+		<string>1020-Anormal supraventriküler karmaşık(ASVC)</string>
+		<string>1030-Ektopik  ventrikülerkarmaşık (EVC) </string>
+		<string>1031-Çifti dipol ektopik ventriküler Karmaşık(DEVC)</string>
+		<string>1032-Birleşik ektopik ventriküler karmaşık(CEVC) </string>
+		<string>1033-Çokbiçimli ektopik ventriküler Karmaşık(PEVC)</string>
+		<string>1034-Ventriküler bigemine (VBG) </string>
+		<string>1035-Ventriküler trigemine (VTG) </string>
+		<string>1036-Sıkca ektopik ventriküler karmaşık(FEVC)</string>
+		<string>1037-Bazı dönem  ektopik ventriküler karmaşık(SREVC)</string>
+		<string>1038-Un dönem ektopik ventriküler karmaşık(LREVC)</string>
+		<string>1040-Beklet (Olası sinüs tutuklama veya blok) </string>
+		<string>1050-Azaltılmış kalp hızı değişkenliği(RHRV) </string>
+		<string>1060-Artan kalp hızı değişkenliği (IHRV)</string>
+		<string>1100-Göçebe Atriyal kalp pilleri (WAP)</string>
+		<string>1200-kavşak ritmi(JR) </string>
+		<string>1201-kavşak ritmi, oranı 45-64 bpm</string>
+		<string>1202-kavşak Bradikardi (JBR) </string>
+		<string>1203-Hızlandırılmış kavşak ritmi (AJR) </string>
+		<string>1300-Ektopik atriyal ritmi (EAR) </string>
+		<string>1301-Ektopik atriyal ritmi, rate 50-90 bpm</string>
+		<string>1302-Ektopik atriyal Bradikardi (EABR) </string>
+		<string>1303-Ektopik atriyal taşikardi(EAT) </string>
+		<string>1311-Muhtemelen sol atriyal Ektopik odak</string>
+		<string>1304-Koroner kalp ritmi (CSR)</string>
+		<string>1400-Supraventriküler (SVT) veya dar QRS taşikardi</string>
+		<string>1401-Supraventriküler taşikardi,oranı daha az 130 bpm</string>
+		<string>1402-Supraventriküler taşikardi,oranı daha değil 130 bpm</string>
+		<string>1403-Supraventriküler taşikardi</string>
+		<string>1500-Atriyum fibrilasyon veya çarpıntı(AFLF)</string>
+		<string>1501-Atriyum çarpıntı tür 1(AFL1)</string>
+		<string>1502-Atriyum çarpıntı tür 2(AFL2)</string>
+		<string>1503-Atriyum fibrilasyon(AF)</string>
+		<string>1531-Atriyum fibrilasyon yavaş ile ventriküler yanıt</string>
+		<string>1532-Atriyum fibrilasyon hızlı ile ventriküler yanıt</string>
+		<string>1533-Atriyum fibrilasyon ile AV ayrılmave kavşak ritmi</string>
+		<string>1504-Atriyum fibrilasyon/çarpıntı ile olası baskın AV iletim</string>
+		<string>1600-Elektronik kalp pilleri(PM)</string>
+		<string>1601-ventriküler kalp piller(VPM)veya Çift Odası kalp piller(CPM) </string>
+		<string>1602-Atriyum Electronic kalp pilleri(APM)</string>
+		<string>1700-Ventriküler taşikardi (VT) </string>
+		<string>1701-Ventriküler kaçış ritim(VER) </string>
+		<string>1702-Hızlandırılmış  İdiyoventriküler ritim (AIVR) </string>
+		<string>1703-Ventriküler çarpıntı (VF) </string>
+		<string>1704-Ventriküler fibrilasyon (Vf) </string>
+		<string>1801-Aşırı Taşikardi(ExT)</string>
+		<string>1802-Aşırı Bradikardi(ExB)</string>
+		<string>1900-Diğer anormal ritim sınıflamaları</string>
+	</array>
+	<key>3. Atrioventricular Conduction Abnormalities</key>
+	<array>
+		<string>2100-Birinci derece AV blok (AVB1) </string>
+		<string>2200-İkinci derece AV blok(AVB2) </string>
+		<string>2201-İkinci derece AV blok tür Wenckebach veya Mobitz 1 (AVB2W) </string>
+		<string>2202-İkinci derece tekil AV block veya tür Mobitz 2 (AVB2S) </string>
+		<string>2203-İkinci derece daha AV block (AVB2M) </string>
+		<string>2301-Üçüncü derece (tam) AV blok (AVB3)</string>
+		<string>2330-Üçüncü derece (tam) AV blok iledar QRS kompleksi</string>
+		<string>2331-Üçüncü derece (tam) AV blok ilegeniş QRS kompleksi</string>
+		<string>2332-Üçüncü derece (tam) AV blok ilegeniş QRS kompleksi ve yavaş Ventriküler hızı</string>
+		<string>2400-Wolff-Parkinson-White syndromu (WPW) </string>
+		<string>2500-Kısa PR aralığı</string>
+	</array>
+	<key>4. Ventricular Conduction Disturbances</key>
+	<array>
+		<string>3100-Sol dal bloğu (LBBB) </string>
+		<string>3101-LBBB  ile olası  MI</string>
+		<string>3200-Sağ dal bloğu (RBBB) </string>
+		<string>3201-RBBB ile olası MI </string>
+		<string>3300-Belirsiz ventriküler ve telgecikme (IVCD) </string>
+		<string>3301-IVCD ile olası MI</string>
+		<string>3401-Tamamlanmamış Sağ dal bloğu (IRBBB) </string>
+		<string>3402-Tamamlanmamış  Sol dal bloğu(ILBBB)</string>
+		<string>3500-Sol ön salkımlı blok (LAFB) </string>
+		<string>3501-Muhtemelen Sol ön salkımlı blok(PLAFB) </string>
+		<string>3502-Sol arka salkımlı blok (LPFB) </string>
+		<string>3700-Brugada sendromu</string>
+		<string>3701-Brugada sendromu, Tür1</string>
+		<string>3702-Brugada sendromu, Tür 2</string>
+		<string>3703-Brugada sendromu, Tür 3</string>
+		<string>3800-Bölünmüş QRS</string>
+	</array>
+	<key>5. Repolarization abnormalities</key>
+	<array>
+		<string>4100-Uzun süreli Ventriküler repolarizasyon</string>
+		<string>4101-Marjinal uzaması ve Ventriküler repolarizasyon</string>
+		<string>4102-ventriküler uzaması repolarization</string>
+		<string>4201-Erken repolarizasyon(ER)</string>
+		<string>4202-Olası erken repolarizasyon(PER)</string>
+	</array>
+	<key>6. Myocardial Infarction/Ischemia</key>
+	<array>
+		<string>5001-Kötü R ilerleme</string>
+		<string>5002-Anormal Q dalgası</string>
+		<string>5100-Q dalgası  MI ile büyük Q dalgaları  </string>
+		<string>5101-lateral Q dalgası MI  ile büyük Q dalgaları  </string>
+		<string>5102-Aşağı Q dalgası MI  ile büyük Q dalgaları</string>
+		<string>5103-Septal Q dalgası MI  ile büyük Q dalgaları </string>
+		<string>5104-Anterior Q dalgası MI  ile büyük Q dalgaları </string>
+		<string>5105-PosterolateraI(PL) MI</string>
+		<string>5200-Q dalgası MI ile orta Q dalgalar ve ile ST-T anormallikler</string>
+		<string>5201-Lateral Q dalgası MI orta Q dalgalar ve  ile ST-T anormallikler </string>
+		<string>5202-Aşağı Q dalgası MI  ile orta Q dalgalarve  ile ST-T anormallikler </string>
+		<string>5203-Septal Q dalgası MI  ile orta Q dalgalar ve  ile ST-T anormallikler</string>
+		<string>5204-Anterior Q dalgası MI  ile orta Q dalgalar ve  ile ST-Tanormallikler</string>
+		<string>5205-Muhtemelen PosterolateraI(PL) ST-T ile MI anormallikler</string>
+		<string>5300-Olası Q dalgası MI  ile orta Q dalgalarve  olmadan ST-T anormallikler</string>
+		<string>5301-Yanal mümkün Q dalgası MI  ile ortaQ dalgaları ve olmadan ST-T anormallikler  </string>
+		<string>5302-Aşağı mümkün Q dalgası MI  ile orta Q dalgalar ve ST-T olmadan anormallikleri </string>
+		<string>5303-Septal mümkün Q dalgası MI  ile ortaQ dalgaları ve olmadan ST-T anormallikler  </string>
+		<string>5304-Anterior mümkün Q dalgası MI  ile orta Q dalgalar ve olmadan ST-T anormallikleri</string>
+		<string>5305-Muhtemelen PosterolateraI(PL) MI olmadan ST-T anormallikler</string>
+		<string>5400-Olası Q dalgası MI küçük Q dalgaları ile ve ST-T ile anormallikler </string>
+		<string>5401-"Yanal mümkün Q dalgası MI ile  küçük Q dalgaları ve ile ST-T   anormallikleri "</string>
+		<string>5402-Aşağı mümkün Q dalgası MI ile  küçük Q dalgaları ve  ile ST-T anormallikleri </string>
+		<string>5403-Septal mümkün Q dalgası MI ile küçük Q dalgaları ve ile ST-T anormallikleri  </string>
+		<string>5404-Anterior mümkün Q dalgası MI  küçük ileQ dalgaları ve  ile ST-T anormallikler </string>
+		<string>5405-Mümkün PosterolateraI(PL) MI</string>
+		<string>5500-ST anormallikleri</string>
+		<string>5600-T dalgası inversiyon</string>
+		<string>5601-T dalgas Düz</string>
+		<string>5700-Küçük Q dalgaları</string>
+		<string>5800-Küçük ST-T anormallikleri</string>
+	</array>
+	<key>7. Ventricular Hypertrophy and Atrial Enlargement</key>
+	<array>
+		<string>6100-Sol ventriküler hipertrofisi (LVH)</string>
+		<string>6101-LVH  ile ST-T anormallikler</string>
+		<string>6201-Sol Atriyal büyütme</string>
+		<string>6301-Sağ ventriküler hipertrofisi (RVH)</string>
+		<string>6401-Sağ Atriyal büyütmek</string>
+	</array>
+	<key>8. Axis deviation</key>
+	<array>
+		<string>7100-Sol QRS eksen sapması</string>
+		<string>7200-Sağ İşaretli QRS eksen sapması</string>
+		<string>7300-Sağ QRS eksen sapması</string>
+		<string>7400-Aşırı sağ QRS eksen sapması</string>
+		<string>7500-Belirsiz QRS eksen</string>
+		<string>7601-Geniş QRS-T açı</string>
+		<string>7602-Çok geniş QRS-T açı</string>
+	</array>
+	<key>9. Other abnormalities</key>
+	<array>
+		<string>8100-Dexiocardia (Doğrulayın elektrot yine ?)</string>
+		<string>8200-Alçak gerilim QRS(LOW)</string>
+		<string>8201-Bacak alçak gerilim QRS(LLW) yol açar.</string>
+		<string>8202-Göğüs alçak gerilim QRS(CLW) yol açar.</string>
+		<string>8301-Sayaç saat bilge döndürme(CCW)</string>
+		<string>8302-Saat bilge döndürme(CW)</string>
+		<string>8400-Yüksek T wave(HT)</string>
+		<string>8500-ST Segment yükselmesi (STE)</string>
+	</array>
+</dict>
+</plist>

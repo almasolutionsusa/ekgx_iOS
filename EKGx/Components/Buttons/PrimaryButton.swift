@@ -10,6 +10,8 @@ import SwiftUI
 struct PrimaryButton: View {
 
     let title: String
+    var background: Color = AppColors.brandPrimary
+    var foreground: Color = .white
     var isLoading: Bool = false
     var isDisabled: Bool = false
     let action: () -> Void
@@ -17,25 +19,23 @@ struct PrimaryButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
+                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                    .fill(isDisabled || isLoading ? background.opacity(0.5) : background)
                 if isLoading {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .progressViewStyle(CircularProgressViewStyle(tint: foreground))
                         .scaleEffect(0.9)
                 } else {
                     Text(title)
                         .font(AppTypography.bodyMedium)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(foreground)
                 }
             }
             .frame(maxWidth: .infinity)
             .frame(height: AppMetrics.buttonHeight)
-            .background(
-                isDisabled || isLoading
-                    ? AppColors.brandPrimary.opacity(0.5)
-                    : AppColors.brandPrimary
-            )
-            .cornerRadius(AppMetrics.radiusMedium)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
         .disabled(isDisabled || isLoading)
         .animation(.easeInOut(duration: 0.15), value: isLoading)
     }

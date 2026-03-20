@@ -4,7 +4,15 @@
       "Bash(gem list:*)",
       "Bash(gem install:*)",
       "Bash(xcodebuild -scheme EKGx -destination 'platform=iOS Simulator,name=iPad Pro 13-inch \\(M4\\)' -quiet build)",
-      "Read(//Users/qusaiasaad/Documents/iOS Projects/**)"
+      "Read(//Users/qusaiasaad/Documents/iOS Projects/**)",
+      "Bash(find /Users/qusaiasaad/Downloads/SDK2.3/SDKCodeDemo/vhECGDemo -name *.h -o -name *.m -o -name *.swift)",
+      "Bash(grep -r \"DemoData\\\\|demoData\" /Users/qusaiasaad/Downloads/SDK2.3/SDKCodeDemo/ --include=*.h --include=*.m --include=*.swift)",
+      "Bash(grep -r \"testData\\\\|test.*data\\\\|demo.*mode\" /Users/qusaiasaad/Downloads/SDK2.3/SDKCodeDemo/vhECGDemo/ --include=*.m --include=*.swift -i)",
+      "Bash(grep -E \"\\\\.\\(h|m|plist\\)$\")",
+      "Bash(find /Users/qusaiasaad/Downloads/SDK2.3 -name *.swift -o -name *.m)",
+      "Bash(find /Users/qusaiasaad/Downloads/SDK2.3 -name *.md -o -name *.html -o -name *.pdf -o -name *.txt)",
+      "Bash(textutil -convert txt -stdout \"/Users/qusaiasaad/Downloads/SDK2.3/SDKUpdate Detail/docs2_3.docx\")",
+      "Bash(python3 -c \":*)"
     ]
   }
 }

@@ -1,0 +1,6 @@
+framework module vhECGSTFilters {
+  umbrella header "vhECGSTFilters-umbrella.h"
+
+  export *
+  module * { export * }
+}

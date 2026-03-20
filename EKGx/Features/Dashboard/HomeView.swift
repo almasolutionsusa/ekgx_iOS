@@ -53,6 +53,7 @@ struct HomeView: View {
                 onLogout:            { viewModel.confirmLogout() }
             )
         }
+        .onAppear { viewModel.activate() }
         .confirmationDialog(
             L10n.Menu.logoutConfirm,
             isPresented: $viewModel.showLogoutConfirmation,
@@ -93,6 +94,7 @@ struct HomeView: View {
                     title: L10n.Home.Card.Recording.title,
                     subtitle: L10n.Home.Card.Recording.subtitle,
                     accentColor: AppColors.brandPrimary,
+                    isEnabled: viewModel.isDeviceConnected,
                     action: { viewModel.navigateToRecording() }
                 )
                 FeatureCard(
@@ -199,6 +201,6 @@ private struct HomeNavigationBar: View {
 
 #Preview {
     let router = AppRouter()
-    HomeView(viewModel: HomeViewModel(router: router))
+    HomeView(viewModel: HomeViewModel(router: router, deviceService: DemoDeviceService()))
         .environment(router)
 }

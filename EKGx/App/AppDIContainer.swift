@@ -19,6 +19,9 @@ final class AppDIContainer {
     private let _authService: MockAuthService = MockAuthService()
     var authService: AuthServiceProtocol { _authService }
 
+    // TODO: Swap DemoDeviceService → BLEDeviceService when physical device is ready
+    private let deviceService: DeviceServiceProtocol = DemoDeviceService()
+
     // MARK: - ViewModel Factories
 
     func makeLoginViewModel(router: AppRouter) -> LoginViewModel {
@@ -30,7 +33,7 @@ final class AppDIContainer {
     }
 
     func makeHomeViewModel(router: AppRouter) -> HomeViewModel {
-        HomeViewModel(router: router)
+        HomeViewModel(router: router, deviceService: deviceService)
     }
 
     func makePatientListViewModel(router: AppRouter) -> PatientListViewModel {
@@ -47,5 +50,9 @@ final class AppDIContainer {
 
     func makeMyAccountViewModel(router: AppRouter) -> MyAccountViewModel {
         MyAccountViewModel(router: router)
+    }
+
+    func makeRecordingViewModel(patient: Patient, router: AppRouter) -> RecordingViewModel {
+        RecordingViewModel(patient: patient, deviceService: deviceService, router: router)
     }
 }

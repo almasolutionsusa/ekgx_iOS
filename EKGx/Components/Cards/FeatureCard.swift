@@ -13,16 +13,19 @@ struct FeatureCard: View {
     let title: String
     let subtitle: String
     let accentColor: Color
+    var isEnabled: Bool = true
     let action: () -> Void
 
+    private var effectiveColor: Color { isEnabled ? accentColor : AppColors.textSecondary }
+
     var body: some View {
-        Button(action: action) {
+        Button(action: { if isEnabled { action() } }) {
             VStack(alignment: .leading, spacing: 0) {
 
                 // ── Colored header stripe
                 ZStack(alignment: .bottomLeading) {
                     LinearGradient(
-                        colors: [accentColor, accentColor.opacity(0.75)],
+                        colors: [effectiveColor, effectiveColor.opacity(0.75)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
@@ -39,7 +42,7 @@ struct FeatureCard: View {
                         Circle()
                             .fill(.white.opacity(0.18))
                             .frame(width: 56, height: 56)
-                        Image(systemName: systemImage)
+                        Image(systemName: isEnabled ? systemImage : "lock.fill")
                             .font(.system(size: 26, weight: .semibold))
                             .foregroundStyle(.white)
                     }
@@ -62,12 +65,12 @@ struct FeatureCard: View {
                     Spacer()
 
                     HStack(spacing: AppMetrics.spacing6) {
-                        Text(L10n.Common.open)
+                        Text(isEnabled ? L10n.Common.open : L10n.Home.Card.deviceRequired)
                             .font(AppTypography.captionBold)
-                        Image(systemName: "arrow.right")
+                        Image(systemName: isEnabled ? "arrow.right" : "antenna.radiowaves.left.and.right")
                             .font(.system(size: 11, weight: .bold))
                     }
-                    .foregroundStyle(accentColor)
+                    .foregroundStyle(effectiveColor)
                 }
                 .padding(.horizontal, AppMetrics.spacing24)
                 .padding(.top, AppMetrics.spacing20)
@@ -76,8 +79,9 @@ struct FeatureCard: View {
             }
             .background(AppColors.surfaceCard)
             .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusXLarge))
-            .shadow(color: accentColor.opacity(0.18), radius: 16, x: 0, y: 6)
+            .shadow(color: effectiveColor.opacity(isEnabled ? 0.18 : 0.08), radius: 16, x: 0, y: 6)
             .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+            .opacity(isEnabled ? 1.0 : 0.6)
         }
         .buttonStyle(FeatureCardButtonStyle())
     }

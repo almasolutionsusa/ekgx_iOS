@@ -1,0 +1,6 @@
+framework module vhECGCodes {
+  umbrella header "vhECGCodes-umbrella.h"
+
+  export *
+  module * { export * }
+}

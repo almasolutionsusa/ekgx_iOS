@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>1. Basic</key>
+	<array>
+		<string>100-ECG not available</string>
+		<string>201-Inadequate quality</string>
+		<string>202-Missing limb leads</string>
+		<string>203-Missing chest leads</string>
+		<string>301-RA/RL reversal?(Check limb lead electrodes again)</string>
+		<string>302-Other limb lead connection interchanges (correction made and ECG coded)</string>
+		<string>321-RA/LA reversal?(Check limb lead electrodes again)</string>
+		<string>322-RA/LL reversal?(Check limb lead electrodes again)</string>
+		<string>303-Correctable chest lead in V1-V3 connection error?(ECG codable)</string>
+		<string>304-Correctable chest lead in V4-V6 connection error?(ECG codable)</string>
+		<string>400-Any conditions with ORS duration more than 120 ms</string>
+		<string>500-Atrial fibrillation or flutter</string>
+		<string>601-Ventricular or dual-chamber electronic pacemaker</string>
+		<string>602-Atrial electronic pacemaker</string>
+	</array>
+	<key>2. Rhythm</key>
+	<array>
+		<string>1000-Sinus rhythm</string>
+		<string>1001-Normal Sinus rhythm</string>
+		<string>1002-Sinus bradycardia</string>
+		<string>1003-Sinus tachycardia</string>
+		<string>1004-Sinus arrhythmia</string>
+		<string>1010-Supraventricular premature contraction</string>
+		<string>1011-Atrial bigeminy</string>
+		<string>1012-Atrial trigeminy</string>
+		<string>1013-Paire of ventricular premature contraction</string>
+		<string>1016-Frequent supraventricular premature contraction</string>
+		<string>1017-Short runs of supraventricular premature contraction</string>
+		<string>1018-Long runs of supraventricular premature contraction</string>
+		<string>1020-Aberrant supraventricular premature contraction</string>
+		<string>1030-Ventricular premature contraction</string>
+		<string>1031-Paire of ventricular premature contraction</string>
+		<string>1032-Ventricular premature contraction(RonT)</string>
+		<string>1033-Polymorphic ventricular premature contraction</string>
+		<string>1034-Ventricular bigeminy</string>
+		<string>1035-Ventricular trigeminy</string>
+		<string>1036-Frequent ventricular premature contraction</string>
+		<string>1037-Short runs of ventricular premature contraction</string>
+		<string>1038-Long runs of ventricular premature contraction</string>
+		<string>1040-Pause (possible sinoatrial arrest or block)</string>
+		<string>1050-Reduced heart rate variability</string>
+		<string>1060-Increased heart rate variability</string>
+		<string>1100-Wandering atrial pacemaker</string>
+		<string>1200-Junctional rhythm</string>
+		<string>1201-Ectopic junctional rhythm</string>
+		<string>1202-Junctional bradycardia</string>
+		<string>1203-Accelerated junctional rhythm</string>
+		<string>1300-Atrial rhythm</string>
+		<string>1301-Ectopic atrial rhythm</string>
+		<string>1302-Ectopic atrial bradycardia </string>
+		<string>1303-Ectopic atrial tachycardia</string>
+		<string>1311-Probably left atrial rhythm </string>
+		<string>1304-Coronary Sinus Rhythm</string>
+		<string>1400-Supraventricular or narrow QRS tachycardia</string>
+		<string>1401-Supraventricular tachycardia, rate less than 130 bpm</string>
+		<string>1402-Supraventricular tachycardia, rate no less than 130 bpm</string>
+		<string>1403-Supraventricular tachycardia</string>
+		<string>1500-Atrial flutter or fibrillation</string>
+		<string>1501-Atrial flutter type 1</string>
+		<string>1502-Atrial flutter type 2</string>
+		<string>1503-Atrial fibrillation</string>
+		<string>1531-Atrial fibrillation with slow ventricular response</string>
+		<string>1532-Atrial fibrillation with rapid ventricular response</string>
+		<string>1533-Atrial fibrillation with AV dissociation and junctional rhythm</string>
+		<string>1504-Atrial fibrillation/flutter with possible dominant AV conduction</string>
+		<string>1600-Pacemaker rhythm</string>
+		<string>1601-Ventricular pacemaker or dual chamber pacemaker</string>
+		<string>1602-Atrial electronic pacemaker</string>
+		<string>1700-Ventricular tachycardia</string>
+		<string>1701-Ventricular escape rhythm</string>
+		<string>1702-Accelerated idioventricular rhythm</string>
+		<string>1703-Ventricular Flutter</string>
+		<string>1704-Ventricular Fibrillation</string>
+		<string>1801-Extreme Tachycardia</string>
+		<string>1802-Extreme Bradycardia</string>
+		<string>1900-Other abnormal rhythm classification</string>
+	</array>
+	<key>3. Atrioventricular Conduction Abnormalities</key>
+	<array>
+		<string>2100-First-degree AV block</string>
+		<string>2200-Second-degree AV block</string>
+		<string>2201-Second-degree AV block type Wenckebach or Mobitz 1</string>
+		<string>2202-Second-degree singular AV block or type Mobitz 2</string>
+		<string>2203-Second-degree multiple AV block</string>
+		<string>2301-Third-degree(complete) AV block</string>
+		<string>2330-Third-degree(complete) AV block with narrow QRS complex</string>
+		<string>2331-Third-degree(complete) AV block with wide QRS complex</string>
+		<string>2332-Third-degree(complete) AV block with wide QRS complex and slow ventricular rate</string>
+		<string>2400-Wolff-Parkinson-White syndrome (WPW)</string>
+		<string>2500-Short PR interval</string>
+	</array>
+	<key>4. Ventricular Conduction Disturbances</key>
+	<array>
+		<string>3100-Left bundle branch block</string>
+		<string>3101-LBBB with possible MI</string>
+		<string>3200-Right bundle branch block</string>
+		<string>3201-RBBB with possible MI</string>
+		<string>3300-Indeterminate ventricular conduction delay</string>
+		<string>3301-IVCD with possible MI</string>
+		<string>3401-Incomplete right bundle branch block</string>
+		<string>3402-Incomplete left bundle branch block</string>
+		<string>3500-Left anterior fascicular block</string>
+		<string>3501-Probably Left anterior fascicular block</string>
+		<string>3502-Left posterior fascicular block</string>
+		<string>3700-Brugada syndrome</string>
+		<string>3701-Brugada syndrome, Type1</string>
+		<string>3702-Brugada syndrome, Type2</string>
+		<string>3703-Brugada syndrome, Type3</string>
+		<string>3800-Fragmented QRS</string>
+	</array>
+	<key>5. Repolarization abnormalities</key>
+	<array>
+		<string>4100-Prolonged ventricular repolarization</string>
+		<string>4101-Marginal prolongation of ventricular repolarization</string>
+		<string>4102-Prolongation of ventricalar repolarization</string>
+		<string>4201-Early Repolarzation</string>
+		<string>4202-Probable early repolarization</string>
+	</array>
+	<key>6. Myocardial Infarction/Ischemia</key>
+	<array>
+		<string>5001-Poor R progression</string>
+		<string>5002-Abnormal Q wave</string>
+		<string>5100-Q wave MI with major Q waves</string>
+		<string>5101-Lateral Q wave MI with major Q waves</string>
+		<string>5102-Inferior Q wave MI with major Q waves</string>
+		<string>5103-Septal Q wave MI with major Q waves</string>
+		<string>5104-Anterior Q wave MI with major Q waves</string>
+		<string>5105-Posterolateral MI</string>
+		<string>5200-Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5201-Lateral Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5202-Inferior Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5203-Septal Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5204-Anterior Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5205-Probably Posterolateral MI with ST-T abnormalities</string>
+		<string>5300-Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5301-Lateral Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5302-Inferior Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5303-Septal Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5304-Anterior Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5305-Probably Posterolateral MI without ST-T abnormalities</string>
+		<string>5400-Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5401-Lateral Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5402-Inferior Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5403-Septal Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5404-Anterior Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5405-Possible Posterolateral MI</string>
+		<string>5500-ST abnormalities</string>
+		<string>5600-T wave inversion</string>
+		<string>5601-T wave flat</string>
+		<string>5700-Minor Q waves</string>
+		<string>5800-Minor ST-T abnormalities</string>
+	</array>
+	<key>7. Ventricular Hypertrophy and Atrial Enlargement</key>
+	<array>
+		<string>6100-Left ventricular hypertrophy</string>
+		<string>6101-LVH with ST-T abnormalities</string>
+		<string>6201-Left atrial enlargement</string>
+		<string>6301-Right ventricular hypertrophy</string>
+		<string>6401-Right atrial enlargement</string>
+	</array>
+	<key>8. Axis deviation</key>
+	<array>
+		<string>7100-Left QRS axis deviation</string>
+		<string>7200-Marked right QRS axis deviation</string>
+		<string>7300-Right QRS axis deviation</string>
+		<string>7400-Extreme right QRS axis deviation</string>
+		<string>7500-Indeterminate QRS axis</string>
+		<string>7601-Wide QRS-T angle</string>
+		<string>7602-Very wide QRS-T angle</string>
+	</array>
+	<key>9. Other abnormalities</key>
+	<array>
+		<string>8100-Dexiocardia(Check electrode again?)</string>
+		<string>8200-Low voltage QRS</string>
+		<string>8201-Limb leads low voltage QRS</string>
+		<string>8202-Chest leads low voltage QRS</string>
+		<string>8301-Counter clock wise rotation</string>
+		<string>8302-Clock wise rotation</string>
+		<string>8400-High T wave</string>
+		<string>8500-ST Segment Elevation</string>
+	</array>
+</dict>
+</plist>

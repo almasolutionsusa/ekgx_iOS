@@ -1,0 +1,11 @@
+framework module vhEcgServiceRest {
+  umbrella header "vhEcgServiceRest.h"
+  export *
+
+  module * { export * }
+}
+
+module vhEcgServiceRest.Swift {
+  header "vhEcgServiceRest-Swift.h"
+  requires objc
+}

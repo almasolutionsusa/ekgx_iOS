@@ -1,0 +1,11 @@
+framework module vhECGTrends {
+  umbrella header "vhECGTrends-umbrella.h"
+
+  export *
+  module * { export * }
+}
+
+module vhECGTrends.Swift {
+  header "vhECGTrends-Swift.h"
+  requires objc
+}

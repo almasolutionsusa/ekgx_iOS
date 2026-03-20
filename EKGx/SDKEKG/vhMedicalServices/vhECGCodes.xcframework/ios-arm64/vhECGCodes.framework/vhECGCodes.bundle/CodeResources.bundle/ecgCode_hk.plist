@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>1. 基本評價</key>
+        <array>
+            <string>100-無心電信號</string>
+            <string>201-記錄質量差</string>
+            <string>202-肢導信號缺失</string>
+            <string>203-胸導信號缺失</string>
+            <string>301-右手/右腿接反? (檢查肢導連接)</string>
+            <string>302-肢導其它導聯交換 (檢查肢導連接)</string>
+            <string>321-左右手接反? (檢查肢導連接)</string>
+            <string>322-右手/左腿接反? (檢查肢導連接)</string>
+            <string>303-胸導V1-V3連接有誤? (ECG可診斷)</string>
+            <string>304-胸導V4-V6連接有誤? (ECG可診斷)</string>
+            <string>400-QRS間期大於120ms</string>
+            <string>500-心房房顫/撲動</string>
+            <string>601-心室或雙腔起搏器</string>
+            <string>602-心房起搏器</string>
+        </array>
+        <key>2. 節律</key>
+        <array>
+            <string>1000-竇性心律</string>
+            <string>1001-竇性心率</string>
+            <string>1002-竇性心動過緩</string>
+            <string>1003-竇性心動過速</string>
+            <string>1004-竇性心律失常</string>
+            <string>1010-室上性期前收縮</string>
+            <string>1011-房性期前收縮二聯律</string>
+            <string>1012-房性期前收縮三聯律</string>
+            <string>1013-成對室上性期前收縮</string>
+            <string>1016-頻發室上性期前收縮</string>
+            <string>1017-短陣室上性期前收縮</string>
+            <string>1018-長陣室上性期前收縮</string>
+            <string>1020-異形室上性期前收縮</string>
+            <string>1030-室性期前收縮</string>
+            <string>1031-成對室性期前收縮</string>
+            <string>1032-室性期前收縮RonT</string>
+            <string>1033-多形室性期前收縮</string>
+            <string>1034-室性期前收縮二聯律</string>
+            <string>1035-室性期前收縮三聯律</string>
+            <string>1036-頻發室性期前收縮</string>
+            <string>1037-短陣室性期前收縮</string>
+            <string>1038-長陣室性期前收縮</string>
+            <string>1040-竇房阻滯或停搏</string>
+            <string>1050-心率變異性降低</string>
+            <string>1060-心率變異性提高</string>
+            <string>1100-遊走性心房起搏點</string>
+            <string>1200-交界性節律</string>
+            <string>1201-交界性節律</string>
+            <string>1202-交界性心動過緩</string>
+            <string>1203-加速性交界性節律</string>
+            <string>1300-房性異位節律</string>
+            <string>1301-房性異位節律</string>
+            <string>1302-房性異位心動過緩</string>
+            <string>1303-房性異位心動過速</string>
+            <string>1311-可能左心房節律</string>
+            <string>1304-冠狀靜脈竇節律</string>
+            <string>1400-室上性或寬QRS心動過速</string>
+            <string>1401-室上性心動過速，心率低於130 bpm</string>
+            <string>1402-室上性心動過速, 心率130 bpm以上</string>
+            <string>1403-室上性心動過速</string>
+            <string>1500-心房撲動或心房顫動</string>
+            <string>1501-心房撲動</string>
+            <string>1502-心房撲動</string>
+            <string>1503-心房顫動</string>
+            <string>1531-心房顫動伴慢速心室響應</string>
+            <string>1532-心房顫動伴快速心室響應</string>
+            <string>1533-心房顫動伴房室分離或交界性節律</string>
+            <string>1504-心房顫動/撲動，可能房室傳導為主</string>
+            <string>1600-心臟起搏器</string>
+            <string>1601-心室起搏器或雙腔起搏器</string>
+            <string>1602-心房起搏器</string>
+            <string>1700-室性心動過速</string>
+            <string>1701-室性逸博心律</string>
+            <string>1702-加速性室性自主心律</string>
+            <string>1703-心室撲動</string>
+            <string>1704-心室顫動</string>
+            <string>1801-顯著心動過速</string>
+            <string>1802-顯著心動過緩</string>
+            <string>1900-其它異常節律</string>
+        </array>
+        <key>3. 房室傳導異常</key>
+        <array>
+            <string>2100-I度房室傳導阻滯</string>
+            <string>2200-II度房室傳導阻滯</string>
+            <string>2201-II度房室傳導阻滯，文氏或莫氏壹型</string>
+            <string>2202-II度房室傳導阻滯，莫氏二型</string>
+            <string>2203-II度房室傳導阻滯，成倍型</string>
+            <string>2301-III度(完全性)房室傳導阻滯</string>
+            <string>2330-III度(完全性)房室傳導阻滯伴窄QRS復合波</string>
+            <string>2331-III度(完全性)房室傳導阻滯伴寬QRS復合波</string>
+            <string>2332-III度(完全性)房室傳導阻滯伴寬QRS復合波和慢速心室率</string>
+            <string>2400-預激綜合癥(WPW)</string>
+            <string>2500-短PR間期</string>
+        </array>
+        <key>4. 心室傳導障礙</key>
+        <array>
+            <string>3100-左束支傳導阻滯</string>
+            <string>3101-左束支傳導阻滯,可能心肌梗死</string>
+            <string>3200-右束支傳導阻滯</string>
+            <string>3201-右束支傳導阻滯,可能心肌梗死</string>
+            <string>3300-不確定的心室傳導延遲</string>
+            <string>3301-不確定的心室傳導延遲,可能心肌梗死</string>
+            <string>3401-不完全性右束支傳導阻滯</string>
+            <string>3402-不完全性左束支傳導阻滯</string>
+            <string>3500-左前分支阻滯</string>
+            <string>3501-可能左前分支阻滯</string>
+            <string>3502-左後分支阻滯</string>
+            <string>3700-Brugada癥候群</string>
+            <string>3701-Brugada癥候群, 類型壹</string>
+            <string>3702-Brugada癥候群, 類型二</string>
+            <string>3703-Brugada癥候群, 類型三</string>
+            <string>3800-碎裂的QRS復合波</string>
+        </array>
+        <key>5. 復極異常</key>
+        <array>
+            <string>4100-心室復極延長</string>
+            <string>4101-可能心室復極延長</string>
+            <string>4102-心室復極延長</string>
+            <string>4201-早期復極</string>
+            <string>4202-可能早期復極</string>
+        </array>
+        <key>6. 心肌梗死或缺血</key>
+        <array>
+            <string>5001-R波上升不良</string>
+            <string>5002-異常Q波</string>
+            <string>5100-明顯Q波(心肌梗死)</string>
+            <string>5101-明顯Q波(側壁心肌梗死)</string>
+            <string>5102-明顯Q波(下壁心肌梗死)</string>
+            <string>5103-明顯Q波(室間隔心肌梗死)</string>
+            <string>5104-明顯Q波(前壁心肌梗死)</string>
+            <string>5105-後側壁心肌梗死</string>
+            <string>5200-可見Q波伴ST-T異常(懷疑心肌梗死)</string>
+            <string>5201-可見Q波伴ST-T異常(懷疑側壁心肌梗死)</string>
+            <string>5202-可見Q波伴ST-T異常(懷疑下壁心肌梗死)</string>
+            <string>5203-可見Q波伴ST-T異常(懷疑室間隔心肌梗死)</string>
+            <string>5204-可見Q波伴ST-T異常(懷疑前壁心肌梗死)</string>
+            <string>5205-懷疑後側壁心肌梗死</string>
+            <string>5300-可見Q波無ST-T異常(可能心肌梗死)</string>
+            <string>5301-可見Q波無ST-T異常(可能側壁心肌梗死)</string>
+            <string>5302-可見Q波無ST-T異常(可能下壁心肌梗死)</string>
+            <string>5303-可見Q波無ST-T異常(可能室間隔心肌梗死)</string>
+            <string>5304-可見Q波無ST-T異常(可能前壁心肌梗死)</string>
+            <string>5305-可能後側壁心肌梗死</string>
+            <string>5400-輕度Q波伴ST-T異常(可能心肌梗死)</string>
+            <string>5401-輕度Q波伴ST-T異常(可能側壁心肌梗死)</string>
+            <string>5402-輕度Q波伴ST-T異常(可能下壁心肌梗死)</string>
+            <string>5403-輕度Q波伴ST-T異常(可能室間隔心肌梗死)</string>
+            <string>5404-輕度Q波伴ST-T異常(可能前壁心肌梗死)</string>
+            <string>5405-可能後側壁心肌梗死</string>
+            <string>5500-ST-T異常</string>
+            <string>5600-T波倒置</string>
+            <string>5601-T波低平</string>
+            <string>5700-輕度Q波</string>
+            <string>5800-輕度ST-T異常</string>
+        </array>
+        <key>7. 心室肥大和心房擴大</key>
+        <array>
+            <string>6100-左心室肥大</string>
+            <string>6101-左心室肥大伴ST-T異常</string>
+            <string>6201-左心房擴大</string>
+            <string>6301-右心室肥大</string>
+            <string>6401-右心房擴大</string>
+        </array>
+        <key>8. 心電軸偏轉</key>
+        <array>
+            <string>7100-心電軸左偏</string>
+            <string>7200-心電軸顯著右偏</string>
+            <string>7300-心電軸右偏</string>
+            <string>7400-心電軸極度右偏</string>
+            <string>7500-不確定心電軸</string>
+            <string>7601-寬QRS-T成角</string>
+            <string>7602-非常寬QRS-T成角</string>
+        </array>
+        <key>9. 其它異常情況</key>
+        <array>
+            <string>8100-右位心(檢查肢導?)</string>
+            <string>8200-低電壓</string>
+            <string>8201-肢導低電壓</string>
+            <string>8202-胸導低電壓</string>
+            <string>8301-逆鐘向</string>
+            <string>8302-順鐘向</string>
+            <string>8400-高大T波</string>
+            <string>8500-ST段擡高</string>
+        </array>
+    </dict>
+</plist>

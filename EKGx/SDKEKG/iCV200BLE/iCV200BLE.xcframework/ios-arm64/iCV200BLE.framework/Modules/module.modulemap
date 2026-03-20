@@ -1,0 +1,6 @@
+framework module iCV200BLE {
+  umbrella header "iCV200BLE-umbrella.h"
+
+  export *
+  module * { export * }
+}

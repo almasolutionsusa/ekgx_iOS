@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>1. Basique</key>
+	<array>
+		<string>100-Pas d'ECG</string>
+		<string>201-Qualité inadéquate</string>
+		<string>202-Pas de dérivations membre</string>
+		<string>203-Pas de dérivations précordiales</string>
+		<string>301-Inversion RA / RL (vérifier à nouveaux les électrodes des membres)</string>
+		<string>302-Other limb lead connection interchanges (correction made and ECG coded)</string>
+		<string>321-Inversion RA / LA (vérifier à nouveaux les électrodes des membres)</string>
+		<string>322-Inversion RA / LL (vérifier à nouveaux les électrodes des membres)</string>
+		<string>303-Dérivation précordiale en V1-V3 pouvant être corrigée</string>
+		<string>304-Dérivation précordiale en V4-V6 pouvant être corrigée</string>
+		<string>400-Toutes conditions avec une durée de QRS supérieure à 120 ms</string>
+		<string>500-Fibrillation artérielle ou Flutter</string>
+		<string>601-Stimulateur ventriculaire ou à double chambre</string>
+		<string>602-Stimulateur atrial</string>
+	</array>
+	<key>2. Rythme</key>
+	<array>
+		<string>1000-Rythme sinusal (RS)</string>
+		<string>1001-Rythme sinusal (RS)</string>
+		<string>1002-Bradycardie sinusale</string>
+		<string>1003-Tachycardie sinusale</string>
+		<string>1004-Arythmie sinusale</string>
+		<string>1010-Complexes  supraventriculaires (ESSV)</string>
+		<string>1011-Bigéminisme auriculaire</string>
+		<string>1012-Trigéminisme auriculaire</string>
+		<string>1013-Doublet de supraventriculaires</string>
+		<string>1016-Complexes supraventriculaires fréquents</string>
+		<string>1017-Courtes salves de supraventriculaires</string>
+		<string>1018-Longues salves de supraventriculaires</string>
+		<string>1020-Complexes supraventriculaires abérants</string>
+		<string>1030-Complexes ventriculaires</string>
+		<string>1031-Doublet de ventriculaires</string>
+		<string>1032-Fusion de complexes ventriculaires</string>
+		<string>1033-Complexes ventriculaires polymorphes</string>
+		<string>1034-Bigéminisme ventriculaire</string>
+		<string>1035-Trigéminisme ventriculaire</string>
+		<string>1036-Fréquents complexes ventriculaires</string>
+		<string>1037-Courtes salves de complexes ventriculaires</string>
+		<string>1038-Longues salves de complexes ventriculaires</string>
+		<string>1040-Pause</string>
+		<string>1050-Variabilité diminuée de la fréquence cardiaque</string>
+		<string>1060-Variabilité augmentée de la fréquence cardiaque</string>
+		<string>1100-Stimulateur auriculaire 'baladeur'</string>
+		<string>1200-Rythme jonctionnel</string>
+		<string>1201-Rythme jonctionnel, fréquence 45-64 bpm</string>
+		<string>1202-Bradycardie jonctionnel</string>
+		<string>1203-Rythme jonctionnel accéléré</string>
+		<string>1300-Rythme auriculaire ectopique</string>
+		<string>1301-Rythme auriculaire ectopique, fréquence 50-90 bpm</string>
+		<string>1302-Bradycardie auriculaire ectopique</string>
+		<string>1303-Tachycardie auriculaire ectopique</string>
+		<string>1311-Sans doute un foyer ectopique dans l'oreillette gauche</string>
+		<string>1304-Rythme du sinus coronaire</string>
+		<string>1400-Tachycardie supraventriculaire ou à complexes fins</string>
+		<string>1401-Tachycardie supraventriculaire, avec une fréquence inférieure à 130 bpm</string>
+		<string>1402-Tachycardie supraventriculaire, avec une fréquence supérieure à 130 bpm</string>
+		<string>1403-Tachycardie supraventriculaire</string>
+		<string>1500-Fibrillation ou flutter auriculaire</string>
+		<string>1501-Flutter atrial de type 1</string>
+		<string>1502-Flutter atrial de type 2</string>
+		<string>1503-Fibrillation atriale (FA)</string>
+		<string>1531-Fibrillation atriale, FC lente</string>
+		<string>1532-Fibrillation atriale, FC rapide</string>
+		<string>1533-Fibrillation atriale avec dissociation AV et ryhtme jonctionnel</string>
+		<string>1504-Fibrillation atriale/Flutter avec une possible conduction AV dominante.</string>
+		<string>1600-Stimulateur cardiaque</string>
+		<string>1601-Stimulateur ventriculaire ou à double chambre</string>
+		<string>1602-Stimulateur atrial</string>
+		<string>1700-Tachycardie ventriculaire</string>
+		<string>1701-Echappement ventriculaire</string>
+		<string>1702-Rythme idioventriculaire accéléré</string>
+		<string>1703-Flutter ventriculaire</string>
+		<string>1704-Fibrillation ventriculaire</string>
+		<string>1801-Tachycardie extrême</string>
+		<string>1802-Bradycardie extrême</string>
+		<string>1900-Classification en autre rythme anormal</string>
+	</array>
+	<key>3. Troubles de la conduction auriculoventriculaire</key>
+	<array>
+		<string>2100-Bloc AV du 1er degré</string>
+		<string>2200-Bloc AV du second degré</string>
+		<string>2201-Bloc AV du second degré, type Wenckebach ou Mobitz 1</string>
+		<string>2202-Bloc AV isolé du second degré de type Mobitz 2</string>
+		<string>2203-Blocs AV multiples du second degré </string>
+		<string>2301-Bloc AV du 3ème degré</string>
+		<string>2330-Bloc AV du 3ème degré à complexes fins</string>
+		<string>2331-Bloc AV du 3ème degré à complexes larges</string>
+		<string>2332-Bloc AV du 3ème degré à complexes larges et ryhtme ventriculaire lent</string>
+		<string>2400-Syndrome de Wolff Parkinson White</string>
+		<string>2500-Intervalle PR court</string>
+	</array>
+	<key>4. Troubles de la conduction ventriculaire</key>
+	<array>
+		<string>3100-Bloc de branche gauche</string>
+		<string>3101-Bloc de branche gauche avec IM possible</string>
+		<string>3200-Bloc de branche droit</string>
+		<string>3201-Bloc de branche droit avec IM possible</string>
+		<string>3300-Délai de conduction ventriculaire indéterminé</string>
+		<string>3301-Délai de conduction ventriculaire indéterminé avec possible IM</string>
+		<string>3401-Bloc de branche droit incomplet</string>
+		<string>3402-Bloc de branche gauche incomplet</string>
+		<string>3500-Bloc fasciculaire antérieur gauche</string>
+		<string>3501-Bloc fasciculaire antérieur gauche probable</string>
+		<string>3502-Bloc fasciculaire postérieur gauche</string>
+		<string>3700-Syndrome de Brugada</string>
+		<string>3701-Syndrome de Brugada, type 1</string>
+		<string>3702-Syndrome de Brugada, type 2</string>
+		<string>3703-Syndrome de Brugada, type 3</string>
+		<string>3800-QRS fragmentés</string>
+	</array>
+	<key>5. Troubles de la repolarisation</key>
+	<array>
+		<string>4100-Repolarisation ventriculaire prolongée</string>
+		<string>4101-Prolongation marginale de la repolarisation ventriculaire</string>
+		<string>4102-Prolongation de la repolarisation ventriculaire</string>
+		<string>4201-Repolarisation précoce</string>
+		<string>4202-Probable repolarisation précoce</string>
+	</array>
+	<key>6. Infartus du myocarde/ischémie</key>
+	<array>
+		<string>5001-Progression de l'onde R</string>
+		<string>5002-Onde Q anormale</string>
+		<string>5100-infarctus du myocarde avec onde Q</string>
+		<string>5101-Lateral Q wave MI with major Q waves</string>
+		<string>5102-Inferior Q wave MI with major Q waves</string>
+		<string>5103-Septal Q wave MI with major Q waves</string>
+		<string>5104-Anterior Q wave MI with major Q waves</string>
+		<string>5105-IM posterolateral</string>
+		<string>5200-Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5201-Lateral Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5202-Inferior Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5203-Septal Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5204-Anterior Q wave MI with moderate Q waves and with ST-T abnormalities</string>
+		<string>5205-Probable IM postérolateral avec des ondes Q modérées et des anomalies du segment ST</string>
+		<string>5300-Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5301-Lateral Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5302-Inferior Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5303-Septal Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5304-Anterior Possible Q wave MI with moderate Q waves and without ST-T abnormalities</string>
+		<string>5305-Probable IM postérolateral sans anomalies du segment ST</string>
+		<string>5400-Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5401-Lateral Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5402-Inferior Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5403-Septal Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5404-Anterior Possible Q wave MI with minor Q waves and with ST-T abnormalities</string>
+		<string>5405-Possible IM postérolatéral</string>
+		<string>5500-Anomalies du ST</string>
+		<string>5600-Inversion de l'onde T</string>
+		<string>5601-Onde T plate</string>
+		<string>5700-Ondes Q mineures</string>
+		<string>5800-Anomalies du ST mineures</string>
+	</array>
+	<key>7. Hypertrophie ventriculaire et élargissement des oreillettes</key>
+	<array>
+		<string>6100-Hypertrophie ventriculaire gauche</string>
+		<string>6101-Hypertrophie ventriculaire gauche avec anomalies du segment ST</string>
+		<string>6201-Elargissement de l'oreillette gauche</string>
+		<string>6301-Hypertrophie ventriculaire droite</string>
+		<string>6401-Elargissement de l'oreillette droite</string>
+	</array>
+	<key>8. Dérivation axiale</key>
+	<array>
+		<string>7100-Dérivation axiale gauche</string>
+		<string>7200-Dérivation axiale droite marquée</string>
+		<string>7300-Dérivation axiale droite</string>
+		<string>7400-Dérivation axiale droite extrême</string>
+		<string>7500-Dérivation axiale droite indéterminée</string>
+		<string>7601-Wide QRS-T angle</string>
+		<string>7602-Very wide QRS-T angle</string>
+	</array>
+	<key>9. Autres anormalités</key>
+	<array>
+		<string>8100-Dexiocardia (re-vérifier les électrodes)</string>
+		<string>8200-QRS à bas voltage</string>
+		<string>8201-Dérivations des membres : QRS à bas voltage</string>
+		<string>8202-Dérivations précordiales : QRS à bas voltage</string>
+		<string>8301-Rotation sens horaire</string>
+		<string>8302-Rotation sens antihoraire</string>
+		<string>8400-Onde T haute</string>
+		<string>8500-Elévation du segment ST</string>
+	</array>
+</dict>
+</plist>

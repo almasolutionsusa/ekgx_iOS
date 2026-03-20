@@ -1,0 +1,11 @@
+framework module vhStressTemplLib {
+  umbrella header "vhStressTemplLib.h"
+  export *
+
+  module * { export * }
+}
+
+module vhStressTemplLib.Swift {
+  header "vhStressTemplLib-Swift.h"
+  requires objc
+}

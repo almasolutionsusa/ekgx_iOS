@@ -104,6 +104,7 @@
 "home.device.tapToConnect"           = "Tap to connect ECG device";
 
 // MARK: - Home · Feature Cards
+"home.card.deviceRequired"           = "Connect Device First";
 "home.card.recording.title"          = "ECG Recording";
 "home.card.recording.subtitle"       = "Capture and monitor live cardiac waveforms in real time";
 "home.card.patients.title"           = "Patients";
@@ -208,6 +209,25 @@
 "settings.demo.fieldLabel"           = "Access Code";
 "settings.demo.fieldPH"              = "Enter code";
 "settings.demo.unlockButton"         = "Unlock";
+
+// MARK: - Recording
+"recording.nav.backButton"           = "Back";
+"recording.exit.title"               = "Stop Recording?";
+"recording.exit.subtitle"            = "The current recording will be discarded.";
+"recording.exit.keepButton"          = "Keep Recording";
+"recording.exit.discardButton"       = "Discard & Exit";
+"recording.done.title"               = "Recording Complete";
+"recording.done.durationLabel"       = "Duration: %@";
+"recording.done.redoButton"          = "Redo Recording";
+"recording.done.analysisButton"      = "View Analysis";
+"recording.controls.leadLayout"      = "Lead Layout";
+"recording.controls.duration"        = "Duration";
+"recording.controls.reset"           = "Reset";
+"recording.controls.record"          = "Record";
+"recording.controls.stop"            = "Stop";
+"recording.controls.viewResult"      = "View Result";
+"recording.controls.elapsed"         = "Elapsed";
+"recording.stats.bpm"                = "bpm";
 
 // MARK: - Placeholder Screens
 "placeholder.comingSoon"             = "Coming Soon";
