@@ -61,6 +61,15 @@ struct RecordingView: View {
                     onAnalysis: { viewModel.proceedToAnalysis() }
                 )
             }
+
+            if viewModel.showDeviceDisconnected {
+                DeviceDisconnectedOverlay(
+                    onDismiss: {
+                        viewModel.showDeviceDisconnected = false
+                        viewModel.confirmExit()
+                    }
+                )
+            }
         }
         .navigationBarHidden(true)
         .onAppear { viewModel.activate() }
@@ -151,6 +160,9 @@ private struct RecordingNavBar: View {
         HStack(spacing: AppMetrics.spacing24) {
             heartRateStat
             timerStat
+            if let battery = viewModel.batteryLevel {
+                batteryStat(battery)
+            }
         }
     }
 
@@ -173,6 +185,27 @@ private struct RecordingNavBar: View {
             Text(L10n.Recording.Stats.bpm)
                 .font(AppTypography.caption)
                 .foregroundStyle(AppColors.textSecondary)
+        }
+    }
+
+    private func batteryStat(_ level: Int) -> some View {
+        HStack(spacing: AppMetrics.spacing6) {
+            Image(systemName: batteryIcon(level))
+                .foregroundStyle(level <= 20 ? AppColors.statusCritical : AppColors.statusSuccess)
+            Text("\(level)%")
+                .font(AppTypography.bodySemibold)
+                .foregroundStyle(AppColors.textPrimary)
+                .monospacedDigit()
+        }
+    }
+
+    private func batteryIcon(_ level: Int) -> String {
+        switch level {
+        case 0..<15:  return "battery.0percent"
+        case 15..<40: return "battery.25percent"
+        case 40..<65: return "battery.50percent"
+        case 65..<90: return "battery.75percent"
+        default:      return "battery.100percent"
         }
     }
 
@@ -236,7 +269,7 @@ private struct RecordingControlsPanel: View {
     private var durationSection: some View {
         controlSection(title: L10n.Recording.Controls.duration) {
             VStack(spacing: AppMetrics.spacing8) {
-                ForEach(RecordingDuration.allCases, id: \.self) { duration in
+                ForEach(RecordingDuration.allCases.filter { $0 != .continuous }, id: \.self) { duration in
                     controlChip(title: duration.rawValue, isSelected: viewModel.selectedDuration == duration) {
                         viewModel.selectedDuration = duration
                     }
@@ -370,17 +403,61 @@ private struct RecordingControlsPanel: View {
     }
 }
 
+// MARK: - Device Disconnected Overlay
+
+private struct DeviceDisconnectedOverlay: View {
+
+    let onDismiss: () -> Void
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.5).ignoresSafeArea()
+
+            VStack(spacing: 20) {
+                Image(systemName: "wifi.slash")
+                    .font(.system(size: 44))
+                    .foregroundColor(AppColors.statusCritical)
+
+                Text(L10n.Recording.DeviceDisconnected.title)
+                    .font(AppTypography.title2)
+                    .foregroundColor(.black)
+
+                Text(L10n.Recording.DeviceDisconnected.subtitle)
+                    .font(AppTypography.callout)
+                    .foregroundColor(Color(UIColor.darkGray))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 8)
+
+                Button(L10n.Recording.DeviceDisconnected.button, action: onDismiss)
+                    .font(AppTypography.bodyMedium)
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 14)
+                    .background(AppColors.brandPrimary)
+                    .cornerRadius(AppMetrics.radiusMedium)
+            }
+            .padding(28)
+            .background(Color.white)
+            .cornerRadius(16)
+            .shadow(color: .black.opacity(0.2), radius: 20)
+            .padding(.horizontal, 40)
+        }
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
     let router = AppRouter()
+    let container = AppDIContainer()
     let patient = Patient.mockPatients[0]
     let service = DemoDeviceService()
     service.connect()
     return RecordingView(viewModel: RecordingViewModel(
         patient: patient,
         deviceService: service,
-        router: router
+        router: router,
+        diContainer: container
     ))
     .environment(router)
 }

@@ -29,6 +29,9 @@ struct EKGRealtimeView: View {
                     ecgView.updateLeads(frame)
                 }
             }
+            .onChange(of: viewModel.leadStatusCount) { _, _ in
+                ecgView.updateLeadsStatus(viewModel.latestLeadStatus)
+            }
             .onChange(of: viewModel.selectedLayout) { _, _ in
                 ecgView.leadDisplay = viewModel.selectedLayout.sdkType
             }

@@ -11,3 +11,8 @@
 #import <iCV200BLE/NSAVHCVDataUtil.h>
 #import <iCV200BLE/NSAVHCVTools.h>
 #import <iCV200BLE/NSCheckChannel.h>
+
+#import <vhMedicalServices/vhECGAnalysisObject.h>
+#import <vhECGCodes/vhECGCodes.h>
+#import <vhECGCodes/CodeGroup.h>
+#import <vhECGCodes/CodeItem.h>

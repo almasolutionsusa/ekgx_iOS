@@ -19,8 +19,15 @@ final class AppDIContainer {
     private let _authService: MockAuthService = MockAuthService()
     var authService: AuthServiceProtocol { _authService }
 
-    // TODO: Swap DemoDeviceService → BLEDeviceService when physical device is ready
-    private let deviceService: DeviceServiceProtocol = DemoDeviceService()
+    private(set) var deviceService: DeviceServiceProtocol = BLEDeviceService()
+
+    func switchToDemo() {
+        deviceService = DemoDeviceService()
+    }
+
+    func switchToRealDevice() {
+        deviceService = BLEDeviceService()
+    }
 
     // MARK: - ViewModel Factories
 
@@ -33,7 +40,7 @@ final class AppDIContainer {
     }
 
     func makeHomeViewModel(router: AppRouter) -> HomeViewModel {
-        HomeViewModel(router: router, deviceService: deviceService)
+        HomeViewModel(router: router, diContainer: self)
     }
 
     func makePatientListViewModel(router: AppRouter) -> PatientListViewModel {
@@ -53,6 +60,21 @@ final class AppDIContainer {
     }
 
     func makeRecordingViewModel(patient: Patient, router: AppRouter) -> RecordingViewModel {
-        RecordingViewModel(patient: patient, deviceService: deviceService, router: router)
+        RecordingViewModel(patient: patient, deviceService: deviceService, router: router, diContainer: self)
+    }
+
+    // MARK: - Last Recording (set by RecordingViewModel before navigating to analysis)
+
+    var lastRecordingPatient: Patient?
+    var lastRecordingData: ECGLeads = []
+    var lastRecordingSampleRate: Int = 660
+
+    func makeAnalysisViewModel(router: AppRouter) -> AnalysisViewModel {
+        AnalysisViewModel(
+            patient: lastRecordingPatient ?? Patient.mockPatients[0],
+            ecgData: lastRecordingData,
+            sampleRate: lastRecordingSampleRate,
+            router: router
+        )
     }
 }

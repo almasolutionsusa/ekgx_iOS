@@ -56,11 +56,25 @@
 		BE18D7842F6CD82200E8CEE9 /* Exceptions for "EKGx" folder in "Embed Frameworks" phase from "EKGx" target */ = {
 			isa = PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet;
 			attributesByRelativePath = {
+				SDKEKG/iCV200BLE/iCV200BLE.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKEKG/vhECGSTFilters/vhECGSTFilters.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKEKG/vhECGSTFilters/vhStressTemplLib.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 				SDKEKG/vhECGTrends.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKEKG/vhMedicalServices/vhECGCodes.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKEKG/vhMedicalServices/vhECGSDKAnalysis.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKEKG/vhMedicalServices/vhEcgServiceRest.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKEKG/vhMedicalServices/vhMedicalServices.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 			};
 			buildPhase = BE18D7832F6CD82200E8CEE9 /* Embed Frameworks */;
 			membershipExceptions = (
+				SDKEKG/iCV200BLE/iCV200BLE.xcframework,
+				SDKEKG/vhECGSTFilters/vhECGSTFilters.xcframework,
+				SDKEKG/vhECGSTFilters/vhStressTemplLib.xcframework,
 				SDKEKG/vhECGTrends.xcframework,
+				SDKEKG/vhMedicalServices/vhECGCodes.xcframework,
+				SDKEKG/vhMedicalServices/vhECGSDKAnalysis.xcframework,
+				SDKEKG/vhMedicalServices/vhEcgServiceRest.xcframework,
+				SDKEKG/vhMedicalServices/vhMedicalServices.xcframework,
 			);
 		};
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */

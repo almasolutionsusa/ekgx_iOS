@@ -9,7 +9,7 @@
 
 import Foundation
 import SwiftUI
-import vhECGSTFilters
+import vhECGSTFilters   // filtersECGsData used in setupDeviceCallbacks
 
 // MARK: - Supporting Types
 
@@ -33,6 +33,11 @@ enum RecordingDuration: String, CaseIterable {
         case .continuous: return Int.max
         }
     }
+
+    // Extra buffer second so the last data batch arrives before analysis runs
+    var recordSeconds: Int {
+        seconds == Int.max ? Int.max : seconds + 1
+    }
 }
 
 enum RecordingState {
@@ -54,8 +59,10 @@ final class RecordingViewModel {
     var selectedDuration: RecordingDuration = .ten
     var elapsedSeconds: Int = 0
     var heartRate: Int = 0
+    var batteryLevel: Int? = nil
     var showExitConfirmation: Bool = false
     var showPreviewSheet: Bool = false
+    var showDeviceDisconnected: Bool = false
     var isFiltersEnabled: Bool = true
 
     // MARK: - Patient
@@ -72,30 +79,47 @@ final class RecordingViewModel {
 
     private(set) var latestECGFrame: [[Int16]] = []
     private(set) var frameCount: Int = 0
+    private(set) var latestLeadStatus: [Bool] = []
+    private(set) var leadStatusCount: Int = 0
 
     // MARK: - Dependencies
 
     let deviceService: DeviceServiceProtocol
     private let router: AppRouter
+    private let diContainer: AppDIContainer
     private var countTimer: Timer?
+    private var signalWatchdog: Timer?
 
     // MARK: - Init
 
-    init(patient: Patient, deviceService: DeviceServiceProtocol, router: AppRouter) {
+    init(patient: Patient, deviceService: DeviceServiceProtocol, router: AppRouter, diContainer: AppDIContainer) {
         self.patient = patient
         self.deviceService = deviceService
         self.router = router
-        setupFilters()
+        self.diContainer = diContainer
     }
 
     /// Call from RecordingView .onAppear — wires this VM as the sole onECGData receiver.
     func activate() {
         setupDeviceCallbacks()
+        deviceService.onConnectionStateChanged = { [weak self] state in
+            guard let self else { return }
+            Task { @MainActor in
+                guard state == .disconnected else { return }
+                if self.recordingState == .recording {
+                    self.stopTimers()
+                }
+                self.showDeviceDisconnected = true
+            }
+        }
     }
 
     /// Call from RecordingView .onDisappear — releases the callback so the next VM can own it.
     func deactivate() {
+        deviceService.onConnectionStateChanged = nil
         deviceService.onECGData = nil
+        deviceService.onLeadStatus = nil
+        deviceService.onBattery = nil
         stopTimers()
     }
 
@@ -106,12 +130,13 @@ final class RecordingViewModel {
         ecgDataBuffer = []
         elapsedSeconds = 0
         recordingState = .recording
+        resetWatchdog()
 
         countTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.elapsedSeconds += 1
             if self.selectedDuration != .continuous,
-               self.elapsedSeconds >= self.selectedDuration.seconds {
+               self.elapsedSeconds >= self.selectedDuration.recordSeconds {
                 self.finishRecording()
             }
         }
@@ -140,7 +165,10 @@ final class RecordingViewModel {
 
     func proceedToAnalysis() {
         showPreviewSheet = false
-        router.navigate(to: .ecgAnalysis(recordingId: patient.uniqueId ?? patient.id.map(String.init) ?? ""))
+        diContainer.lastRecordingPatient = patient
+        diContainer.lastRecordingData = ecgDataBuffer
+        diContainer.lastRecordingSampleRate = deviceService.sampleRate
+        router.navigate(to: .ecgAnalysis(recordingId: ""))
     }
 
     // MARK: - Computed
@@ -175,9 +203,38 @@ final class RecordingViewModel {
     private func stopTimers() {
         countTimer?.invalidate()
         countTimer = nil
+        signalWatchdog?.invalidate()
+        signalWatchdog = nil
+    }
+
+    private func resetWatchdog() {
+        signalWatchdog?.invalidate()
+        signalWatchdog = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] _ in
+            guard let self else { return }
+            Task { @MainActor in
+                guard self.recordingState == .recording else { return }
+                self.stopTimers()
+                self.showDeviceDisconnected = true
+            }
+        }
     }
 
     private func setupDeviceCallbacks() {
+        deviceService.onBattery = { [weak self] level in
+            guard let self else { return }
+            Task { @MainActor in
+                self.batteryLevel = level
+            }
+        }
+
+        deviceService.onLeadStatus = { [weak self] status in
+            guard let self else { return }
+            Task { @MainActor in
+                self.latestLeadStatus = status
+                self.leadStatusCount &+= 1
+            }
+        }
+
         deviceService.onECGData = { [weak self] leads in
             guard let self else { return }
             vhECGFiltersLib.shared().filtersECGsData(leads) { [weak self] filtered in
@@ -188,19 +245,16 @@ final class RecordingViewModel {
                     self.frameCount &+= 1
                     if self.recordingState == .recording {
                         self.appendToBuffer(leads)
+                        self.resetWatchdog()
                     }
                 }
-            } hbrHandler: { _ in }
+            } hbrHandler: { [weak self] hbr in
+                guard let self else { return }
+                Task { @MainActor in
+                    self.heartRate = Int(hbr)
+                }
+            }
         }
-    }
-
-    private func setupFilters() {
-        // Demo device rate is 660 Hz, uVpb matches ecg_demo.plist source
-        vhECGFiltersLib.shared().setFilterWithRate(660, uVpb: 4.88)
-        vhECGFiltersLib.shared().setFilterSwitch(true)
-        vhECGFiltersLib.shared().setFilterFreqNotch(.notchType_50)
-        vhECGFiltersLib.shared().setFilterFreqLow(.lowType_40)
-        vhECGFiltersLib.shared().setFilterFreqMooth(.smoothType_weak)
     }
 
     private func appendToBuffer(_ leads: ECGLeads) {

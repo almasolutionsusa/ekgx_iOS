@@ -74,8 +74,14 @@ struct RootView: View {
                         removal: .move(edge: .trailing).combined(with: .opacity)
                     ))
 
-            case .ecgAnalysis,
-                 .patientDetail,
+            case .ecgAnalysis:
+                AnalysisView(viewModel: diContainer.makeAnalysisViewModel(router: router))
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
+
+            case .patientDetail,
                  .support,
                  .faq,
                  .indicationsForUse:

@@ -65,17 +65,19 @@ final class HomeViewModel {
     // MARK: - Dependencies
 
     private let router: AppRouter
-    private let deviceService: DeviceServiceProtocol
+    private let diContainer: AppDIContainer
+    private var deviceService: DeviceServiceProtocol
 
-    init(router: AppRouter, deviceService: DeviceServiceProtocol) {
+    init(router: AppRouter, diContainer: AppDIContainer) {
         self.router = router
-        self.deviceService = deviceService
-        // Sync initial state from the service (device may already be connected)
-        deviceState = deviceService.currentState
+        self.diContainer = diContainer
+        self.deviceService = diContainer.deviceService
+        deviceState = diContainer.deviceService.currentState
     }
 
     /// Call from HomeView .onAppear — re-registers the callback every time we return to home.
     func activate() {
+        deviceService = diContainer.deviceService
         deviceState = deviceService.currentState
         deviceService.onConnectionStateChanged = { [weak self] state in
             withAnimation { self?.deviceState = state }
@@ -96,11 +98,27 @@ final class HomeViewModel {
 
     func connectDevice() {
         guard deviceState == .disconnected else { return }
+        diContainer.switchToRealDevice()
+        deviceService = diContainer.deviceService
+        deviceService.onConnectionStateChanged = { [weak self] state in
+            withAnimation { self?.deviceState = state }
+        }
+        deviceService.connect()
+    }
+
+    func connectDemo() {
+        guard deviceState == .disconnected else { return }
+        diContainer.switchToDemo()
+        deviceService = diContainer.deviceService
+        deviceService.onConnectionStateChanged = { [weak self] state in
+            withAnimation { self?.deviceState = state }
+        }
         deviceService.connect()
     }
 
     func disconnectDevice() {
         deviceService.disconnect()
+        withAnimation { deviceState = .disconnected }
     }
 
     // MARK: - Feature Navigation

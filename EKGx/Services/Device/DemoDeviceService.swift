@@ -10,11 +10,14 @@
 //
 
 import Foundation
+import vhECGSTFilters
 
 final class DemoDeviceService: DeviceServiceProtocol {
 
     var onConnectionStateChanged: ((DeviceConnectionState) -> Void)?
     var onECGData: ((ECGLeads) -> Void)?
+    var onLeadStatus: (([Bool]) -> Void)?
+    var onBattery: ((Int) -> Void)?
     private(set) var currentState: DeviceConnectionState = .disconnected
 
     // Matches ecg.plist source device — 660 Hz, 25 samples per ~38ms tick
@@ -46,6 +49,14 @@ final class DemoDeviceService: DeviceServiceProtocol {
 
     // MARK: - Private
 
+    private func configureFilters() {
+        vhECGFiltersLib.shared().setFilterWithRate(Int32(Double(sampleRate)), uVpb: 4.88)
+        vhECGFiltersLib.shared().setFilterSwitch(true)
+        vhECGFiltersLib.shared().setFilterFreqNotch(.notchType_50)
+        vhECGFiltersLib.shared().setFilterFreqLow(.lowType_40)
+        vhECGFiltersLib.shared().setFilterFreqMooth(.smoothType_weak)
+    }
+
     private func loadDemoData() {
         guard let path = Bundle.main.path(forResource: "ecg_demo", ofType: "plist"),
               let raw = NSArray(contentsOfFile: path) as? [[NSNumber]],
@@ -58,6 +69,7 @@ final class DemoDeviceService: DeviceServiceProtocol {
     private func startStreaming() {
         guard !ecgData.isEmpty else { return }
         sampleIndex = 0
+        configureFilters()
 
         let interval = Double(batchSize) / Double(sampleRate)   // ~0.038s
         timer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in

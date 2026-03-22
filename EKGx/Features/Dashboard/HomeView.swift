@@ -137,13 +137,23 @@ private struct HomeNavigationBar: View {
 
             // ── RIGHT: Device button + user chip
             HStack(spacing: AppMetrics.spacing16) {
+                if viewModel.deviceState == .disconnected {
+                    Button("Demo") { viewModel.connectDemo() }
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(AppColors.brandPrimary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(AppColors.brandPrimary.opacity(0.1))
+                        .cornerRadius(AppMetrics.radiusMedium)
+                        .buttonStyle(.plain)
+                }
                 DeviceConnectButton(
                     state: viewModel.deviceState,
                     onTap: {
-                        if viewModel.deviceState == .connected {
-                            viewModel.disconnectDevice()
-                        } else {
+                        if viewModel.deviceState == .disconnected {
                             viewModel.connectDevice()
+                        } else {
+                            viewModel.disconnectDevice()
                         }
                     }
                 )
@@ -198,9 +208,9 @@ private struct HomeNavigationBar: View {
 }
 
 // MARK: - Preview
-
-#Preview {
-    let router = AppRouter()
-    HomeView(viewModel: HomeViewModel(router: router, deviceService: DemoDeviceService()))
-        .environment(router)
-}
+//
+//#Preview {
+//    let router = AppRouter()
+//    HomeView(viewModel: HomeViewModel(router: router, deviceService: DemoDeviceService()))
+//        .environment(router)
+//}

@@ -228,6 +228,54 @@
 "recording.controls.viewResult"      = "View Result";
 "recording.controls.elapsed"         = "Elapsed";
 "recording.stats.bpm"                = "bpm";
+"recording.deviceDisconnected.title"   = "Device Disconnected";
+"recording.deviceDisconnected.subtitle" = "The ECG device lost connection. Please reconnect the device and try again.";
+"recording.deviceDisconnected.button"  = "Go to Dashboard";
+
+// MARK: - Analysis Result
+"analysis.nav.backButton"            = "Recording";
+"analysis.nav.title"                 = "ECG Analysis";
+"analysis.nav.unconfirmed"           = "Unconfirmed — Review Required";
+"analysis.section.measurements"      = "Measurements";
+"analysis.section.interpretation"    = "Interpretation";
+"analysis.section.leadParams"        = "Lead Parameters";
+"analysis.measure.hr"                = "HR";
+"analysis.measure.rr"                = "RR";
+"analysis.measure.pr"                = "PR";
+"analysis.measure.qrs"               = "QRS";
+"analysis.measure.qt"                = "QT";
+"analysis.measure.qtc"               = "QTc";
+"analysis.measure.qtcf"              = "QTcF";
+"analysis.measure.pd"                = "P Dur";
+"analysis.measure.paxis"             = "P Axis";
+"analysis.measure.qrsaxis"           = "QRS Axis";
+"analysis.measure.taxis"             = "T Axis";
+"analysis.measure.rv1"               = "R-V1";
+"analysis.measure.sv1"               = "S-V1";
+"analysis.measure.rv5"               = "R-V5";
+"analysis.measure.sv5"               = "S-V5";
+"analysis.measure.unitBpm"           = "bpm";
+"analysis.measure.unitMs"            = "ms";
+"analysis.measure.unitMv"            = "mV";
+"analysis.measure.unitDeg"           = "°";
+"analysis.failed.title"              = "Analysis Failed";
+"analysis.failed.subtitle"           = "The ECG data could not be analyzed. The recording may be too short or contain excessive noise. Please redo the recording.";
+"analysis.failed.redoButton"         = "Redo Recording";
+"analysis.leadParam.lead"            = "Lead";
+"analysis.leadParam.morpho"          = "Morpho";
+"analysis.leadParam.pa"              = "Pa (mV)";
+"analysis.leadParam.pd"              = "Pd (ms)";
+"analysis.leadParam.qa"              = "Qa (mV)";
+"analysis.leadParam.qd"              = "Qd (ms)";
+"analysis.leadParam.ra"              = "Ra (mV)";
+"analysis.leadParam.rd"              = "Rd (ms)";
+"analysis.leadParam.sa"              = "Sa (mV)";
+"analysis.leadParam.sd"              = "Sd (ms)";
+"analysis.leadParam.td"              = "Td (ms)";
+"analysis.leadParam.qrsD"            = "QRS (ms)";
+"analysis.leadParam.pr"              = "PR (ms)";
+"analysis.leadParam.qt"              = "QT (ms)";
+"analysis.leadParam.stj"             = "STj (mV)";
 
 // MARK: - Placeholder Screens
 "placeholder.comingSoon"             = "Coming Soon";

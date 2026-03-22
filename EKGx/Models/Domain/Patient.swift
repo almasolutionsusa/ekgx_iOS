@@ -47,6 +47,11 @@ struct Patient: Identifiable, Codable, Hashable {
         return "\(years) yrs"
     }
 
+    var ageYears: Int {
+        guard let date = Self.dateFormatter.date(from: birthDate) else { return 0 }
+        return Calendar.current.dateComponents([.year], from: date, to: Date()).year ?? 0
+    }
+
     var genderDisplay: String {
         switch gender.lowercased() {
         case "m", "male":   return "Male"

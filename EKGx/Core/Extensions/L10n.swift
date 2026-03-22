@@ -325,6 +325,69 @@ enum L10n {
         enum Stats {
             static let bpm         = "recording.stats.bpm".localized
         }
+        enum DeviceDisconnected {
+            static let title    = "recording.deviceDisconnected.title".localized
+            static let subtitle = "recording.deviceDisconnected.subtitle".localized
+            static let button   = "recording.deviceDisconnected.button".localized
+        }
+    }
+
+    // MARK: - Analysis Result
+
+    enum Analysis {
+        enum Nav {
+            static let backButton   = "analysis.nav.backButton".localized
+            static let title        = "analysis.nav.title".localized
+            static let unconfirmed  = "analysis.nav.unconfirmed".localized
+        }
+        enum Section {
+            static let measurements  = "analysis.section.measurements".localized
+            static let interpretation = "analysis.section.interpretation".localized
+            static let leadParams    = "analysis.section.leadParams".localized
+        }
+        enum Measure {
+            static let hr       = "analysis.measure.hr".localized
+            static let rr       = "analysis.measure.rr".localized
+            static let pr       = "analysis.measure.pr".localized
+            static let qrs      = "analysis.measure.qrs".localized
+            static let qt       = "analysis.measure.qt".localized
+            static let qtc      = "analysis.measure.qtc".localized
+            static let qtcf     = "analysis.measure.qtcf".localized
+            static let pd       = "analysis.measure.pd".localized
+            static let paxis    = "analysis.measure.paxis".localized
+            static let qrsaxis  = "analysis.measure.qrsaxis".localized
+            static let taxis    = "analysis.measure.taxis".localized
+            static let rv1      = "analysis.measure.rv1".localized
+            static let sv1      = "analysis.measure.sv1".localized
+            static let rv5      = "analysis.measure.rv5".localized
+            static let sv5      = "analysis.measure.sv5".localized
+            static let unitBpm  = "analysis.measure.unitBpm".localized
+            static let unitMs   = "analysis.measure.unitMs".localized
+            static let unitMv   = "analysis.measure.unitMv".localized
+            static let unitDeg  = "analysis.measure.unitDeg".localized
+        }
+        enum Failed {
+            static let title      = "analysis.failed.title".localized
+            static let subtitle   = "analysis.failed.subtitle".localized
+            static let redoButton = "analysis.failed.redoButton".localized
+        }
+        enum LeadParam {
+            static let lead   = "analysis.leadParam.lead".localized
+            static let morpho = "analysis.leadParam.morpho".localized
+            static let pa     = "analysis.leadParam.pa".localized
+            static let pd     = "analysis.leadParam.pd".localized
+            static let qa     = "analysis.leadParam.qa".localized
+            static let qd     = "analysis.leadParam.qd".localized
+            static let ra     = "analysis.leadParam.ra".localized
+            static let rd     = "analysis.leadParam.rd".localized
+            static let sa     = "analysis.leadParam.sa".localized
+            static let sd     = "analysis.leadParam.sd".localized
+            static let td     = "analysis.leadParam.td".localized
+            static let qrsD   = "analysis.leadParam.qrsD".localized
+            static let pr     = "analysis.leadParam.pr".localized
+            static let qt     = "analysis.leadParam.qt".localized
+            static let stj    = "analysis.leadParam.stj".localized
+        }
     }
 
     // MARK: - Placeholder

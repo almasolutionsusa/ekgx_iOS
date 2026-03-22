@@ -12,7 +12,9 @@
       "Bash(find /Users/qusaiasaad/Downloads/SDK2.3 -name *.swift -o -name *.m)",
       "Bash(find /Users/qusaiasaad/Downloads/SDK2.3 -name *.md -o -name *.html -o -name *.pdf -o -name *.txt)",
       "Bash(textutil -convert txt -stdout \"/Users/qusaiasaad/Downloads/SDK2.3/SDKUpdate Detail/docs2_3.docx\")",
-      "Bash(python3 -c \":*)"
+      "Bash(python3 -c \":*)",
+      "Bash(find /Users/qusaiasaad -path */Alma* -name *.swift)",
+      "Bash(find '/Users/qusaiasaad/Documents/iOS Projects/Alma' -path *vhECGTrends* -name *.h -type f)"
     ]
   }
 }
