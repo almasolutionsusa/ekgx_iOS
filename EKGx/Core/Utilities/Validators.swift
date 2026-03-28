@@ -22,9 +22,21 @@ struct Validators {
         return predicate.evaluate(with: trimmed) ? nil : L10n.Validation.emailInvalid
     }
 
+    // MARK: - Username (email or plain username)
+
+    static func validateUsername(_ value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? L10n.Validation.emailEmpty : nil
+    }
+
     // MARK: - Password
 
     static func validatePassword(_ password: String) -> String? {
+        if password.isEmpty { return L10n.Validation.passwordEmpty }
+        return password.count < 4 ? L10n.Validation.passwordTooShort : nil
+    }
+
+    static func validatePasswordStrong(_ password: String) -> String? {
         if password.isEmpty { return L10n.Validation.passwordEmpty }
         return password.count < 8 ? L10n.Validation.passwordTooShort : nil
     }

@@ -2,98 +2,140 @@
 //  AuthService.swift
 //  EKGx
 //
-//  Production authentication service. Communicates with the EKGx backend
-//  over HTTPS using async/await URLSession.
-//
-//  NOTE: Replace `baseURL` with your actual API endpoint before release.
+//  Production authentication service.
+//  Uses APIClient (cookie-based session) to communicate with the EKGx backend.
 //
 
 import Foundation
 
 final class AuthService: AuthServiceProtocol {
 
-    // MARK: - Configuration
-
-    private let baseURL = URL(string: "https://api.ecgxpro.com/v1")!
-    private let session: URLSession
-    private let decoder = JSONDecoder()
+    // MARK: - State
 
     private(set) var isAuthenticated: Bool = false
-    private var accessToken: String?
+    private(set) var currentUser: SessionUser? = nil
+    private(set) var loginData: LoginData? = nil
+
+    private let client: APIClient
 
     // MARK: - Init
 
-    init(session: URLSession = .shared) {
-        self.session = session
-        self.decoder.keyDecodingStrategy = .convertFromSnakeCase
+    init(client: APIClient = .shared) {
+        self.client = client
+        // Restore session from persisted cookie if still valid
+        self.isAuthenticated = client.isAuthenticated
     }
 
-    // MARK: - AuthServiceProtocol
+    // MARK: - Login
 
     func login(email: String, password: String) async throws {
-        let body = LoginRequest(email: email, password: password)
-        let response: LoginResponse = try await post(endpoint: APIEndpoints.Auth.login, body: body)
-        accessToken = response.accessToken
-        isAuthenticated = true
+        let body = LoginRequest(username: email, password: password)
+        do {
+            let response: APIResponse<LoginData> = try await client.post(
+                path: APIEndpoints.Auth.login,
+                body: body
+            )
+            loginData       = response.data
+            currentUser     = response.data?.user
+            isAuthenticated = true
+        } catch let error as APIError {
+            throw mapAPIError(error)
+        }
     }
+
+    // MARK: - PIN Login
+
+    func pinLogin(pin: String, deviceUuid: String, appUuid: String) async throws {
+        let body = PinLoginRequest(pin: pin, deviceUuid: deviceUuid, appUuid: appUuid)
+        do {
+            let response: APIResponse<LoginData> = try await client.post(
+                path: APIEndpoints.Auth.pinLogin,
+                body: body
+            )
+            loginData       = response.data
+            currentUser     = response.data?.user
+            isAuthenticated = true
+        } catch let error as APIError {
+            throw mapAPIError(error)
+        }
+    }
+
+    // MARK: - Register (not in current spec — kept for future)
 
     func register(details: SignupDetails) async throws {
-        let body = RegisterRequest(
-            firstName:  details.firstName,
-            lastName:   details.lastName,
-            email:      details.email,
-            password:   details.password,
-            role:       details.role.rawValue,
-            facility:   details.facility.rawValue,
-            department: details.department,
-            npi:        details.npi.isEmpty ? nil : details.npi,
-            title:      details.title.isEmpty ? nil : details.title,
-            degree:     details.degree.isEmpty ? nil : details.degree
-        )
-        let response: LoginResponse = try await post(endpoint: APIEndpoints.Auth.register, body: body)
-        accessToken = response.accessToken
-        isAuthenticated = true
+        // Registration is currently web-only per spec.
+        // When endpoint is added, implement here.
+        throw AuthError.unknown
     }
 
+    // MARK: - PIN Management
+
+    func pinStatus(userId: Int64) async throws -> Bool {
+        do {
+            let response: APIResponse<PinStatusData> = try await client.get(
+                path: APIEndpoints.Auth.pinStatus,
+                query: ["userId": "\(userId)"]
+            )
+            return response.data?.hasPin ?? false
+        } catch let error as APIError {
+            throw mapAPIError(error)
+        }
+    }
+
+    func setupPin(userId: Int64, facilityId: Int64, pin: String, deviceUuid: String, appUuid: String) async throws {
+        let body = PinSetupRequest(
+            userId: userId,
+            facilityId: facilityId,
+            pin: pin,
+            deviceUuid: deviceUuid,
+            appUuid: appUuid
+        )
+        do {
+            try await client.postVoid(path: APIEndpoints.Auth.pinSetup, body: body)
+        } catch let error as APIError {
+            throw mapAPIError(error)
+        }
+    }
+
+    func changePin(userId: Int64, facilityId: Int64, oldPin: String, newPin: String) async throws {
+        let body = PinChangeRequest(userId: userId, facilityId: facilityId, oldPin: oldPin, newPin: newPin)
+        do {
+            try await client.postVoid(path: APIEndpoints.Auth.pinChange, body: body)
+        } catch let error as APIError {
+            throw mapAPIError(error)
+        }
+    }
+
+    // MARK: - Forgot Password
+
+    func forgotPassword(email: String) async throws {
+        let body = ForgotPasswordRequest(email: email)
+        do {
+            try await client.postVoid(path: APIEndpoints.Auth.forgotPassword, body: body)
+        } catch let error as APIError {
+            throw mapAPIError(error)
+        }
+    }
+
+    // MARK: - Logout
+
     func logout() async throws {
-        accessToken = nil
+        client.clearSession()
+        currentUser     = nil
+        loginData       = nil
         isAuthenticated = false
     }
 
-    // MARK: - Private Helpers
+    // MARK: - Private
 
-    private func post<Body: Encodable, Response: Decodable>(
-        endpoint: String,
-        body: Body
-    ) async throws -> Response {
-        guard let url = URL(string: endpoint, relativeTo: baseURL) else {
-            throw AuthError.unknown
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(body)
-
-        do {
-            let (data, response) = try await session.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse else {
-                throw AuthError.unknown
-            }
-            switch httpResponse.statusCode {
-            case 200...299:
-                return try decoder.decode(Response.self, from: data)
-            case 401:
-                throw AuthError.invalidCredentials
-            case 409:
-                throw AuthError.emailAlreadyInUse
-            default:
-                throw AuthError.serverError(statusCode: httpResponse.statusCode)
-            }
-        } catch let error as AuthError {
-            throw error
-        } catch {
-            throw AuthError.networkUnavailable
+    private func mapAPIError(_ error: APIError) -> AuthError {
+        switch error {
+        case .invalidCredentials:  return .invalidCredentials
+        case .conflict:            return .emailAlreadyInUse
+        case .networkUnavailable:  return .networkUnavailable
+        case .forbidden:           return .sessionExpired
+        case .serverError(let c):  return .serverError(statusCode: c)
+        default:                   return .unknown
         }
     }
 }

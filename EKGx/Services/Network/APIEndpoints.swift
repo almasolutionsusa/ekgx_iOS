@@ -2,8 +2,8 @@
 //  APIEndpoints.swift
 //  EKGx
 //
-//  Single source of truth for all API endpoint paths.
-//  Reference these constants in every service — never hardcode path strings.
+//  Single source of truth for all API path strings.
+//  Always reference these constants — never hardcode paths.
 //
 
 import Foundation
@@ -13,30 +13,23 @@ enum APIEndpoints {
     // MARK: - Auth
 
     enum Auth {
-        static let login    = "/auth/login"
-        static let register = "/auth/register"
-        static let logout   = "/auth/logout"
-        static let refresh  = "/auth/refresh"
+        static let login          = "/api/auth/login"
+        static let pinLogin       = "/api/auth/pin-login"
+        static let forgotPassword = "/api/auth/forgot-password"
+        static let pinSetup       = "/api/auth/pin/setup"
+        static let pinChange      = "/api/auth/pin/change"
+        static let pinStatus      = "/api/auth/pin/status"
     }
 
-    // MARK: - Patients
+    // MARK: - App
 
-    enum Patients {
-        static let list   = "/patients"
-        static let detail = "/patients/{id}"
+    enum App {
+        static let checkin = "/api/app/checkin"
     }
 
-    // MARK: - ECG
+    // MARK: - EKG
 
-    enum ECG {
-        static let recordings = "/ecg/recordings"
-        static let upload     = "/ecg/upload"
-    }
-
-    // MARK: - Reports
-
-    enum Reports {
-        static let list     = "/reports"
-        static let generate = "/reports/generate"
+    enum EKG {
+        static let results = "/api/ekg/results"
     }
 }

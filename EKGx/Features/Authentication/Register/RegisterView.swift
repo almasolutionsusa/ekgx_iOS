@@ -437,6 +437,7 @@ private struct DropdownPicker<T: Hashable>: View {
 // MARK: - Preview
 
 #Preview {
-    let router = AppRouter()
-    RegisterView(viewModel: RegisterViewModel(authService: MockAuthService(), router: router))
+    let diContainer = AppDIContainer()
+    let router      = AppRouter()
+    RegisterView(viewModel: diContainer.makeRegisterViewModel(router: router))
 }

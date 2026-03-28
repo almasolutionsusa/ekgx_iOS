@@ -2,9 +2,17 @@
 //  AppDIContainer.swift
 //  EKGx
 //
-//  Dependency injection container. Owns all service instances and exposes
-//  factory methods for constructing ViewModels with the correct dependencies.
-//  ViewModels are never created directly by Views.
+//  Dependency injection root.
+//
+//  LOCAL MODE (isLocalMode = true)
+//  ─────────────────────────────────────────────────────────────────────────
+//  No login required. Router starts at .dashboard directly.
+//  Checkin and upload services still run but fail silently.
+//
+//  ONLINE MODE (isLocalMode = false)
+//  ─────────────────────────────────────────────────────────────────────────
+//  Real AuthService (session cookie). Checkin on launch.
+//  ECG uploads sent to POST /api/ekg/results.
 //
 
 import Foundation
@@ -13,13 +21,44 @@ import Foundation
 @MainActor
 final class AppDIContainer {
 
+    // MARK: - Mode
+
+    /// Toggle: true = no login required, mock auth, local-only.
+    /// false = real API, session cookie auth required.
+    private(set) var isLocalMode: Bool
+
     // MARK: - Services
 
-    // TODO: Switch back to AuthService() when the API is ready
-    private let _authService: MockAuthService = MockAuthService()
-    var authService: AuthServiceProtocol { _authService }
+    private(set) var authService: AuthServiceProtocol
+    let checkinService: AppCheckinService
+    let ekgUploadService: EKGUploadService
+
+    // MARK: - Device Service
 
     private(set) var deviceService: DeviceServiceProtocol = BLEDeviceService()
+
+    // MARK: - Init
+
+    init(localMode: Bool = false) {
+        self.isLocalMode      = localMode
+        self.authService      = AuthService()
+        self.checkinService   = AppCheckinService()
+        self.ekgUploadService = EKGUploadService()
+    }
+
+    // MARK: - Mode Switching
+
+    func enableOnlineMode() {
+        isLocalMode = false
+    }
+
+    /// Switches to local mode and navigates directly to dashboard — no login needed.
+    func enableLocalMode(router: AppRouter) {
+        isLocalMode = true
+        router.navigate(to: .dashboard)
+    }
+
+    // MARK: - Device Switching
 
     func switchToDemo() {
         deviceService = DemoDeviceService()
@@ -32,7 +71,7 @@ final class AppDIContainer {
     // MARK: - ViewModel Factories
 
     func makeLoginViewModel(router: AppRouter) -> LoginViewModel {
-        LoginViewModel(authService: authService, router: router)
+        LoginViewModel(authService: authService, diContainer: self, router: router)
     }
 
     func makeRegisterViewModel(router: AppRouter) -> RegisterViewModel {

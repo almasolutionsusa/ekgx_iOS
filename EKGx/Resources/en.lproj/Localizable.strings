@@ -6,8 +6,8 @@
 // MARK: - Authentication · Login
 "auth.login.title"                   = "Welcome Back";
 "auth.login.subtitle"                = "Sign in to continue to EKGx Pro";
-"auth.login.emailLabel"              = "Email Address";
-"auth.login.emailPlaceholder"        = "doctor@hospital.com";
+"auth.login.emailLabel"              = "Username or Email";
+"auth.login.emailPlaceholder"        = "Username or email address";
 "auth.login.passwordLabel"           = "Password";
 "auth.login.passwordPlaceholder"     = "Enter your password";
 "auth.login.loginButton"             = "Sign In";
@@ -17,9 +17,14 @@
 "auth.login.errorInvalidCredentials" = "Invalid email or password. Please try again.";
 "auth.login.errorNetwork"            = "Network unavailable. Check your connection and retry.";
 "auth.login.errorGeneric"            = "An unexpected error occurred. Please contact IT support.";
+"auth.login.forgotPasswordTitle"     = "Reset Password";
+"auth.login.forgotPasswordSubtitle"  = "Enter your email address and we'll send you a link to reset your password.";
+"auth.login.forgotPasswordEmailLabel" = "Email Address";
+"auth.login.forgotPasswordSend"      = "Send Reset Link";
+"auth.login.forgotPasswordSuccess"   = "Password reset link sent. Please check your email.";
 "auth.login.pinButton"               = "Sign In with PIN";
 "auth.login.pinTitle"                = "Enter PIN Code";
-"auth.login.pinSubtitle"             = "Use your 4-digit PIN to access EKGx Pro";
+"auth.login.pinSubtitle"             = "Use your 6-digit PIN to access EKGx Pro";
 "auth.login.pinPlaceholder"          = "● ● ● ●";
 "auth.login.pinErrorEmpty"           = "Please enter your PIN code.";
 "auth.login.pinErrorInvalid"         = "Incorrect PIN. Please try again.";
@@ -210,6 +215,10 @@
 "settings.demo.fieldPH"              = "Enter code";
 "settings.demo.unlockButton"         = "Unlock";
 
+// MARK: - Auth · Local Mode
+"auth.login.localMode"               = "Continue Offline";
+"auth.login.localModeSubtitle"       = "Use the app without an internet connection";
+
 // MARK: - Recording
 "recording.nav.backButton"           = "Back";
 "recording.exit.title"               = "Stop Recording?";
@@ -354,11 +363,11 @@
 "account.pin.sheetTitle"             = "Set PIN Code";
 "account.pin.sheetSubtitle"          = "Create a 4-digit PIN for quick, secure app access.";
 "account.pin.fieldNew"               = "New PIN";
-"account.pin.fieldNewPH"             = "Enter 4-digit PIN";
+"account.pin.fieldNewPH"             = "Enter 6-digit PIN";
 "account.pin.fieldConfirm"           = "Confirm PIN";
-"account.pin.fieldConfirmPH"         = "Re-enter 4-digit PIN";
+"account.pin.fieldConfirmPH"         = "Re-enter 6-digit PIN";
 "account.pin.submitButton"           = "Set PIN";
-"account.pin.errorDigits"            = "PIN must be exactly 4 digits.";
+"account.pin.errorDigits"            = "PIN must be exactly 6 digits.";
 "account.pin.errorMismatch"          = "PINs do not match. Please try again.";
 
 // MARK: - My Account · Change Password Sheet

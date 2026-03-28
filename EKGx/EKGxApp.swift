@@ -25,7 +25,7 @@ struct EKGxApp: App {
         for family in UIFont.familyNames.sorted() {
             for name in UIFont.fontNames(forFamilyName: family) {
                 if name.contains("Montserrat") || name.contains("Roboto") {
-                    print("✅ Font loaded: \(name)")
+//                    print("✅ Font loaded: \(name)")
                 }
             }
         }
@@ -44,6 +44,11 @@ struct EKGxApp: App {
                 // Kiosk chrome reduction
                 .statusBarHidden(true)
                 .persistentSystemOverlays(.hidden)
+                .task {
+                    // Fire-and-forget: registers the app install with the server.
+                    // Failure is silently ignored — app works fully offline.
+                    await diContainer.checkinService.checkin()
+                }
         }
     }
 }

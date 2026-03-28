@@ -41,6 +41,9 @@ struct LoginView: View {
         .sheet(isPresented: $viewModel.showPinLogin) {
             PinLoginSheet(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showForgotPassword) {
+            ForgotPasswordSheet(viewModel: viewModel)
+        }
     }
 }
 
@@ -247,20 +250,62 @@ private struct LoginFormPanel: View {
 
                     // Form fields
                     VStack(spacing: AppMetrics.spacing20) {
-                        ETextField(
-                            label: L10n.Auth.Login.emailLabel,
-                            placeholder: L10n.Auth.Login.emailPlaceholder,
-                            systemImage: "envelope",
-                            text: $viewModel.email,
-                            errorMessage: viewModel.emailError,
-                            keyboardType: .emailAddress,
-                            textContentType: .emailAddress
-                        )
-                        .focused($focusedField, equals: .email)
-                        .onChange(of: viewModel.email) { _, _ in
-                            viewModel.clearFieldError(for: .email)
+                        // Username field + suggestions dropdown
+                        ZStack(alignment: .topLeading) {
+                            ETextField(
+                                label: L10n.Auth.Login.emailLabel,
+                                placeholder: L10n.Auth.Login.emailPlaceholder,
+                                systemImage: "person",
+                                text: $viewModel.email,
+                                errorMessage: viewModel.emailError,
+                                keyboardType: .default,
+                                textContentType: .username
+                            )
+                            .focused($focusedField, equals: .email)
+                            .onChange(of: viewModel.email) { _, _ in
+                                viewModel.clearFieldError(for: .email)
+                                viewModel.updateSuggestions()
+                            }
+                            .onSubmit { focusedField = .password; viewModel.dismissSuggestions() }
+
+                            if viewModel.showSuggestions {
+                                VStack(spacing: 0) {
+                                    ForEach(viewModel.suggestions, id: \.self) { suggestion in
+                                        Button {
+                                            viewModel.selectSuggestion(suggestion)
+                                            focusedField = .password
+                                        } label: {
+                                            HStack(spacing: AppMetrics.spacing12) {
+                                                Image(systemName: "clock.arrow.circlepath")
+                                                    .font(.system(size: 14))
+                                                    .foregroundStyle(AppColors.textSecondary)
+                                                Text(suggestion)
+                                                    .font(AppTypography.callout)
+                                                    .foregroundStyle(AppColors.textPrimary)
+                                                Spacer()
+                                            }
+                                            .padding(.horizontal, AppMetrics.spacing16)
+                                            .padding(.vertical, AppMetrics.spacing12)
+                                            .frame(maxWidth: .infinity)
+                                            .contentShape(Rectangle())
+                                        }
+                                        .buttonStyle(.plain)
+                                        if suggestion != viewModel.suggestions.last {
+                                            Divider().padding(.horizontal, AppMetrics.spacing16)
+                                        }
+                                    }
+                                }
+                                .background(AppColors.surfaceCard)
+                                .cornerRadius(AppMetrics.radiusMedium)
+                                .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                                        .strokeBorder(AppColors.borderSubtle, lineWidth: AppMetrics.borderWidth)
+                                )
+                                .offset(y: AppMetrics.textFieldHeight + AppMetrics.spacing4)
+                                .zIndex(10)
+                            }
                         }
-                        .onSubmit { focusedField = .password }
 
                         ESecureField(
                             label: L10n.Auth.Login.passwordLabel,
@@ -271,6 +316,7 @@ private struct LoginFormPanel: View {
                         .focused($focusedField, equals: .password)
                         .onChange(of: viewModel.password) { _, _ in
                             viewModel.clearFieldError(for: .password)
+                            viewModel.dismissSuggestions()
                         }
                         .onSubmit { focusedField = nil; viewModel.login() }
                     }
@@ -279,7 +325,8 @@ private struct LoginFormPanel: View {
                     HStack {
                         Spacer()
                         Button(L10n.Auth.Login.forgotPassword) {
-                            // TODO: navigate to password reset
+                            focusedField = nil
+                            viewModel.openForgotPassword()
                         }
                         .font(AppTypography.subheadline)
                         .foregroundStyle(AppColors.brandPrimary)
@@ -339,6 +386,35 @@ private struct LoginFormPanel: View {
                         Spacer()
                     }
                     .padding(.top, AppMetrics.spacing16)
+
+                    // Offline / local mode
+                    Divider()
+                        .padding(.vertical, AppMetrics.spacing24)
+
+                    Button {
+                        focusedField = nil
+                        viewModel.continueOffline()
+                    } label: {
+                        HStack(spacing: AppMetrics.spacing8) {
+                            Image(systemName: "wifi.slash")
+                                .font(.system(size: 14, weight: .medium))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(L10n.Auth.Login.localMode)
+                                    .font(AppTypography.subheadline)
+                                    .fontWeight(.medium)
+                                Text(L10n.Auth.Login.localModeSubtitle)
+                                    .font(AppTypography.caption)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundStyle(AppColors.textSecondary)
+                        .padding(AppMetrics.spacing16)
+                        .background(AppColors.surfaceCard)
+                        .cornerRadius(AppMetrics.radiusMedium)
+                    }
+                    .buttonStyle(.plain)
 
                     Spacer(minLength: AppMetrics.spacing64)
                 }
@@ -411,7 +487,7 @@ private struct PinLoginSheet: View {
 
             // PIN dot indicators
             HStack(spacing: AppMetrics.spacing20) {
-                ForEach(0..<4, id: \.self) { index in
+                ForEach(0..<6, id: \.self) { index in
                     ZStack {
                         Circle()
                             .stroke(
@@ -443,13 +519,13 @@ private struct PinLoginSheet: View {
                 .onChange(of: viewModel.pinInput) { _, newValue in
                     // Clamp to 4 digits only
                     let digits = newValue.filter(\.isNumber)
-                    if digits.count > 4 {
-                        viewModel.pinInput = String(digits.prefix(4))
+                    if digits.count > 6 {
+                        viewModel.pinInput = String(digits.prefix(6))
                     } else if digits != newValue {
                         viewModel.pinInput = digits
                     }
                     viewModel.pinError = nil
-                    if viewModel.pinInput.count == 4 {
+                    if viewModel.pinInput.count == 6 {
                         viewModel.submitPinLogin()
                     }
                 }
@@ -493,8 +569,144 @@ private struct PinLoginSheet: View {
 
 // MARK: - Preview
 
+// MARK: - Forgot Password Sheet
+
+private struct ForgotPasswordSheet: View {
+
+    @Bindable var viewModel: LoginViewModel
+    @FocusState private var emailFocused: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+
+            // Handle
+            Capsule()
+                .fill(AppColors.borderSubtle)
+                .frame(width: 40, height: 4)
+                .padding(.top, AppMetrics.spacing16)
+                .padding(.bottom, AppMetrics.spacing32)
+
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(AppColors.brandPrimary.opacity(0.10))
+                    .frame(width: 72, height: 72)
+                Image(systemName: "lock.rotation")
+                    .font(.system(size: 30, weight: .semibold))
+                    .foregroundStyle(AppColors.brandPrimary)
+            }
+            .padding(.bottom, AppMetrics.spacing20)
+
+            // Title & subtitle
+            VStack(spacing: AppMetrics.spacing8) {
+                Text(L10n.Auth.Login.forgotPasswordTitle)
+                    .font(AppTypography.title2)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text(L10n.Auth.Login.forgotPasswordSubtitle)
+                    .font(AppTypography.callout)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, AppMetrics.spacing32)
+            }
+            .padding(.bottom, AppMetrics.spacing32)
+
+            // Success state
+            if let success = viewModel.forgotSuccessMessage {
+                HStack(spacing: AppMetrics.spacing12) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(AppColors.statusSuccess)
+                        .font(.system(size: 22))
+                    Text(success)
+                        .font(AppTypography.callout)
+                        .foregroundStyle(AppColors.statusSuccess)
+                }
+                .padding(AppMetrics.spacing16)
+                .background(AppColors.statusSuccess.opacity(0.08))
+                .cornerRadius(AppMetrics.radiusMedium)
+                .padding(.horizontal, AppMetrics.spacing32)
+                .padding(.bottom, AppMetrics.spacing24)
+
+                Button(L10n.Common.dismiss) {
+                    viewModel.cancelForgotPassword()
+                }
+                .font(AppTypography.bodyMedium)
+                .foregroundStyle(AppColors.brandPrimary)
+
+            } else {
+                // Email field
+                VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
+                    Text(L10n.Auth.Login.forgotPasswordEmailLabel)
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(AppColors.textSecondary)
+
+                    TextField(L10n.Auth.Login.emailPlaceholder, text: $viewModel.forgotEmail)
+                        .font(AppTypography.body)
+                        .keyboardType(.emailAddress)
+                        .textContentType(.emailAddress)
+                        .autocapitalization(.none)
+                        .focused($emailFocused)
+                        .padding(.horizontal, AppMetrics.spacing16)
+                        .frame(height: AppMetrics.textFieldHeight)
+                        .background(AppColors.surfaceCard)
+                        .cornerRadius(AppMetrics.radiusMedium)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                                .strokeBorder(
+                                    viewModel.forgotEmailError != nil ? AppColors.statusCritical :
+                                    emailFocused ? AppColors.borderFocused : AppColors.borderSubtle,
+                                    lineWidth: emailFocused ? AppMetrics.borderWidthFocused : AppMetrics.borderWidth
+                                )
+                        )
+
+                    if let error = viewModel.forgotEmailError {
+                        Text(error)
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.statusCritical)
+                    }
+                }
+                .padding(.horizontal, AppMetrics.spacing32)
+
+                // Error banner
+                if let error = viewModel.forgotErrorMessage {
+                    Text(error)
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.statusCritical)
+                        .padding(.top, AppMetrics.spacing8)
+                        .padding(.horizontal, AppMetrics.spacing32)
+                }
+
+                // Send button
+                PrimaryButton(
+                    title: L10n.Auth.Login.forgotPasswordSend,
+                    isLoading: viewModel.forgotIsLoading
+                ) {
+                    emailFocused = false
+                    viewModel.submitForgotPassword()
+                }
+                .padding(.horizontal, AppMetrics.spacing32)
+                .padding(.top, AppMetrics.spacing24)
+
+                // Cancel
+                Button(L10n.Common.cancel) {
+                    viewModel.cancelForgotPassword()
+                }
+                .font(AppTypography.subheadline)
+                .foregroundStyle(AppColors.textSecondary)
+                .padding(.top, AppMetrics.spacing16)
+            }
+
+            Spacer(minLength: AppMetrics.spacing48)
+        }
+        .frame(maxWidth: .infinity)
+        .background(AppColors.surfaceBackground)
+        .onAppear { emailFocused = true }
+    }
+}
+
+// MARK: - Preview
+
 #Preview {
-    let router = AppRouter()
-    let viewModel = LoginViewModel(authService: MockAuthService(), router: router)
-    LoginView(viewModel: viewModel)
+    let diContainer = AppDIContainer()
+    let router      = AppRouter()
+    LoginView(viewModel: diContainer.makeLoginViewModel(router: router))
 }

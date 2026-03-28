@@ -3,7 +3,7 @@
     {
       "color" : {
         "color-space" : "srgb",
-        "components" : { "alpha" : "1.000", "blue" : "0.710", "green" : "0.831", "red" : "0.000" }
+        "components" : { "alpha" : "1.000", "blue" : "0.541", "green" : "0.561", "red" : "0.051" }
       },
       "idiom" : "universal"
     },
@@ -11,7 +11,7 @@
       "appearances" : [ { "appearance" : "luminosity", "value" : "dark" } ],
       "color" : {
         "color-space" : "srgb",
-        "components" : { "alpha" : "1.000", "blue" : "0.714", "green" : "0.769", "red" : "0.180" }
+        "components" : { "alpha" : "1.000", "blue" : "0.686", "green" : "0.710", "red" : "0.165" }
       },
       "idiom" : "universal"
     }

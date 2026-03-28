@@ -28,6 +28,11 @@ enum L10n {
             static let errorInvalidCredentials = "auth.login.errorInvalidCredentials".localized
             static let errorNetwork            = "auth.login.errorNetwork".localized
             static let errorGeneric            = "auth.login.errorGeneric".localized
+            static let forgotPasswordTitle     = "auth.login.forgotPasswordTitle".localized
+            static let forgotPasswordSubtitle  = "auth.login.forgotPasswordSubtitle".localized
+            static let forgotPasswordEmailLabel = "auth.login.forgotPasswordEmailLabel".localized
+            static let forgotPasswordSend      = "auth.login.forgotPasswordSend".localized
+            static let forgotPasswordSuccess   = "auth.login.forgotPasswordSuccess".localized
             static let pinButton               = "auth.login.pinButton".localized
             static let pinTitle                = "auth.login.pinTitle".localized
             static let pinSubtitle             = "auth.login.pinSubtitle".localized
@@ -35,6 +40,8 @@ enum L10n {
             static let pinErrorEmpty           = "auth.login.pinErrorEmpty".localized
             static let pinErrorInvalid         = "auth.login.pinErrorInvalid".localized
             static let pinBackToEmail          = "auth.login.pinBackToEmail".localized
+            static let localMode               = "auth.login.localMode".localized
+            static let localModeSubtitle       = "auth.login.localModeSubtitle".localized
         }
 
         enum Register {

@@ -121,7 +121,7 @@ final class RegisterViewModel {
         emailError        = Validators.validateEmail(email)
         confirmEmailError = email.trimmed != confirmEmail.trimmed
                             ? L10n.Validation.emailMismatch : nil
-        passwordError        = Validators.validatePassword(password)
+        passwordError        = Validators.validatePasswordStrong(password)
         confirmPasswordError = Validators.validatePasswordMatch(password, confirmPassword)
 
         return [firstNameError, lastNameError, facilityError, roleError,

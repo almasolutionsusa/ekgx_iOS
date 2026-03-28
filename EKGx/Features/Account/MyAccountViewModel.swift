@@ -129,7 +129,7 @@ final class MyAccountViewModel {
     }
 
     func submitPin() {
-        guard pinInput.count == 4, pinInput.allSatisfy(\.isNumber) else {
+        guard pinInput.count == 6, pinInput.allSatisfy(\.isNumber) else {
             pinError = L10n.Account.Pin.errorDigits
             return
         }

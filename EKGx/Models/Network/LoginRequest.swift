@@ -5,20 +5,41 @@
 
 import Foundation
 
+// MARK: - Auth Requests
+
 struct LoginRequest: Encodable {
-    let email: String
+    let username: String
     let password: String
 }
 
-struct RegisterRequest: Encodable {
-    let firstName: String
-    let lastName: String
+struct PinLoginRequest: Encodable {
+    let pin: String
+    let deviceUuid: String
+    let appUuid: String
+}
+
+struct PinSetupRequest: Encodable {
+    let userId: Int64
+    let facilityId: Int64
+    let pin: String
+    let deviceUuid: String
+    let appUuid: String
+}
+
+struct PinChangeRequest: Encodable {
+    let userId: Int64
+    let facilityId: Int64
+    let oldPin: String
+    let newPin: String
+}
+
+struct ForgotPasswordRequest: Encodable {
     let email: String
-    let password: String
-    let role: String
-    let facility: String
-    let department: String
-    let npi: String?
-    let title: String?
-    let degree: String?
+}
+
+// MARK: - App Requests
+
+struct AppCheckinRequest: Encodable {
+    let uuid: String
+    let version: String
 }
