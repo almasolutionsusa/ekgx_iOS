@@ -4,9 +4,13 @@
 <dict>
 	<key>files</key>
 	<dict>
+		<key>.DS_Store</key>
+		<data>
+		ADXJLLkjWgedMSJ8yp7ksYYbqFc=
+		</data>
 		<key>Headers/vhECGTrends-Swift.h</key>
 		<data>
-		AG4yLBOLAK0hkLsy6wP+hMjCkTU=
+		Km30mtz+gxvBRf0RWjGXRwhJJQE=
 		</data>
 		<key>Headers/vhECGTrends-umbrella.h</key>
 		<data>
@@ -14,7 +18,7 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		wsWpnYKDJdjLx10GKyjrVWfTCvQ=
+		T6PkwcKtVNdhNcfpAIzfOu6rG4s=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -22,51 +26,51 @@
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/Project/arm64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		3HNcubLHyEWtYiHMYQl5XO3TX90=
+		zl6pR8GD0pytlQHLsP8H6CcNMlQ=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<data>
-		8MAhfcgmedmJiTvhbvn4y9rwCuk=
+		8DFW7cK77WXRv6RrOAyuIrwl0rk=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
-		4Z5x0CUWc5LD5tIL+gB4tVEpbUk=
+		DKROLD/fT3uH9mPPXIuBpZGmaJE=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.private.swiftinterface</key>
 		<data>
-		KxpePrZe2WS6SchOyyk2ELdtI9s=
+		builwA+ZzKQ8pb8JnW8o/HA9B98=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		6RRX3uMdyvJocvFKK2aBxAY51do=
+		A5b8FJ1Q2IafZCRLtq9fdnKKsFQ=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<data>
-		KxpePrZe2WS6SchOyyk2ELdtI9s=
+		builwA+ZzKQ8pb8JnW8o/HA9B98=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		JSmNIfIHuh/s4hdSdZfLgm+v6MM=
+		slHJCOKXy/S8kT7M2hTNmEN6BBs=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<data>
-		4Z5x0CUWc5LD5tIL+gB4tVEpbUk=
+		DKROLD/fT3uH9mPPXIuBpZGmaJE=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.private.swiftinterface</key>
 		<data>
-		k2XlAfWWJrLO2+zywz6OMRdvL4Y=
+		MCLFwe0zbDCyYvGUbppWTC0ngWE=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		F56RgyNBzyzsHvr/D9XwOobFn7s=
+		p87xpuxjG1PyU3IO6Mbz2hozMno=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.swiftinterface</key>
 		<data>
-		k2XlAfWWJrLO2+zywz6OMRdvL4Y=
+		MCLFwe0zbDCyYvGUbppWTC0ngWE=
 		</data>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		ouCcqWvy1YYSWFXSm6HO/DwMcAc=
+		saPzmPhWUVcAeQV5akdGNS8M9LE=
 		</data>
 		<key>vhECGTrends.bundle/Assets.car</key>
 		<data>
@@ -74,7 +78,7 @@
 		</data>
 		<key>vhECGTrends.bundle/Info.plist</key>
 		<data>
-		ykqbVxZjGL2r4n22HEzKCHBPnok=
+		1Xv/S4pKVnuZn5nl/KPqs6Mlvnk=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -83,11 +87,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			AG4yLBOLAK0hkLsy6wP+hMjCkTU=
+			Km30mtz+gxvBRf0RWjGXRwhJJQE=
 			</data>
 			<key>hash2</key>
 			<data>
-			zm75ZS9U5m2JobssCePlQmYUQWjfMXUb3vqICCelcqM=
+			etyVZRT8o4DRUeqr94bRUjtzwYToeQJOeuoAeI3YWTY=
 			</data>
 		</dict>
 		<key>Headers/vhECGTrends-umbrella.h</key>
@@ -116,132 +120,132 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			3HNcubLHyEWtYiHMYQl5XO3TX90=
+			zl6pR8GD0pytlQHLsP8H6CcNMlQ=
 			</data>
 			<key>hash2</key>
 			<data>
-			deQRUBBiD6cCvCTYWbYetFrAE4YCHNUr+1P5ES6PpFE=
+			wqPi4xowhZqqcRSo+DjRSFWJDcIRA6VEOvRFEQCz9UE=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/Project/x86_64-apple-ios-simulator.swiftsourceinfo</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			8MAhfcgmedmJiTvhbvn4y9rwCuk=
+			8DFW7cK77WXRv6RrOAyuIrwl0rk=
 			</data>
 			<key>hash2</key>
 			<data>
-			ozPQ6YkXCvexcvndf6xNpHRu83Gs2dADn6sIfD0Z4P4=
+			lSG2rYQlvpfGk3gvJNUhecjUkXlfieavCzfKSKo7ZEk=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			4Z5x0CUWc5LD5tIL+gB4tVEpbUk=
+			DKROLD/fT3uH9mPPXIuBpZGmaJE=
 			</data>
 			<key>hash2</key>
 			<data>
-			dqilOMJEHvHh+Umg1G+urGW6uKkg4zFRC6eNOH1gJgM=
+			foa9u/vi6V7ELvTpFbtxFH2n3uWzAfxL/Ulsht42kRQ=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.private.swiftinterface</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			KxpePrZe2WS6SchOyyk2ELdtI9s=
+			builwA+ZzKQ8pb8JnW8o/HA9B98=
 			</data>
 			<key>hash2</key>
 			<data>
-			vS3BLiO6pVXQxsg7LomfUhymg6bOtxvwklIULKt0qSY=
+			K7GYaj8HZUm22dbMXb3eRA0epoM9NSJSkSk7Vy24quE=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			6RRX3uMdyvJocvFKK2aBxAY51do=
+			A5b8FJ1Q2IafZCRLtq9fdnKKsFQ=
 			</data>
 			<key>hash2</key>
 			<data>
-			58Zj7YJ0gF4kSieItmjR/rswjEra7d3itNo+24oLpeE=
+			ZcgH+wQJjvX2N48IVkeFojdQnRJY2eTOeX49qxzEaAw=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			KxpePrZe2WS6SchOyyk2ELdtI9s=
+			builwA+ZzKQ8pb8JnW8o/HA9B98=
 			</data>
 			<key>hash2</key>
 			<data>
-			vS3BLiO6pVXQxsg7LomfUhymg6bOtxvwklIULKt0qSY=
+			K7GYaj8HZUm22dbMXb3eRA0epoM9NSJSkSk7Vy24quE=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			JSmNIfIHuh/s4hdSdZfLgm+v6MM=
+			slHJCOKXy/S8kT7M2hTNmEN6BBs=
 			</data>
 			<key>hash2</key>
 			<data>
-			lv0oRba5m+en96iWAeKKg4McHsBmgPA9qTe6MLBfvGI=
+			GZOyQcgyn2mLBSTOGEeCKXr6+4bu9zRHvi2cutNUZCw=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			4Z5x0CUWc5LD5tIL+gB4tVEpbUk=
+			DKROLD/fT3uH9mPPXIuBpZGmaJE=
 			</data>
 			<key>hash2</key>
 			<data>
-			dqilOMJEHvHh+Umg1G+urGW6uKkg4zFRC6eNOH1gJgM=
+			foa9u/vi6V7ELvTpFbtxFH2n3uWzAfxL/Ulsht42kRQ=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.private.swiftinterface</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			k2XlAfWWJrLO2+zywz6OMRdvL4Y=
+			MCLFwe0zbDCyYvGUbppWTC0ngWE=
 			</data>
 			<key>hash2</key>
 			<data>
-			ZkEM9MGzhpLWHKwAm2zOA/IOzrORcF3sUxyZ/13ICIs=
+			QUwZHbB0eLOsBo4XoDhtOiofivpuHGMjQnfDBUSll2w=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			F56RgyNBzyzsHvr/D9XwOobFn7s=
+			p87xpuxjG1PyU3IO6Mbz2hozMno=
 			</data>
 			<key>hash2</key>
 			<data>
-			BGYwT0FVyj52GqhCc8j5iiXKvR7d0HbI4i2KOXZrphQ=
+			M0qfpR4rCkT30A6L+4UQRLtUOiiUQbBsgndLtZUDDCU=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.swiftinterface</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			k2XlAfWWJrLO2+zywz6OMRdvL4Y=
+			MCLFwe0zbDCyYvGUbppWTC0ngWE=
 			</data>
 			<key>hash2</key>
 			<data>
-			ZkEM9MGzhpLWHKwAm2zOA/IOzrORcF3sUxyZ/13ICIs=
+			QUwZHbB0eLOsBo4XoDhtOiofivpuHGMjQnfDBUSll2w=
 			</data>
 		</dict>
 		<key>Modules/vhECGTrends.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			ouCcqWvy1YYSWFXSm6HO/DwMcAc=
+			saPzmPhWUVcAeQV5akdGNS8M9LE=
 			</data>
 			<key>hash2</key>
 			<data>
-			EM+/WJMD/Yk48yOEsd0FLf+nqUluwmjWQKW9K/2bFKc=
+			cpzV1jV94C2JMcmMhpvRG28pIKu0TX2nJTY1/3e7cFY=
 			</data>
 		</dict>
 		<key>vhECGTrends.bundle/Assets.car</key>
@@ -259,11 +263,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			ykqbVxZjGL2r4n22HEzKCHBPnok=
+			1Xv/S4pKVnuZn5nl/KPqs6Mlvnk=
 			</data>
 			<key>hash2</key>
 			<data>
-			vs2bZOf/BfxvE//m/ldyJy6/pGRtlttPkxJnkLMcRGg=
+			6F6gw0E/MYj/6bkLEPCI1xMbPsLdABSS6tMNvn0Nr0M=
 			</data>
 		</dict>
 	</dict>

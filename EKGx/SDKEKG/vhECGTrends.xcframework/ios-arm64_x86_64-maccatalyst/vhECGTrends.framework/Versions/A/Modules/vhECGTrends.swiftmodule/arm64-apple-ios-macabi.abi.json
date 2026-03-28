@@ -1322,6 +1322,102 @@
           },
           {
             "kind": "Var",
+            "name": "headTailType",
+            "printedName": "headTailType",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "vhEcgHeadTailType",
+                "printedName": "vhECGTrends.vhEcgHeadTailType",
+                "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "c:@M@vhECGTrends@objc(cs)vhECGDrawView(py)headTailType",
+            "mangledName": "$s11vhECGTrends0A11ECGDrawViewC12headTailTypeAA0a7EcgHeadfG0Ovp",
+            "moduleName": "vhECGTrends",
+            "declAttributes": [
+              "HasInitialValue",
+              "Preconcurrency",
+              "Custom",
+              "HasStorage",
+              "AccessControl",
+              "ObjC",
+              "RawDocComment"
+            ],
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "vhEcgHeadTailType",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType",
+                    "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "c:@M@vhECGTrends@objc(cs)vhECGDrawView(im)headTailType",
+                "mangledName": "$s11vhECGTrends0A11ECGDrawViewC12headTailTypeAA0a7EcgHeadfG0Ovg",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "declAttributes": [
+                  "ObjC"
+                ],
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "vhEcgHeadTailType",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType",
+                    "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "c:@M@vhECGTrends@objc(cs)vhECGDrawView(im)setHeadTailType:",
+                "mangledName": "$s11vhECGTrends0A11ECGDrawViewC12headTailTypeAA0a7EcgHeadfG0Ovs",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "declAttributes": [
+                  "ObjC"
+                ],
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:11vhECGTrends0A11ECGDrawViewC12headTailTypeAA0a7EcgHeadfG0OvM",
+                "mangledName": "$s11vhECGTrends0A11ECGDrawViewC12headTailTypeAA0a7EcgHeadfG0OvM",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
+            "kind": "Var",
             "name": "leadDisplay",
             "printedName": "leadDisplay",
             "children": [
@@ -4620,6 +4716,230 @@
       },
       {
         "kind": "TypeDecl",
+        "name": "vhEcgHeadTailType",
+        "printedName": "vhEcgHeadTailType",
+        "children": [
+          {
+            "kind": "Var",
+            "name": "small",
+            "printedName": "small",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(vhECGTrends.vhEcgHeadTailType.Type) -> vhECGTrends.vhEcgHeadTailType",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "vhEcgHeadTailType",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType",
+                    "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "vhEcgHeadTailType",
+                        "printedName": "vhECGTrends.vhEcgHeadTailType",
+                        "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType@vhEcgHeadTailTypeSmall",
+            "mangledName": "$s11vhECGTrends0A15EcgHeadTailTypeO5smallyA2CmF",
+            "moduleName": "vhECGTrends",
+            "declAttributes": [
+              "ObjC"
+            ],
+            "fixedbinaryorder": 0
+          },
+          {
+            "kind": "Var",
+            "name": "large",
+            "printedName": "large",
+            "children": [
+              {
+                "kind": "TypeFunc",
+                "name": "Function",
+                "printedName": "(vhECGTrends.vhEcgHeadTailType.Type) -> vhECGTrends.vhEcgHeadTailType",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "vhEcgHeadTailType",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType",
+                    "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Metatype",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType.Type",
+                    "children": [
+                      {
+                        "kind": "TypeNominal",
+                        "name": "vhEcgHeadTailType",
+                        "printedName": "vhECGTrends.vhEcgHeadTailType",
+                        "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ],
+            "declKind": "EnumElement",
+            "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType@vhEcgHeadTailTypeLarge",
+            "mangledName": "$s11vhECGTrends0A15EcgHeadTailTypeO5largeyA2CmF",
+            "moduleName": "vhECGTrends",
+            "declAttributes": [
+              "RawDocComment",
+              "ObjC"
+            ],
+            "fixedbinaryorder": 1
+          },
+          {
+            "kind": "Constructor",
+            "name": "init",
+            "printedName": "init(rawValue:)",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Optional",
+                "printedName": "vhECGTrends.vhEcgHeadTailType?",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "vhEcgHeadTailType",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType",
+                    "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                  }
+                ],
+                "usr": "s:Sq"
+              },
+              {
+                "kind": "TypeNominal",
+                "name": "Int",
+                "printedName": "Swift.Int",
+                "usr": "s:Si"
+              }
+            ],
+            "declKind": "Constructor",
+            "usr": "s:11vhECGTrends0A15EcgHeadTailTypeO8rawValueACSgSi_tcfc",
+            "mangledName": "$s11vhECGTrends0A15EcgHeadTailTypeO8rawValueACSgSi_tcfc",
+            "moduleName": "vhECGTrends",
+            "implicit": true,
+            "init_kind": "Designated"
+          },
+          {
+            "kind": "Var",
+            "name": "rawValue",
+            "printedName": "rawValue",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "Int",
+                "printedName": "Swift.Int",
+                "usr": "s:Si"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "s:11vhECGTrends0A15EcgHeadTailTypeO8rawValueSivp",
+            "mangledName": "$s11vhECGTrends0A15EcgHeadTailTypeO8rawValueSivp",
+            "moduleName": "vhECGTrends",
+            "implicit": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Int",
+                    "printedName": "Swift.Int",
+                    "usr": "s:Si"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:11vhECGTrends0A15EcgHeadTailTypeO8rawValueSivg",
+                "mangledName": "$s11vhECGTrends0A15EcgHeadTailTypeO8rawValueSivg",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "accessorKind": "get"
+              }
+            ]
+          }
+        ],
+        "declKind": "Enum",
+        "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType",
+        "mangledName": "$s11vhECGTrends0A15EcgHeadTailTypeO",
+        "moduleName": "vhECGTrends",
+        "declAttributes": [
+          "AccessControl",
+          "ObjC",
+          "RawDocComment"
+        ],
+        "enumRawTypeName": "Int",
+        "conformances": [
+          {
+            "kind": "Conformance",
+            "name": "Copyable",
+            "printedName": "Copyable",
+            "usr": "s:s8CopyableP",
+            "mangledName": "$ss8CopyableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Escapable",
+            "printedName": "Escapable",
+            "usr": "s:s9EscapableP",
+            "mangledName": "$ss9EscapableP"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Equatable",
+            "printedName": "Equatable",
+            "usr": "s:SQ",
+            "mangledName": "$sSQ"
+          },
+          {
+            "kind": "Conformance",
+            "name": "Hashable",
+            "printedName": "Hashable",
+            "usr": "s:SH",
+            "mangledName": "$sSH"
+          },
+          {
+            "kind": "Conformance",
+            "name": "RawRepresentable",
+            "printedName": "RawRepresentable",
+            "children": [
+              {
+                "kind": "TypeWitness",
+                "name": "RawValue",
+                "printedName": "RawValue",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Int",
+                    "printedName": "Swift.Int",
+                    "usr": "s:Si"
+                  }
+                ]
+              }
+            ],
+            "usr": "s:SY",
+            "mangledName": "$sSY"
+          }
+        ]
+      },
+      {
+        "kind": "TypeDecl",
         "name": "vhEcgLeadType",
         "printedName": "vhEcgLeadType",
         "children": [
@@ -6869,6 +7189,102 @@
                 "declKind": "Accessor",
                 "usr": "s:11vhECGTrends0A15ECGRealTimeViewC14standard_styleAA0A15EcgStandardTypeOvM",
                 "mangledName": "$s11vhECGTrends0A15ECGRealTimeViewC14standard_styleAA0A15EcgStandardTypeOvM",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
+            "kind": "Var",
+            "name": "head_tail_type",
+            "printedName": "head_tail_type",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "vhEcgHeadTailType",
+                "printedName": "vhECGTrends.vhEcgHeadTailType",
+                "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "c:@M@vhECGTrends@objc(cs)vhECGRealTimeView(py)head_tail_type",
+            "mangledName": "$s11vhECGTrends0A15ECGRealTimeViewC14head_tail_typeAA0A15EcgHeadTailTypeOvp",
+            "moduleName": "vhECGTrends",
+            "declAttributes": [
+              "HasInitialValue",
+              "Preconcurrency",
+              "Custom",
+              "HasStorage",
+              "AccessControl",
+              "ObjC",
+              "RawDocComment"
+            ],
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "vhEcgHeadTailType",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType",
+                    "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "c:@M@vhECGTrends@objc(cs)vhECGRealTimeView(im)head_tail_type",
+                "mangledName": "$s11vhECGTrends0A15ECGRealTimeViewC14head_tail_typeAA0A15EcgHeadTailTypeOvg",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "declAttributes": [
+                  "ObjC"
+                ],
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "vhEcgHeadTailType",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType",
+                    "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "c:@M@vhECGTrends@objc(cs)vhECGRealTimeView(im)setHead_tail_type:",
+                "mangledName": "$s11vhECGTrends0A15ECGRealTimeViewC14head_tail_typeAA0A15EcgHeadTailTypeOvs",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "declAttributes": [
+                  "ObjC"
+                ],
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:11vhECGTrends0A15ECGRealTimeViewC14head_tail_typeAA0A15EcgHeadTailTypeOvM",
+                "mangledName": "$s11vhECGTrends0A15ECGRealTimeViewC14head_tail_typeAA0A15EcgHeadTailTypeOvM",
                 "moduleName": "vhECGTrends",
                 "implicit": true,
                 "accessorKind": "_modify"
@@ -13439,6 +13855,102 @@
           },
           {
             "kind": "Var",
+            "name": "head_tail_type",
+            "printedName": "head_tail_type",
+            "children": [
+              {
+                "kind": "TypeNominal",
+                "name": "vhEcgHeadTailType",
+                "printedName": "vhECGTrends.vhEcgHeadTailType",
+                "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+              }
+            ],
+            "declKind": "Var",
+            "usr": "c:@M@vhECGTrends@objc(cs)vhECGTrendsView(py)head_tail_type",
+            "mangledName": "$s11vhECGTrends0aB4ViewC14head_tail_typeAA0A15EcgHeadTailTypeOvp",
+            "moduleName": "vhECGTrends",
+            "declAttributes": [
+              "HasInitialValue",
+              "Preconcurrency",
+              "Custom",
+              "HasStorage",
+              "AccessControl",
+              "ObjC",
+              "RawDocComment"
+            ],
+            "hasStorage": true,
+            "accessors": [
+              {
+                "kind": "Accessor",
+                "name": "Get",
+                "printedName": "Get()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "vhEcgHeadTailType",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType",
+                    "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "c:@M@vhECGTrends@objc(cs)vhECGTrendsView(im)head_tail_type",
+                "mangledName": "$s11vhECGTrends0aB4ViewC14head_tail_typeAA0A15EcgHeadTailTypeOvg",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "declAttributes": [
+                  "ObjC"
+                ],
+                "accessorKind": "get"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Set",
+                "printedName": "Set()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  },
+                  {
+                    "kind": "TypeNominal",
+                    "name": "vhEcgHeadTailType",
+                    "printedName": "vhECGTrends.vhEcgHeadTailType",
+                    "usr": "c:@M@vhECGTrends@E@vhEcgHeadTailType"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "c:@M@vhECGTrends@objc(cs)vhECGTrendsView(im)setHead_tail_type:",
+                "mangledName": "$s11vhECGTrends0aB4ViewC14head_tail_typeAA0A15EcgHeadTailTypeOvs",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "declAttributes": [
+                  "ObjC"
+                ],
+                "accessorKind": "set"
+              },
+              {
+                "kind": "Accessor",
+                "name": "Modify",
+                "printedName": "Modify()",
+                "children": [
+                  {
+                    "kind": "TypeNominal",
+                    "name": "Void",
+                    "printedName": "()"
+                  }
+                ],
+                "declKind": "Accessor",
+                "usr": "s:11vhECGTrends0aB4ViewC14head_tail_typeAA0A15EcgHeadTailTypeOvM",
+                "mangledName": "$s11vhECGTrends0aB4ViewC14head_tail_typeAA0A15EcgHeadTailTypeOvM",
+                "moduleName": "vhECGTrends",
+                "implicit": true,
+                "accessorKind": "_modify"
+              }
+            ]
+          },
+          {
+            "kind": "Var",
             "name": "pix_per_mm",
             "printedName": "pix_per_mm",
             "children": [
@@ -15535,478 +16047,212 @@
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "IntegerLiteral",
-      "offset": 1809,
+      "offset": 2029,
       "length": 3,
       "value": "500"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "BooleanLiteral",
-      "offset": 1995,
+      "offset": 2215,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "FloatLiteral",
-      "offset": 2178,
+      "offset": 2398,
       "length": 3,
       "value": "1.3"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "FloatLiteral",
-      "offset": 2784,
+      "offset": 3004,
       "length": 4,
       "value": "0.17"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "FloatLiteral",
-      "offset": 2797,
+      "offset": 3017,
       "length": 4,
       "value": "0.81"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "FloatLiteral",
-      "offset": 2809,
+      "offset": 3029,
       "length": 4,
       "value": "0.80"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "FloatLiteral",
-      "offset": 2822,
+      "offset": 3042,
       "length": 3,
       "value": "1.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "FloatLiteral",
-      "offset": 3189,
+      "offset": 3409,
       "length": 3,
       "value": "0.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "FloatLiteral",
-      "offset": 3219,
+      "offset": 3439,
+      "length": 3,
+      "value": "0.0"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
+      "kind": "FloatLiteral",
+      "offset": 3468,
+      "length": 3,
+      "value": "0.0"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
+      "kind": "FloatLiteral",
+      "offset": 3498,
       "length": 3,
       "value": "0.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "Array",
-      "offset": 3313,
+      "offset": 3592,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "BooleanLiteral",
-      "offset": 3377,
+      "offset": 3656,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "IntegerLiteral",
-      "offset": 3391,
+      "offset": 3670,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "IntegerLiteral",
-      "offset": 3470,
+      "offset": 3749,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "IntegerLiteral",
-      "offset": 3548,
+      "offset": 3827,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "IntegerLiteral",
-      "offset": 3626,
+      "offset": 3905,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "BooleanLiteral",
-      "offset": 3662,
+      "offset": 3941,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "Array",
-      "offset": 3994,
+      "offset": 4273,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "Array",
-      "offset": 4044,
+      "offset": 4323,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "BooleanLiteral",
-      "offset": 4079,
+      "offset": 4358,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "BooleanLiteral",
-      "offset": 4325,
+      "offset": 4604,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "BooleanLiteral",
-      "offset": 4364,
+      "offset": 4643,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "Array",
-      "offset": 4423,
+      "offset": 4702,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "IntegerLiteral",
-      "offset": 4459,
+      "offset": 4738,
       "length": 1,
       "value": "0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "Array",
-      "offset": 4560,
+      "offset": 4839,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "Array",
-      "offset": 4612,
+      "offset": 4891,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "BooleanLiteral",
-      "offset": 4649,
+      "offset": 4928,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "BooleanLiteral",
-      "offset": 6017,
+      "offset": 6296,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
       "kind": "BooleanLiteral",
-      "offset": 6063,
+      "offset": 6342,
       "length": 5,
       "value": "false"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 9172,
-      "length": 1,
-      "value": "1"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 9230,
-      "length": 2,
-      "value": "12"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 9369,
-      "length": 1,
-      "value": "1"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 9474,
-      "length": 1,
-      "value": "0"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 9609,
-      "length": 1,
-      "value": "5"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 9657,
-      "length": 1,
-      "value": "2"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 9692,
-      "length": 1,
-      "value": "6"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "BooleanLiteral",
-      "offset": 9911,
-      "length": 4,
-      "value": "true"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "BooleanLiteral",
-      "offset": 9945,
-      "length": 4,
-      "value": "true"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "BooleanLiteral",
-      "offset": 9980,
-      "length": 4,
-      "value": "true"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10090,
-      "length": 1,
-      "value": "3"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10095,
-      "length": 1,
-      "value": "0"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10108,
-      "length": 2,
-      "value": "12"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10178,
-      "length": 1,
-      "value": "6"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10183,
-      "length": 1,
-      "value": "0"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10196,
-      "length": 2,
-      "value": "12"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10267,
-      "length": 1,
-      "value": "2"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10272,
-      "length": 1,
-      "value": "0"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10389,
-      "length": 1,
-      "value": "1"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10403,
-      "length": 1,
-      "value": "3"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10417,
-      "length": 1,
-      "value": "5"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10431,
-      "length": 2,
-      "value": "12"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10506,
-      "length": 1,
-      "value": "1"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10511,
-      "length": 1,
-      "value": "3"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10516,
-      "length": 1,
-      "value": "0"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "BooleanLiteral",
-      "offset": 10612,
-      "length": 5,
-      "value": "false"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "BooleanLiteral",
-      "offset": 10647,
-      "length": 5,
-      "value": "false"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "BooleanLiteral",
-      "offset": 10683,
-      "length": 5,
-      "value": "false"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10948,
-      "length": 1,
-      "value": "5"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 10961,
-      "length": 2,
-      "value": "12"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 11009,
-      "length": 1,
-      "value": "5"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 11150,
-      "length": 1,
-      "value": "5"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 11311,
-      "length": 2,
-      "value": "10"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 11568,
-      "length": 1,
-      "value": "2"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "FloatLiteral",
-      "offset": 11650,
-      "length": 3,
-      "value": "0.5"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 12108,
-      "length": 1,
-      "value": "2"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 12197,
-      "length": 1,
-      "value": "2"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 12296,
-      "length": 1,
-      "value": "4"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 12395,
-      "length": 1,
-      "value": "4"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGDrawView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 12484,
-      "length": 1,
-      "value": "6"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
@@ -16088,126 +16334,133 @@
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3001,
+      "offset": 2945,
+      "length": 5,
+      "value": "1"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
+      "kind": "IntegerLiteral",
+      "offset": 3102,
       "length": 2,
       "value": "1"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3014,
+      "offset": 3115,
       "length": 3,
       "value": "2"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3028,
+      "offset": 3129,
       "length": 3,
       "value": "3"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3042,
+      "offset": 3143,
       "length": 3,
       "value": "4"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3056,
+      "offset": 3157,
       "length": 3,
       "value": "5"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3075,
+      "offset": 3176,
       "length": 2,
       "value": "6"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3088,
+      "offset": 3189,
       "length": 2,
       "value": "7"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3101,
+      "offset": 3202,
       "length": 2,
       "value": "8"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3114,
+      "offset": 3215,
       "length": 2,
       "value": "9"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3127,
+      "offset": 3228,
       "length": 2,
       "value": "10"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3140,
+      "offset": 3241,
       "length": 2,
       "value": "11"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3158,
+      "offset": 3259,
       "length": 3,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3172,
+      "offset": 3273,
       "length": 3,
       "value": "13"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3186,
+      "offset": 3287,
       "length": 3,
       "value": "14"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3200,
+      "offset": 3301,
       "length": 2,
       "value": "15"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3213,
+      "offset": 3314,
       "length": 2,
       "value": "16"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3226,
+      "offset": 3327,
       "length": 2,
       "value": "17"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGModel.swift",
       "kind": "IntegerLiteral",
-      "offset": 3244,
+      "offset": 3345,
       "length": 3,
       "value": "18"
     },
@@ -16235,65 +16488,44 @@
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 2206,
+      "offset": 2402,
       "length": 3,
       "value": "5.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 2401,
+      "offset": 2597,
       "length": 3,
       "value": "500"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "BooleanLiteral",
-      "offset": 3466,
+      "offset": 3662,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "StringLiteral",
-      "offset": 3670,
+      "offset": 3866,
       "length": 2,
       "value": "\"\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 3910,
+      "offset": 4106,
       "length": 4,
       "value": "0.94"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 3923,
+      "offset": 4119,
       "length": 4,
       "value": "0.56"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "FloatLiteral",
-      "offset": 3935,
-      "length": 4,
-      "value": "0.56"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "FloatLiteral",
-      "offset": 3948,
-      "length": 3,
-      "value": "1.0"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "FloatLiteral",
-      "offset": 4118,
-      "length": 4,
-      "value": "0.94"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
@@ -16305,259 +16537,280 @@
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 4143,
+      "offset": 4144,
+      "length": 3,
+      "value": "1.0"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "FloatLiteral",
+      "offset": 4314,
+      "length": 4,
+      "value": "0.94"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "FloatLiteral",
+      "offset": 4327,
       "length": 4,
       "value": "0.56"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 4156,
+      "offset": 4339,
+      "length": 4,
+      "value": "0.56"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "FloatLiteral",
+      "offset": 4352,
       "length": 4,
       "value": "0.83"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 4325,
+      "offset": 4521,
       "length": 4,
       "value": "1.00"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 4338,
+      "offset": 4534,
       "length": 4,
       "value": "0.88"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 4350,
+      "offset": 4546,
       "length": 4,
       "value": "0.88"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 4363,
+      "offset": 4559,
       "length": 3,
       "value": "1.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 4530,
+      "offset": 4726,
       "length": 3,
       "value": "1.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 4686,
+      "offset": 4882,
       "length": 3,
       "value": "0.5"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 4841,
+      "offset": 5037,
       "length": 3,
       "value": "0.5"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 6050,
+      "offset": 6246,
       "length": 1,
       "value": "0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 6074,
+      "offset": 6270,
       "length": 1,
       "value": "0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 6149,
+      "offset": 6345,
       "length": 1,
       "value": "0"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 6152,
-      "length": 1,
-      "value": "0"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 6306,
-      "length": 2,
-      "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
       "offset": 6348,
-      "length": 2,
-      "value": "10"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 6373,
-      "length": 2,
-      "value": "15"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 6378,
-      "length": 2,
-      "value": "10"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 6403,
-      "length": 2,
-      "value": "20"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 6407,
       "length": 1,
-      "value": "2"
+      "value": "0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 6410,
-      "length": 2,
-      "value": "15"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 6478,
+      "offset": 6502,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 6541,
-      "length": 1,
-      "value": "2"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 6565,
-      "length": 2,
-      "value": "15"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "IntegerLiteral",
-      "offset": 6570,
+      "offset": 6544,
       "length": 2,
       "value": "10"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 6595,
+      "offset": 6569,
       "length": 2,
-      "value": "20"
+      "value": "15"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "IntegerLiteral",
+      "offset": 6574,
+      "length": 2,
+      "value": "10"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
       "offset": 6599,
+      "length": 2,
+      "value": "20"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "IntegerLiteral",
+      "offset": 6603,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 6602,
+      "offset": 6606,
       "length": 2,
       "value": "15"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "BooleanLiteral",
-      "offset": 7249,
-      "length": 5,
-      "value": "false"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
-      "kind": "BooleanLiteral",
-      "offset": 7432,
-      "length": 5,
-      "value": "false"
-    },
-    {
-      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 7580,
+      "offset": 6674,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "IntegerLiteral",
-      "offset": 7848,
+      "offset": 6737,
+      "length": 1,
+      "value": "2"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "IntegerLiteral",
+      "offset": 6761,
+      "length": 2,
+      "value": "15"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "IntegerLiteral",
+      "offset": 6766,
+      "length": 2,
+      "value": "10"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "IntegerLiteral",
+      "offset": 6791,
+      "length": 2,
+      "value": "20"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "IntegerLiteral",
+      "offset": 6795,
+      "length": 1,
+      "value": "2"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "IntegerLiteral",
+      "offset": 6798,
+      "length": 2,
+      "value": "15"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "BooleanLiteral",
+      "offset": 7445,
+      "length": 5,
+      "value": "false"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "BooleanLiteral",
+      "offset": 7628,
+      "length": 5,
+      "value": "false"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "IntegerLiteral",
+      "offset": 7776,
+      "length": 2,
+      "value": "12"
+    },
+    {
+      "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
+      "kind": "IntegerLiteral",
+      "offset": 8044,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 7889,
+      "offset": 8085,
       "length": 4,
       "value": "0.17"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 7902,
+      "offset": 8098,
       "length": 4,
       "value": "0.81"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 7914,
+      "offset": 8110,
       "length": 4,
       "value": "0.80"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "FloatLiteral",
-      "offset": 7927,
+      "offset": 8123,
       "length": 3,
       "value": "1.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "StringLiteral",
-      "offset": 7951,
+      "offset": 8147,
       "length": 24,
       "value": "\"Respiratory  12.5 mm\/s\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGRealTimeView.swift",
       "kind": "BooleanLiteral",
-      "offset": 7999,
+      "offset": 8195,
       "length": 4,
       "value": "true"
     },
@@ -16788,406 +17041,406 @@
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 2663,
+      "offset": 2860,
       "length": 3,
       "value": "5.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 2895,
+      "offset": 3092,
       "length": 3,
       "value": "500"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "StringLiteral",
-      "offset": 3588,
+      "offset": 3785,
       "length": 6,
       "value": "\"mm\/s\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "StringLiteral",
-      "offset": 3952,
+      "offset": 4149,
       "length": 7,
       "value": "\"mm\/mV\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "BooleanLiteral",
-      "offset": 4466,
+      "offset": 4663,
       "length": 5,
       "value": "false"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "StringLiteral",
-      "offset": 4623,
+      "offset": 4820,
       "length": 2,
       "value": "\"\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 4850,
+      "offset": 5047,
       "length": 4,
       "value": "0.94"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 4863,
+      "offset": 5060,
       "length": 4,
       "value": "0.56"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 4875,
+      "offset": 5072,
       "length": 4,
       "value": "0.56"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 4888,
+      "offset": 5085,
       "length": 3,
       "value": "1.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5077,
+      "offset": 5274,
       "length": 4,
       "value": "0.94"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5090,
+      "offset": 5287,
       "length": 4,
       "value": "0.56"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5102,
+      "offset": 5299,
       "length": 4,
       "value": "0.56"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5115,
+      "offset": 5312,
       "length": 4,
       "value": "0.83"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5298,
+      "offset": 5495,
       "length": 4,
       "value": "1.00"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5311,
+      "offset": 5508,
       "length": 4,
       "value": "0.88"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5323,
+      "offset": 5520,
       "length": 4,
       "value": "0.88"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5336,
+      "offset": 5533,
       "length": 3,
       "value": "1.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5522,
+      "offset": 5719,
       "length": 3,
       "value": "1.0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5697,
+      "offset": 5894,
       "length": 3,
       "value": "0.5"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 5865,
+      "offset": 6062,
       "length": 3,
       "value": "0.5"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 6169,
+      "offset": 6366,
       "length": 1,
       "value": "0"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 10000,
+      "offset": 10197,
       "length": 3,
       "value": "0.8"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 10061,
+      "offset": 10258,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 10135,
+      "offset": 10332,
       "length": 1,
       "value": "4"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 10169,
+      "offset": 10366,
       "length": 1,
       "value": "1"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "StringLiteral",
-      "offset": 10271,
+      "offset": 10468,
       "length": 7,
       "value": "\"mm\/mV\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 10386,
+      "offset": 10583,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 10389,
+      "offset": 10586,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 10426,
+      "offset": 10623,
       "length": 4,
       "value": "0.16"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 10711,
+      "offset": 10908,
       "length": 3,
       "value": "0.8"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 10772,
+      "offset": 10969,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 10846,
+      "offset": 11043,
       "length": 1,
       "value": "4"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 10880,
+      "offset": 11077,
       "length": 1,
       "value": "1"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "StringLiteral",
-      "offset": 10986,
+      "offset": 11183,
       "length": 6,
       "value": "\"mm\/s\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 11100,
+      "offset": 11297,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 11103,
+      "offset": 11300,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 11140,
+      "offset": 11337,
       "length": 4,
       "value": "0.16"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 11524,
+      "offset": 11721,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 11565,
+      "offset": 11762,
       "length": 2,
       "value": "12"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "Array",
-      "offset": 11678,
+      "offset": 11875,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 11936,
+      "offset": 12133,
       "length": 3,
       "value": "0.8"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 12010,
+      "offset": 12207,
       "length": 1,
       "value": "4"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 12044,
+      "offset": 12241,
       "length": 1,
       "value": "1"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 12143,
+      "offset": 12340,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 12146,
+      "offset": 12343,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "FloatLiteral",
-      "offset": 12183,
+      "offset": 12380,
       "length": 4,
       "value": "0.16"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "StringLiteral",
-      "offset": 12674,
+      "offset": 12871,
       "length": 10,
       "value": "\"pre_icon\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "StringLiteral",
-      "offset": 12754,
+      "offset": 12951,
       "length": 17,
       "value": "\"pre_select_icon\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "BooleanLiteral",
-      "offset": 12816,
+      "offset": 13013,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "StringLiteral",
-      "offset": 13051,
+      "offset": 13248,
       "length": 11,
       "value": "\"next_icon\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "StringLiteral",
-      "offset": 13132,
+      "offset": 13329,
       "length": 18,
       "value": "\"next_select_icon\""
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "BooleanLiteral",
-      "offset": 13195,
+      "offset": 13392,
       "length": 4,
       "value": "true"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 15629,
+      "offset": 15826,
       "length": 1,
       "value": "1"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 15632,
+      "offset": 15829,
       "length": 1,
       "value": "1"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "IntegerLiteral",
-      "offset": 15728,
+      "offset": 15925,
       "length": 1,
       "value": "2"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "Array",
-      "offset": 15934,
+      "offset": 16131,
       "length": 2,
       "value": "[]"
     },
     {
       "filePath": "\/Users\/moon\/vhECGTrends\/vhECGTrends\/Classes\/vhECGTrendsView.swift",
       "kind": "BooleanLiteral",
-      "offset": 16703,
+      "offset": 16900,
       "length": 4,
       "value": "true"
     }

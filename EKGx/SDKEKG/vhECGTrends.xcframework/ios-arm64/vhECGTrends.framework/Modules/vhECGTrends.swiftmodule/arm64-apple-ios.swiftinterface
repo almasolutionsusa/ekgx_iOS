@@ -1,7 +1,7 @@
 // swift-interface-format-version: 1.0
-// swift-compiler-version: Apple Swift version 6.2.1 effective-5.10 (swiftlang-6.2.1.4.8 clang-1700.4.4.1)
+// swift-compiler-version: Apple Swift version 6.2.4 effective-5.10 (swiftlang-6.2.4.1.4 clang-1700.6.4.2)
 // swift-module-flags: -target arm64-apple-ios9.0 -enable-objc-interop -enable-library-evolution -swift-version 5 -enforce-exclusivity=checked -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name vhECGTrends
-// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2.1
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.2.4
 import Foundation
 import Swift
 import UIKit
@@ -59,6 +59,10 @@ import _SwiftConcurrencyShims
     @objc set
   }
   @objc @_Concurrency.MainActor @preconcurrency public var standardType: vhECGTrends.vhEcgStandardType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var headTailType: vhECGTrends.vhEcgHeadTailType {
     @objc get
     @objc set
   }
@@ -204,6 +208,17 @@ import _SwiftConcurrencyShims
     get
   }
 }
+@objc public enum vhEcgHeadTailType : Swift.Int {
+  case small
+  case large
+  #if compiler(>=5.3) && $NonescapableTypes
+  public init?(rawValue: Swift.Int)
+  #endif
+  public typealias RawValue = Swift.Int
+  public var rawValue: Swift.Int {
+    get
+  }
+}
 @objc public enum vhEcgLeadType : Swift.Int {
   case I
   case II
@@ -274,6 +289,10 @@ import _SwiftConcurrencyShims
     @objc set
   }
   @objc @_Concurrency.MainActor @preconcurrency public var standard_style: vhECGTrends.vhEcgStandardType {
+    @objc get
+    @objc set
+  }
+  @objc @_Concurrency.MainActor @preconcurrency public var head_tail_type: vhECGTrends.vhEcgHeadTailType {
     @objc get
     @objc set
   }
@@ -486,6 +505,10 @@ extension vhECGTrends.vhECGSelectButtonController {
     @objc get
     @objc set
   }
+  @objc @_Concurrency.MainActor @preconcurrency public var head_tail_type: vhECGTrends.vhEcgHeadTailType {
+    @objc get
+    @objc set
+  }
   @objc @_Concurrency.MainActor @preconcurrency public var pix_per_mm: Swift.Double {
     @objc get
     @objc set
@@ -580,6 +603,9 @@ extension vhECGTrends.vhEcgLeadDisplayType : Swift.RawRepresentable {}
 extension vhECGTrends.vhEcgStandardType : Swift.Equatable {}
 extension vhECGTrends.vhEcgStandardType : Swift.Hashable {}
 extension vhECGTrends.vhEcgStandardType : Swift.RawRepresentable {}
+extension vhECGTrends.vhEcgHeadTailType : Swift.Equatable {}
+extension vhECGTrends.vhEcgHeadTailType : Swift.Hashable {}
+extension vhECGTrends.vhEcgHeadTailType : Swift.RawRepresentable {}
 extension vhECGTrends.vhEcgLeadType : Swift.Equatable {}
 extension vhECGTrends.vhEcgLeadType : Swift.Hashable {}
 extension vhECGTrends.vhEcgLeadType : Swift.RawRepresentable {}
