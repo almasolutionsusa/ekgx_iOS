@@ -45,8 +45,8 @@ final class AuthService: AuthServiceProtocol {
 
     // MARK: - PIN Login
 
-    func pinLogin(pin: String, deviceUuid: String, appUuid: String) async throws {
-        let body = PinLoginRequest(pin: pin, deviceUuid: deviceUuid, appUuid: appUuid)
+    func pinLogin(pin: String, appUuid: String) async throws {
+        let body = PinLoginRequest(pin: pin, appUuid: appUuid)
         do {
             let response: APIResponse<LoginData> = try await client.post(
                 path: APIEndpoints.Auth.pinLogin,
@@ -60,36 +60,51 @@ final class AuthService: AuthServiceProtocol {
         }
     }
 
-    // MARK: - Register (not in current spec — kept for future)
+    // MARK: - Register
 
     func register(details: SignupDetails) async throws {
-        // Registration is currently web-only per spec.
-        // When endpoint is added, implement here.
-        throw AuthError.unknown
-    }
-
-    // MARK: - PIN Management
-
-    func pinStatus(userId: Int64) async throws -> Bool {
+        let body = AppRegistrationRequest(
+            username:  details.email,                  // server expects unique username
+            email:     details.email,
+            firstName: details.firstName,
+            lastName:  details.lastName,
+            phone:     nil,
+            title:     mapRoleToTitle(details.role),
+            appUuid:   UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? "",
+            npi:       details.npi.isEmpty ? nil : details.npi,
+            degree:    details.degree.isEmpty ? nil : details.degree.uppercased()
+        )
         do {
-            let response: APIResponse<PinStatusData> = try await client.get(
-                path: APIEndpoints.Auth.pinStatus,
-                query: ["userId": "\(userId)"]
-            )
-            return response.data?.hasPin ?? false
+            try await client.postVoid(path: APIEndpoints.Auth.register, body: body)
         } catch let error as APIError {
             throw mapAPIError(error)
         }
     }
 
-    func setupPin(userId: Int64, facilityId: Int64, pin: String, deviceUuid: String, appUuid: String) async throws {
-        let body = PinSetupRequest(
-            userId: userId,
-            facilityId: facilityId,
-            pin: pin,
-            deviceUuid: deviceUuid,
-            appUuid: appUuid
-        )
+    private func mapRoleToTitle(_ role: UserRole) -> String {
+        switch role {
+        case .physician:     return "PHYSICIAN"
+        case .nurse:         return "RN"
+        case .technician:    return "TECHNICIAN"
+        case .administrator: return "OTHER"
+        }
+    }
+
+    // MARK: - PIN Management
+
+    func pinStatus() async throws -> PinStatusData? {
+        do {
+            let response: APIResponse<PinStatusData> = try await client.get(
+                path: APIEndpoints.Auth.pinStatus
+            )
+            return response.data
+        } catch let error as APIError {
+            throw mapAPIError(error)
+        }
+    }
+
+    func setupPin(pin: String, appUuid: String) async throws {
+        let body = PinSetupRequest(pin: pin, appUuid: appUuid)
         do {
             try await client.postVoid(path: APIEndpoints.Auth.pinSetup, body: body)
         } catch let error as APIError {

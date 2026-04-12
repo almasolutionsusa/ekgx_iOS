@@ -126,10 +126,12 @@ final class APIClient {
         return try await execute(request)
     }
 
-    /// Multipart POST — used for ECG file upload.
+    /// Multipart POST — used for EKG file upload.
+    /// Accepts optional query params (appended to URL) and optional form fields.
     func postMultipart<T: Decodable>(
         path: String,
-        fields: [String: String],
+        query: [String: String] = [:],
+        fields: [String: String] = [:],
         fileData: Data?,
         fileName: String = "ecg.bin",
         mimeType: String = "application/octet-stream",
@@ -154,7 +156,12 @@ final class APIClient {
 
         body.append("--\(boundary)--\r\n")
 
-        var request = URLRequest(url: resolve(path: path))
+        var components = URLComponents(url: resolve(path: path), resolvingAgainstBaseURL: true)!
+        if !query.isEmpty {
+            components.queryItems = query.map { URLQueryItem(name: $0.key, value: $0.value) }
+        }
+
+        var request = URLRequest(url: components.url!)
         request.httpMethod = "POST"
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         request.httpBody = body
@@ -197,10 +204,8 @@ final class APIClient {
     }
 
     private func injectDeviceHeaders(_ request: inout URLRequest) {
-        let deviceUuid = UserDefaults.standard.string(forKey: AppCheckinService.Keys.deviceUuid) ?? ""
-        let appUuid    = UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid)    ?? ""
-        if !deviceUuid.isEmpty { request.setValue(deviceUuid, forHTTPHeaderField: "X-Device-UUID") }
-        if !appUuid.isEmpty    { request.setValue(appUuid,    forHTTPHeaderField: "X-App-UUID")    }
+        let appUuid = UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? ""
+        if !appUuid.isEmpty { request.setValue(appUuid, forHTTPHeaderField: "X-App-UUID") }
     }
 
     private func execute<T: Decodable>(_ request: URLRequest) async throws -> APIResponse<T> {

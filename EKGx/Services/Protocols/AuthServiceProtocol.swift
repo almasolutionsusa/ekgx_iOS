@@ -38,16 +38,16 @@ protocol AuthServiceProtocol: AnyObject {
     func login(email: String, password: String) async throws
 
     /// PIN login. On success, session cookie is persisted.
-    func pinLogin(pin: String, deviceUuid: String, appUuid: String) async throws
+    func pinLogin(pin: String, appUuid: String) async throws
 
     /// Register a new user account.
     func register(details: SignupDetails) async throws
 
-    /// Check whether a PIN has been set up for a given userId.
-    func pinStatus(userId: Int64) async throws -> Bool
+    /// Check PIN expiry for the authenticated user.
+    func pinStatus() async throws -> PinStatusData?
 
-    /// Set up PIN for first time.
-    func setupPin(userId: Int64, facilityId: Int64, pin: String, deviceUuid: String, appUuid: String) async throws
+    /// Set up a new 6-digit PIN for the authenticated user.
+    func setupPin(pin: String, appUuid: String) async throws
 
     /// Change existing PIN.
     func changePin(userId: Int64, facilityId: Int64, oldPin: String, newPin: String) async throws

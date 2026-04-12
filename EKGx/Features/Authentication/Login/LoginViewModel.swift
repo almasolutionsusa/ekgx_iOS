@@ -182,11 +182,10 @@ final class LoginViewModel {
         pinError  = nil
         defer { isLoading = false }
 
-        let deviceUuid = diContainer.checkinService.deviceUuid
-        let appUuid    = diContainer.checkinService.appUuid
+        let appUuid = diContainer.checkinService.appUuid
 
         do {
-            try await authService.pinLogin(pin: pinInput, deviceUuid: deviceUuid, appUuid: appUuid)
+            try await authService.pinLogin(pin: pinInput, appUuid: appUuid)
             showPinLogin = false
             router.navigate(to: .dashboard)
         } catch let authError as AuthError {

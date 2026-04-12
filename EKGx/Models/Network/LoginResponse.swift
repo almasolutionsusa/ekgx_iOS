@@ -60,8 +60,9 @@ struct SessionAppSettings: Decodable {
 
 // MARK: - Pin Status Response Data
 
+/// Simplified per spec: `daysUntilExpiry` per facility PIN.
 struct PinStatusData: Decodable {
-    let hasPin: Bool?
+    let daysUntilExpiry: Int?
 }
 
 // MARK: - App Checkin Response Data
@@ -69,4 +70,6 @@ struct PinStatusData: Decodable {
 struct AppCheckinData: Decodable {
     let registered: Bool?
     let assigned: Bool?
+    let facility: String?
+    let organization: String?
 }

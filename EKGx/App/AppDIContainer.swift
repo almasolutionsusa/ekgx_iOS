@@ -31,6 +31,7 @@ final class AppDIContainer {
 
     private(set) var authService: AuthServiceProtocol
     let checkinService: AppCheckinService
+    let facilityService: AppFacilityService
     let ekgUploadService: EKGUploadService
 
     // MARK: - Device Service
@@ -42,7 +43,9 @@ final class AppDIContainer {
     init(localMode: Bool = false) {
         self.isLocalMode      = localMode
         self.authService      = AuthService()
-        self.checkinService   = AppCheckinService()
+        let checkin           = AppCheckinService()
+        self.checkinService   = checkin
+        self.facilityService  = AppFacilityService(checkinService: checkin)
         self.ekgUploadService = EKGUploadService()
     }
 

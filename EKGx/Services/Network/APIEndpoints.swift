@@ -14,6 +14,7 @@ enum APIEndpoints {
 
     enum Auth {
         static let login          = "/api/auth/login"
+        static let register       = "/api/auth/register"
         static let pinLogin       = "/api/auth/pin-login"
         static let forgotPassword = "/api/auth/forgot-password"
         static let pinSetup       = "/api/auth/pin/setup"
@@ -24,12 +25,13 @@ enum APIEndpoints {
     // MARK: - App
 
     enum App {
-        static let checkin = "/api/app/checkin"
+        static let checkin  = "/api/app/checkin"
+        static let facility = "/api/app/facility"
     }
 
     // MARK: - EKG
 
     enum EKG {
-        static let results = "/api/ekg/results"
+        static let upload = "/api/ekg/upload"
     }
 }

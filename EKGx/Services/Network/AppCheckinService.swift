@@ -3,7 +3,13 @@
 //  EKGx
 //
 //  Registers / checks-in this app installation with the server on every launch.
-//  The server returns appUuid and deviceUuid which are required for ECG uploads.
+//
+//  IMPORTANT: `appUuid` IS the device identifier in the EKGx backend.
+//  The server uses a single UUID (per-install / per-device) to resolve
+//  App → Kit → Facility → Organization. There is no separate deviceUuid.
+//
+//  We use `UIDevice.current.identifierForVendor` as the stable value, falling
+//  back to a persisted random UUID if vendor ID is unavailable.
 //
 //  Per spec: POST /api/app/checkin — permitAll, no auth required.
 //
@@ -16,28 +22,22 @@ final class AppCheckinService {
     // MARK: - Stored identifiers
 
     enum Keys {
-        static let appUuid    = "ekgx.appUuid"
-        static let deviceUuid = "ekgx.deviceUuid"
+        static let appUuid = "ekgx.appUuid"
     }
 
     private let client: APIClient
     private let defaults: UserDefaults
 
-    // MARK: - Cached identifiers (set after checkin)
+    // MARK: - Cached identifier (set after init / checkin)
 
-    private(set) var appUuid: String    = ""
-    private(set) var deviceUuid: String = ""
+    private(set) var appUuid: String = ""
 
     // MARK: - Init
 
     init(client: APIClient = .shared, defaults: UserDefaults = .standard) {
         self.client   = client
         self.defaults = defaults
-        // appUuid is a stable install-level UUID (persisted in UserDefaults)
-        appUuid    = defaults.string(forKey: Keys.appUuid) ?? ""
-        // deviceUuid is always the hardware vendor identifier
-        deviceUuid = UIDevice.current.identifierForVendor?.uuidString ?? ""
-        defaults.set(deviceUuid, forKey: Keys.deviceUuid)
+        self.appUuid  = resolveAppUuid()
     }
 
     // MARK: - Checkin
@@ -46,9 +46,7 @@ final class AppCheckinService {
     /// Safe to call multiple times — server is idempotent on the same UUID.
     @discardableResult
     func checkin() async -> AppCheckinData? {
-        let uuid    = persistentInstallUUID()
-        let version = appVersion()
-        let body    = AppCheckinRequest(uuid: uuid, version: version)
+        let body = AppCheckinRequest(uuid: appUuid, version: appVersion())
 
         do {
             let response: APIResponse<AppCheckinData> = try await client.post(
@@ -64,8 +62,13 @@ final class AppCheckinService {
 
     // MARK: - Private helpers
 
-    /// Stable UUID that persists across launches (stored in UserDefaults).
-    private func persistentInstallUUID() -> String {
+    /// The appUuid = device vendor identifier (stable across launches, resets on reinstall).
+    /// Falls back to a persisted random UUID if vendor ID is unavailable.
+    private func resolveAppUuid() -> String {
+        if let vendor = UIDevice.current.identifierForVendor?.uuidString, !vendor.isEmpty {
+            defaults.set(vendor, forKey: Keys.appUuid)
+            return vendor
+        }
         if let existing = defaults.string(forKey: Keys.appUuid), !existing.isEmpty {
             return existing
         }
