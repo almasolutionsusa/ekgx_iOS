@@ -10,16 +10,16 @@ import Foundation
 struct SignupDetails {
     var firstName: String
     var lastName: String
-    var facility: Facility
-    var role: UserRole
-    var department: String
+    var phone: String
     var email: String
     var confirmEmail: String
     var password: String
     var confirmPassword: String
-    var npi: String    = ""
-    var title: String  = ""
-    var degree: String = ""
+    /// Title enum value: PHYSICIAN | RN | TECHNICIAN | OTHER
+    var title: String
+    /// Degree enum value: MD | DO | NP | PA | RN | LPN | ... | NONE
+    var degree: String
+    var npi: String = ""
 }
 
 // MARK: - AuthServiceProtocol

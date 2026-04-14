@@ -48,6 +48,9 @@ struct EKGxApp: App {
                     // Fire-and-forget: registers the app install with the server.
                     // Failure is silently ignored — app works fully offline.
                     await diContainer.checkinService.checkin()
+                    // Prefetch facility + enum options for downstream screens
+                    // (patient search, EKG upload, register form).
+                    await diContainer.appInfoService.getInfo()
                 }
         }
     }

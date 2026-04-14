@@ -13,31 +13,42 @@ final class RegisterViewModel {
 
     var firstName: String    = ""
     var lastName: String     = ""
-    var facility: Facility?  = nil
-    var role: UserRole?      = nil
-    var department: String   = ""
+    var phone: String        = ""
     var email: String        = ""
     var confirmEmail: String = ""
     var password: String     = ""
     var confirmPassword: String = ""
 
-    // MARK: - Optional Input
+    /// Selected title — required. Values come from the server (titles enum).
+    var title: String? = nil
+    /// Selected degree — required. Values come from the server (degrees enum).
+    var degree: String? = nil
+    /// Optional NPI identifier.
+    var npi: String = ""
 
-    var npi: String    = ""
-    var title: String  = ""
-    var degree: String = ""
+    // MARK: - Server-provided enum options (from GET /api/app/info)
+
+    var titles: [String]  = []
+    var degrees: [String] = []
+
+    // MARK: - Resolved Facility (from GET /api/app/info)
+
+    var facilityName: String = ""
+    var organizationName: String = ""
+    var facilityId: Int64? = nil
+    var isLoadingFacility: Bool = false
+    var facilityNotAssigned: Bool = false
 
     // MARK: - UI State
 
-    var isLoading: Bool      = false
+    var isLoading: Bool       = false
     var errorMessage: String? = nil
 
     // Per-field errors
     var firstNameError: String?     = nil
     var lastNameError: String?      = nil
-    var facilityError: String?      = nil
-    var roleError: String?          = nil
-    var departmentError: String?    = nil
+    var titleError: String?         = nil
+    var degreeError: String?        = nil
     var emailError: String?         = nil
     var confirmEmailError: String?  = nil
     var passwordError: String?      = nil
@@ -46,17 +57,52 @@ final class RegisterViewModel {
     // MARK: - Dependencies
 
     private let authService: AuthServiceProtocol
+    private let appInfoService: AppInfoService
     private let router: AppRouter
 
-    init(authService: AuthServiceProtocol, router: AppRouter) {
-        self.authService = authService
-        self.router = router
+    init(authService: AuthServiceProtocol, appInfoService: AppInfoService, router: AppRouter) {
+        self.authService    = authService
+        self.appInfoService = appInfoService
+        self.router         = router
+    }
+
+    // MARK: - Activation (called from RegisterView.onAppear)
+
+    func activate() {
+        guard facilityName.isEmpty, !isLoadingFacility else { return }
+        Task { await loadAppInfo() }
+    }
+
+    private func loadAppInfo() async {
+        isLoadingFacility   = true
+        facilityNotAssigned = false
+        defer { isLoadingFacility = false }
+
+        guard let data = await appInfoService.getInfo() else {
+            facilityNotAssigned = true
+            return
+        }
+
+        titles  = data.titles  ?? []
+        degrees = data.degrees ?? []
+
+        if data.assigned == true, let name = data.facilityName, !name.isEmpty {
+            facilityId       = data.facilityId
+            facilityName     = name
+            organizationName = data.organizationName ?? ""
+        } else {
+            facilityNotAssigned = true
+        }
     }
 
     // MARK: - Actions
 
     func register() {
         guard validateInputs() else { return }
+        guard !facilityNotAssigned else {
+            errorMessage = L10n.Auth.Register.errorFacilityNotAssigned
+            return
+        }
         Task { await performRegister() }
     }
 
@@ -66,16 +112,15 @@ final class RegisterViewModel {
 
     func clearFieldError(for field: Field) {
         switch field {
-        case .firstName:      firstNameError = nil
-        case .lastName:       lastNameError = nil
-        case .facility:       facilityError = nil
-        case .role:           roleError = nil
-        case .department:     departmentError = nil
-        case .email:          emailError = nil
-        case .confirmEmail:   confirmEmailError = nil
-        case .password:       passwordError = nil
+        case .firstName:       firstNameError = nil
+        case .lastName:        lastNameError = nil
+        case .title:           titleError = nil
+        case .degree:          degreeError = nil
+        case .email:           emailError = nil
+        case .confirmEmail:    confirmEmailError = nil
+        case .password:        passwordError = nil
         case .confirmPassword: confirmPasswordError = nil
-        case .npi, .title, .degree: break   // optional — no error tracking needed
+        case .npi, .phone:     break
         }
         errorMessage = nil
     }
@@ -90,16 +135,14 @@ final class RegisterViewModel {
         let details = SignupDetails(
             firstName:       firstName.trimmed,
             lastName:        lastName.trimmed,
-            facility:        facility!,
-            role:            role!,
-            department:      department.trimmed,
+            phone:           phone.trimmed,
             email:           email.trimmed,
             confirmEmail:    confirmEmail.trimmed,
             password:        password,
             confirmPassword: confirmPassword,
-            npi:             npi.trimmed,
-            title:           title.trimmed,
-            degree:          degree.trimmed
+            title:           title ?? "",
+            degree:          degree ?? "",
+            npi:             npi.trimmed
         )
 
         do {
@@ -115,26 +158,25 @@ final class RegisterViewModel {
     private func validateInputs() -> Bool {
         firstNameError    = firstName.trimmed.isEmpty  ? L10n.Validation.nameEmpty : nil
         lastNameError     = lastName.trimmed.isEmpty   ? L10n.Validation.nameEmpty : nil
-        facilityError     = facility == nil            ? L10n.Validation.required : nil
-        roleError         = role == nil                ? L10n.Validation.required : nil
-        departmentError   = department.trimmed.isEmpty ? L10n.Validation.nameEmpty : nil
+        titleError        = (title?.isEmpty ?? true)   ? L10n.Validation.required : nil
+        degreeError       = (degree?.isEmpty ?? true)  ? L10n.Validation.required : nil
         emailError        = Validators.validateEmail(email)
         confirmEmailError = email.trimmed != confirmEmail.trimmed
                             ? L10n.Validation.emailMismatch : nil
         passwordError        = Validators.validatePasswordStrong(password)
         confirmPasswordError = Validators.validatePasswordMatch(password, confirmPassword)
 
-        return [firstNameError, lastNameError, facilityError, roleError,
-                departmentError, emailError, confirmEmailError,
+        return [firstNameError, lastNameError, titleError, degreeError,
+                emailError, confirmEmailError,
                 passwordError, confirmPasswordError].allSatisfy { $0 == nil }
     }
 
     // MARK: - Field Enum
 
     enum Field: Hashable {
-        case firstName, lastName, facility, role, department
+        case firstName, lastName, phone
         case email, confirmEmail, password, confirmPassword
-        case npi, title, degree
+        case title, degree, npi
     }
 }
 

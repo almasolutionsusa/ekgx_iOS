@@ -12,6 +12,12 @@ struct LoginData: Decodable {
     let facilities: [SessionFacility]
     let messages: [SessionMessage]
     let appSettings: SessionAppSettings?
+    let accessToken: String?
+    let refreshToken: String?
+    let facilityId: Int64?
+    let facilityName: String?
+    let loginMethod: String?
+    let pinExpiryWarning: String?
 }
 
 // MARK: - Session User
@@ -70,6 +76,6 @@ struct PinStatusData: Decodable {
 struct AppCheckinData: Decodable {
     let registered: Bool?
     let assigned: Bool?
-    let facility: String?
-    let organization: String?
+    let facilityName: String?
+    let organizationName: String?
 }

@@ -221,6 +221,7 @@ private struct LoginFormPanel: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
+            ScrollViewReader { proxy in
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     Spacer(minLength: AppMetrics.spacing64)
@@ -262,6 +263,7 @@ private struct LoginFormPanel: View {
                                 textContentType: .username
                             )
                             .focused($focusedField, equals: .email)
+                            .id(LoginViewModel.Field.email)
                             .onChange(of: viewModel.email) { _, _ in
                                 viewModel.clearFieldError(for: .email)
                                 viewModel.updateSuggestions()
@@ -314,6 +316,7 @@ private struct LoginFormPanel: View {
                             errorMessage: viewModel.passwordError
                         )
                         .focused($focusedField, equals: .password)
+                        .id(LoginViewModel.Field.password)
                         .onChange(of: viewModel.password) { _, _ in
                             viewModel.clearFieldError(for: .password)
                             viewModel.dismissSuggestions()
@@ -365,11 +368,6 @@ private struct LoginFormPanel: View {
                     }
 
                     Spacer(minLength: AppMetrics.spacing16)
-
-                    // Register
-                    SecondaryButton(title: L10n.Auth.Login.registerButton) {
-                        viewModel.navigateToRegister()
-                    }
 
                     // Sign-in link hint
                     HStack {
@@ -424,6 +422,15 @@ private struct LoginFormPanel: View {
             }
             .background(AppColors.surfaceBackground)
             .scrollDismissesKeyboard(.interactively)
+            .onChange(of: focusedField) { _, newValue in
+                guard let field = newValue else { return }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(field, anchor: .top)
+                    }
+                }
+            }
+            } // ScrollViewReader
 
             // Dark mode toggle
             Button {

@@ -22,8 +22,8 @@ final class AuthService: AuthServiceProtocol {
 
     init(client: APIClient = .shared) {
         self.client = client
-        // Restore session from persisted cookie if still valid
-        self.isAuthenticated = client.isAuthenticated
+        // Restore session from persisted JWT (cookie is a secondary fallback)
+        self.isAuthenticated = TokenStore.shared.accessToken != nil || client.isAuthenticated
     }
 
     // MARK: - Login
@@ -35,9 +35,7 @@ final class AuthService: AuthServiceProtocol {
                 path: APIEndpoints.Auth.login,
                 body: body
             )
-            loginData       = response.data
-            currentUser     = response.data?.user
-            isAuthenticated = true
+            persistSession(from: response.data)
         } catch let error as APIError {
             throw mapAPIError(error)
         }
@@ -52,41 +50,42 @@ final class AuthService: AuthServiceProtocol {
                 path: APIEndpoints.Auth.pinLogin,
                 body: body
             )
-            loginData       = response.data
-            currentUser     = response.data?.user
-            isAuthenticated = true
+            persistSession(from: response.data)
         } catch let error as APIError {
             throw mapAPIError(error)
         }
+    }
+
+    // MARK: - Session Persistence
+
+    private func persistSession(from data: LoginData?) {
+        loginData   = data
+        currentUser = data?.user
+        TokenStore.shared.accessToken  = data?.accessToken
+        TokenStore.shared.refreshToken = data?.refreshToken
+        TokenStore.shared.facilityId   = data?.facilityId
+        isAuthenticated = true
     }
 
     // MARK: - Register
 
     func register(details: SignupDetails) async throws {
         let body = AppRegistrationRequest(
-            username:  details.email,                  // server expects unique username
+            username:  details.email,                  // server expects unique username — we use email
             email:     details.email,
             firstName: details.firstName,
             lastName:  details.lastName,
-            phone:     nil,
-            title:     mapRoleToTitle(details.role),
+            phone:     details.phone.isEmpty ? nil : details.phone,
+            title:     details.title,
+            password:  details.password,
             appUuid:   UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? "",
             npi:       details.npi.isEmpty ? nil : details.npi,
-            degree:    details.degree.isEmpty ? nil : details.degree.uppercased()
+            degree:    details.degree.isEmpty ? nil : details.degree
         )
         do {
             try await client.postVoid(path: APIEndpoints.Auth.register, body: body)
         } catch let error as APIError {
             throw mapAPIError(error)
-        }
-    }
-
-    private func mapRoleToTitle(_ role: UserRole) -> String {
-        switch role {
-        case .physician:     return "PHYSICIAN"
-        case .nurse:         return "RN"
-        case .technician:    return "TECHNICIAN"
-        case .administrator: return "OTHER"
         }
     }
 
@@ -136,6 +135,7 @@ final class AuthService: AuthServiceProtocol {
 
     func logout() async throws {
         client.clearSession()
+        TokenStore.shared.clear()
         currentUser     = nil
         loginData       = nil
         isAuthenticated = false

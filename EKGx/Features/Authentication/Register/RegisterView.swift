@@ -37,6 +37,79 @@ struct RegisterView: View {
                     .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
             }
         }
+        .onAppear { viewModel.activate() }
+    }
+}
+
+// MARK: - Resolved Facility Field (read-only, fetched from server)
+
+private struct ResolvedFacilityField: View {
+
+    @Bindable var viewModel: RegisterViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
+            Text(L10n.Auth.Register.facilityLabel)
+                .font(AppTypography.captionBold)
+                .foregroundStyle(AppColors.textSecondary)
+
+            HStack(spacing: AppMetrics.spacing12) {
+                Image(systemName: "building.2")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(viewModel.facilityNotAssigned
+                                     ? AppColors.statusCritical
+                                     : AppColors.brandPrimary)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    if viewModel.isLoadingFacility {
+                        Text(L10n.Auth.Register.facilityLoading)
+                            .font(AppTypography.body)
+                            .foregroundStyle(AppColors.textSecondary)
+                    } else if viewModel.facilityNotAssigned {
+                        Text(L10n.Auth.Register.facilityNotAssigned)
+                            .font(AppTypography.footnote)
+                            .foregroundStyle(AppColors.statusCritical)
+                    } else if !viewModel.facilityName.isEmpty {
+                        Text(viewModel.facilityName)
+                            .font(AppTypography.bodyMedium)
+                            .foregroundStyle(AppColors.textPrimary)
+                        if !viewModel.organizationName.isEmpty {
+                            Text(viewModel.organizationName)
+                                .font(AppTypography.caption)
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                    } else {
+                        Text(L10n.Auth.Register.facilityPlaceholder)
+                            .font(AppTypography.body)
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+                }
+
+                Spacer()
+
+                if viewModel.isLoadingFacility {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
+                } else if !viewModel.facilityNotAssigned && !viewModel.facilityName.isEmpty {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundStyle(AppColors.statusSuccess)
+                        .font(.system(size: 18))
+                }
+            }
+            .padding(.horizontal, AppMetrics.spacing16)
+            .frame(height: AppMetrics.textFieldHeight)
+            .background(AppColors.surfaceCard)
+            .cornerRadius(AppMetrics.radiusMedium)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                    .strokeBorder(
+                        viewModel.facilityNotAssigned
+                            ? AppColors.statusCritical
+                            : AppColors.borderSubtle,
+                        lineWidth: AppMetrics.borderWidth
+                    )
+            )
+        }
     }
 }
 
@@ -103,6 +176,7 @@ private struct RegisterFormPanel: View {
     @FocusState private var focus: RegisterViewModel.Field?
 
     var body: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
 
@@ -145,6 +219,7 @@ private struct RegisterFormPanel: View {
                             autocapitalization: .words
                         )
                         .focused($focus, equals: .firstName)
+                        .id(RegisterViewModel.Field.firstName)
                         .onChange(of: viewModel.firstName) { _, _ in viewModel.clearFieldError(for: .firstName) }
                         .onSubmit { focus = .lastName }
 
@@ -158,29 +233,11 @@ private struct RegisterFormPanel: View {
                             autocapitalization: .words
                         )
                         .focused($focus, equals: .lastName)
+                        .id(RegisterViewModel.Field.lastName)
                         .onChange(of: viewModel.lastName) { _, _ in viewModel.clearFieldError(for: .lastName) }
-                        .onSubmit { focus = .title }
+                        .onSubmit { focus = .phone }
                     }
 
-                    HStack(spacing: AppMetrics.spacing14) {
-                        OptionalTextField(
-                            label: L10n.Auth.Register.titleLabel,
-                            placeholder: L10n.Auth.Register.titlePlaceholder,
-                            systemImage: "person.text.rectangle",
-                            text: $viewModel.title
-                        )
-                        .focused($focus, equals: .title)
-                        .onSubmit { focus = .degree }
-
-                        OptionalTextField(
-                            label: L10n.Auth.Register.degreeLabel,
-                            placeholder: L10n.Auth.Register.degreePlaceholder,
-                            systemImage: "graduationcap",
-                            text: $viewModel.degree
-                        )
-                        .focused($focus, equals: .degree)
-                        .onSubmit { focus = .department }
-                    }
                 }
 
                 Spacer(minLength: AppMetrics.spacing24)
@@ -189,38 +246,41 @@ private struct RegisterFormPanel: View {
                 FormSectionHeader(title: L10n.Auth.Register.sectionProfessional)
 
                 VStack(spacing: AppMetrics.spacing14) {
-                    DropdownPicker(
-                        label: L10n.Auth.Register.facilityLabel,
-                        placeholder: L10n.Auth.Register.facilityPlaceholder,
-                        systemImage: "building.2",
-                        selection: $viewModel.facility,
-                        options: Facility.allCases,
-                        displayText: { $0.label },
-                        errorMessage: viewModel.facilityError
-                    )
-                    .onChange(of: viewModel.facility) { _, _ in viewModel.clearFieldError(for: .facility) }
+                    ResolvedFacilityField(viewModel: viewModel)
 
                     DropdownPicker(
-                        label: L10n.Auth.Register.roleLabel,
-                        placeholder: L10n.Auth.Register.rolePlaceholder,
-                        systemImage: "stethoscope",
-                        selection: $viewModel.role,
-                        options: UserRole.allCases,
-                        displayText: { $0.label },
-                        errorMessage: viewModel.roleError
+                        label: L10n.Auth.Register.titleLabel,
+                        placeholder: L10n.Auth.Register.titlePlaceholder,
+                        systemImage: "person.text.rectangle",
+                        selection: $viewModel.title,
+                        options: viewModel.titles,
+                        displayText: { $0 },
+                        errorMessage: viewModel.titleError
                     )
-                    .onChange(of: viewModel.role) { _, _ in viewModel.clearFieldError(for: .role) }
+                    .id(RegisterViewModel.Field.title)
+                    .onChange(of: viewModel.title) { _, _ in viewModel.clearFieldError(for: .title) }
 
-                    ETextField(
-                        label: L10n.Auth.Register.departmentLabel,
-                        placeholder: L10n.Auth.Register.departmentPlaceholder,
-                        systemImage: "cross.case",
-                        text: $viewModel.department,
-                        errorMessage: viewModel.departmentError,
-                        autocapitalization: .words
+                    DropdownPicker(
+                        label: L10n.Auth.Register.degreeLabel,
+                        placeholder: L10n.Auth.Register.degreePlaceholder,
+                        systemImage: "graduationcap",
+                        selection: $viewModel.degree,
+                        options: viewModel.degrees,
+                        displayText: { $0 },
+                        errorMessage: viewModel.degreeError
                     )
-                    .focused($focus, equals: .department)
-                    .onChange(of: viewModel.department) { _, _ in viewModel.clearFieldError(for: .department) }
+                    .id(RegisterViewModel.Field.degree)
+                    .onChange(of: viewModel.degree) { _, _ in viewModel.clearFieldError(for: .degree) }
+
+                    OptionalTextField(
+                        label: L10n.Auth.Register.phoneLabel,
+                        placeholder: L10n.Auth.Register.phonePlaceholder,
+                        systemImage: "phone",
+                        text: $viewModel.phone,
+                        keyboardType: .phonePad
+                    )
+                    .focused($focus, equals: .phone)
+                    .id(RegisterViewModel.Field.phone)
                     .onSubmit { focus = .npi }
 
                     OptionalTextField(
@@ -231,6 +291,7 @@ private struct RegisterFormPanel: View {
                         keyboardType: .numberPad
                     )
                     .focused($focus, equals: .npi)
+                    .id(RegisterViewModel.Field.npi)
                     .onSubmit { focus = .email }
                 }
 
@@ -250,19 +311,21 @@ private struct RegisterFormPanel: View {
                         textContentType: .emailAddress
                     )
                     .focused($focus, equals: .email)
+                    .id(RegisterViewModel.Field.email)
                     .onChange(of: viewModel.email) { _, _ in viewModel.clearFieldError(for: .email) }
                     .onSubmit { focus = .confirmEmail }
 
                     ETextField(
                         label: L10n.Auth.Register.confirmEmailLabel,
                         placeholder: L10n.Auth.Register.confirmEmailPlaceholder,
-                        systemImage: "envelope.badge.checkmark",
+                        systemImage: "checkmark.seal",
                         text: $viewModel.confirmEmail,
                         errorMessage: viewModel.confirmEmailError,
                         keyboardType: .emailAddress,
                         textContentType: .emailAddress
                     )
                     .focused($focus, equals: .confirmEmail)
+                    .id(RegisterViewModel.Field.confirmEmail)
                     .onChange(of: viewModel.confirmEmail) { _, _ in viewModel.clearFieldError(for: .confirmEmail) }
                     .onSubmit { focus = .password }
 
@@ -273,6 +336,7 @@ private struct RegisterFormPanel: View {
                         errorMessage: viewModel.passwordError
                     )
                     .focused($focus, equals: .password)
+                    .id(RegisterViewModel.Field.password)
                     .onChange(of: viewModel.password) { _, _ in viewModel.clearFieldError(for: .password) }
                     .onSubmit { focus = .confirmPassword }
 
@@ -283,6 +347,7 @@ private struct RegisterFormPanel: View {
                         errorMessage: viewModel.confirmPasswordError
                     )
                     .focused($focus, equals: .confirmPassword)
+                    .id(RegisterViewModel.Field.confirmPassword)
                     .onChange(of: viewModel.confirmPassword) { _, _ in viewModel.clearFieldError(for: .confirmPassword) }
                     .onSubmit { focus = nil; viewModel.register() }
                 }
@@ -314,7 +379,8 @@ private struct RegisterFormPanel: View {
                 }
                 .padding(.top, AppMetrics.spacing20)
 
-                Spacer(minLength: AppMetrics.spacing48)
+                // Extra scroll runway so bottom fields can scroll above the keyboard
+                Spacer(minLength: 400)
             }
             .padding(.horizontal, AppMetrics.spacing40)
             .frame(maxWidth: AppMetrics.registerFormMaxWidth)
@@ -322,6 +388,16 @@ private struct RegisterFormPanel: View {
         }
         .background(AppColors.surfaceBackground)
         .scrollDismissesKeyboard(.interactively)
+        .onChange(of: focus) { _, newValue in
+            guard let field = newValue else { return }
+            // Small delay so the keyboard has started appearing before we scroll
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    proxy.scrollTo(field, anchor: .top)
+                }
+            }
+        }
+        } // ScrollViewReader
     }
 }
 

@@ -42,6 +42,7 @@ struct AppRegistrationRequest: Encodable {
     let lastName: String?
     let phone: String?
     let title: String        // PHYSICIAN | RN | TECHNICIAN | OTHER
+    let password: String     // HIPAA-compliant password
     let appUuid: String
     let npi: String?
     let degree: String?      // MD | DO | NP | PA | RN | ...

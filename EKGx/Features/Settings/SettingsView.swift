@@ -713,11 +713,3 @@ private struct DemoCodeSheet: View {
 private extension AppMetrics {
     static let spacing76: CGFloat = 76
 }
-
-// MARK: - Preview
-
-#Preview {
-    let router = AppRouter()
-    SettingsView(viewModel: SettingsViewModel(router: router))
-        .environment(router)
-}

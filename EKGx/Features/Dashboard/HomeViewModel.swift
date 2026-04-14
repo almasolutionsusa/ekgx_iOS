@@ -125,7 +125,7 @@ final class HomeViewModel {
 
     func navigateToRecording() {
         closeMenu()
-        router.navigate(to: .ecgRecording(patientId: ""))
+        router.navigate(to: .patientSelection)
     }
 
     func navigateToPatients() {

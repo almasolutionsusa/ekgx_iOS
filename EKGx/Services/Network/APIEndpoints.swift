@@ -25,13 +25,20 @@ enum APIEndpoints {
     // MARK: - App
 
     enum App {
-        static let checkin  = "/api/app/checkin"
-        static let facility = "/api/app/facility"
+        static let checkin = "/api/app/checkin"
+        static let info    = "/api/app/info"
     }
 
     // MARK: - EKG
 
     enum EKG {
         static let upload = "/api/ekg/upload"
+    }
+
+    // MARK: - Patients
+
+    enum Patients {
+        static let create = "/api/patients"
+        static let search = "/api/patients/search"
     }
 }

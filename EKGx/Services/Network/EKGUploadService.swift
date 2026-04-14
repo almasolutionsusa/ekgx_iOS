@@ -43,8 +43,10 @@ struct EKGUploadPayload {
     var appVersion: String?
     var recordedAt: Date?
 
-    // Raw EKG file bytes
+    // Raw EKG file bytes (.plist signal data)
     var fileData: Data?
+    // Rendered 12-lead JPEG (optional — required for IN_HOUSE EMR)
+    var imageData: Data?
 }
 
 // MARK: - EKGUploadService
@@ -62,13 +64,29 @@ final class EKGUploadService {
     func upload(payload: EKGUploadPayload) async throws {
         let query = buildQuery(from: payload)
 
+        var files: [MultipartFile] = []
+        if let data = payload.fileData {
+            files.append(MultipartFile(
+                fieldName: "file",
+                fileName: "ecg_\(Int(Date().timeIntervalSince1970)).plist",
+                mimeType: "application/octet-stream",
+                data: data
+            ))
+        }
+        if let image = payload.imageData {
+            files.append(MultipartFile(
+                fieldName: "imageFile",
+                fileName: "ecg_\(Int(Date().timeIntervalSince1970)).jpg",
+                mimeType: "image/jpeg",
+                data: image
+            ))
+        }
+
         do {
             let _: APIResponse<AnyCodable> = try await client.postMultipart(
                 path: APIEndpoints.EKG.upload,
                 query: query,
-                fileData: payload.fileData,
-                fileName: "ecg_\(Int(Date().timeIntervalSince1970)).plist",
-                mimeType: "application/octet-stream"
+                files: files
             )
         } catch let error as APIError {
             throw error

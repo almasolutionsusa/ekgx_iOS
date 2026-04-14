@@ -38,16 +38,21 @@
 "auth.register.lastNameLabel"                = "Last Name";
 "auth.register.lastNamePlaceholder"          = "Enter your last name";
 "auth.register.facilityLabel"                = "Facility";
-"auth.register.facilityPlaceholder"          = "Select your facility";
+"auth.register.facilityPlaceholder"          = "Resolving facility…";
+"auth.register.facilityLoading"              = "Loading facility…";
+"auth.register.facilityNotAssigned"          = "This device is not assigned to any facility. Contact your administrator.";
+"auth.register.errorFacilityNotAssigned"     = "Cannot register — this device has no facility assigned.";
 "auth.register.roleLabel"                    = "Role";
 "auth.register.rolePlaceholder"              = "Select your role";
 "auth.register.departmentLabel"              = "Department";
 "auth.register.departmentPlaceholder"        = "e.g. Cardiology";
+"auth.register.phoneLabel"                   = "Phone Number (Optional)";
+"auth.register.phonePlaceholder"             = "+1 (555) 000-0000";
 "auth.register.npiLabel"                     = "NPI Number (Optional)";
 "auth.register.npiPlaceholder"               = "10-digit NPI";
-"auth.register.titleLabel"                   = "Title (Optional)";
+"auth.register.titleLabel"                   = "Title";
 "auth.register.titlePlaceholder"             = "e.g. Dr., RN, PA";
-"auth.register.degreeLabel"                  = "Degree (Optional)";
+"auth.register.degreeLabel"                  = "Degree";
 "auth.register.degreePlaceholder"            = "e.g. MD, DO, NP";
 "auth.register.emailLabel"                   = "Email Address";
 "auth.register.emailPlaceholder"             = "doctor@hospital.com";
@@ -218,6 +223,35 @@
 // MARK: - Auth · Local Mode
 "auth.login.localMode"               = "Continue Offline";
 "auth.login.localModeSubtitle"       = "Use the app without an internet connection";
+
+// MARK: - Patient Selection (pre-recording)
+"patientSelection.nav.title"         = "Select Patient";
+"patientSelection.nav.subtitle"      = "Search for the patient to record an ECG for";
+"patientSelection.search.title"      = "Search Patient";
+"patientSelection.search.firstName"  = "First Name";
+"patientSelection.search.lastName"   = "Last Name (Optional)";
+"patientSelection.search.dob"        = "Date of Birth";
+"patientSelection.search.mrn"        = "MRN";
+"patientSelection.search.or"         = "OR";
+"patientSelection.search.button"     = "Search";
+"patientSelection.search.clearButton" = "Clear";
+"patientSelection.results.title"     = "Search Results";
+"patientSelection.results.empty"     = "No patients found";
+"patientSelection.results.emptySubtitle" = "Try different search criteria or check the spelling";
+"patientSelection.prompt.title"      = "Ready to search";
+"patientSelection.prompt.subtitle"   = "Enter first name or MRN to find a patient";
+"patientSelection.confirm"           = "Continue to Recording";
+"patientSelection.createNew"         = "Create New Patient";
+"patientSelection.create.title"      = "New Patient";
+"patientSelection.create.subtitle"   = "Enter the patient's details below.";
+"patientSelection.create.firstName"  = "First Name";
+"patientSelection.create.lastName"   = "Last Name";
+"patientSelection.create.dob"        = "Date of Birth";
+"patientSelection.create.gender"     = "Gender";
+"patientSelection.create.mrn"        = "Medical Record Number (MRN)";
+"patientSelection.create.mrnPlaceholder" = "e.g. MRN-12345";
+"patientSelection.create.cancel"     = "Cancel";
+"patientSelection.create.submit"     = "Create Patient";
 
 // MARK: - Recording
 "recording.nav.backButton"           = "Back";

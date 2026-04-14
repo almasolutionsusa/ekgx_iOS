@@ -17,6 +17,7 @@ enum AppRoute: Hashable, Equatable {
     case dashboard
     case patientList
     case cloudReports
+    case patientSelection
     case ecgRecording(patientId: String)
     case ecgAnalysis(recordingId: String)
     case patientDetail(patientId: String)

@@ -74,7 +74,10 @@ final class APIClient {
         config.httpCookieAcceptPolicy = .always
         config.timeoutIntervalForRequest  = 30
         config.timeoutIntervalForResource = 60
-        return URLSession(configuration: config)
+        // Don't follow redirects automatically — the backend uses 302 → /login
+        // for Spring Security auth failures which would otherwise cause an
+        // infinite redirect loop. We surface the raw status instead.
+        return URLSession(configuration: config, delegate: RedirectBlockingDelegate(), delegateQueue: nil)
     }()
 
     private let decoder: JSONDecoder = {
@@ -126,15 +129,12 @@ final class APIClient {
         return try await execute(request)
     }
 
-    /// Multipart POST — used for EKG file upload.
-    /// Accepts optional query params (appended to URL) and optional form fields.
+    /// Multipart POST — supports multiple files plus optional form fields and query params.
     func postMultipart<T: Decodable>(
         path: String,
         query: [String: String] = [:],
         fields: [String: String] = [:],
-        fileData: Data?,
-        fileName: String = "ecg.bin",
-        mimeType: String = "application/octet-stream",
+        files: [MultipartFile] = [],
         responseType: T.Type = T.self
     ) async throws -> APIResponse<T> {
         let boundary = "Boundary-\(UUID().uuidString)"
@@ -146,11 +146,11 @@ final class APIClient {
             body.append("\(value)\r\n")
         }
 
-        if let fileData {
+        for file in files {
             body.append("--\(boundary)\r\n")
-            body.append("Content-Disposition: form-data; name=\"file\"; filename=\"\(fileName)\"\r\n")
-            body.append("Content-Type: \(mimeType)\r\n\r\n")
-            body.append(fileData)
+            body.append("Content-Disposition: form-data; name=\"\(file.fieldName)\"; filename=\"\(file.fileName)\"\r\n")
+            body.append("Content-Type: \(file.mimeType)\r\n\r\n")
+            body.append(file.data)
             body.append("\r\n")
         }
 
@@ -206,7 +206,19 @@ final class APIClient {
     private func injectDeviceHeaders(_ request: inout URLRequest) {
         let appUuid = UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? ""
         if !appUuid.isEmpty { request.setValue(appUuid, forHTTPHeaderField: "X-App-UUID") }
+
+        // Don't send Bearer token on public endpoints — Spring Security will
+        // reject a stale token with a 302 redirect even on permitAll routes.
+        let path = request.url?.path ?? ""
+        let isPublic = path.hasPrefix("/api/auth/")
+                    || path.hasPrefix("/api/app/checkin")
+                    || path.hasPrefix("/api/app/info")
+        if !isPublic, let token = TokenStore.shared.accessToken, !token.isEmpty {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
     }
+
+    private let redirectBlocker = RedirectBlockingDelegate()
 
     private func execute<T: Decodable>(_ request: URLRequest) async throws -> APIResponse<T> {
         #if DEBUG
@@ -214,7 +226,7 @@ final class APIClient {
         #endif
 
         do {
-            let (data, response) = try await session.data(for: request)
+            let (data, response) = try await session.data(for: request, delegate: redirectBlocker)
             guard let http = response as? HTTPURLResponse else { throw APIError.unknown }
 
             #if DEBUG
@@ -228,6 +240,7 @@ final class APIClient {
                 } catch {
                     throw APIError.decodingFailed(error)
                 }
+            case 302: throw APIError.invalidCredentials   // Spring redirect to /login
             case 401: throw APIError.invalidCredentials
             case 403: throw APIError.forbidden
             case 404: throw APIError.notFound
@@ -288,3 +301,31 @@ private extension Data {
 // MARK: - AnyCodable (placeholder for void data fields)
 
 struct AnyCodable: Codable {}
+
+// MARK: - MultipartFile
+
+struct MultipartFile {
+    let fieldName: String
+    let fileName: String
+    let mimeType: String
+    let data: Data
+}
+
+// MARK: - Redirect Blocking Delegate
+
+/// Blocks all HTTP redirects. The EKGx backend uses Spring Security which
+/// returns 302 → /login for unauthenticated requests to protected endpoints.
+/// Following those redirects causes an infinite loop since /login itself
+/// requires auth. Returning nil here surfaces the original 302 as the final
+/// response so we can show a proper error instead of hanging.
+final class RedirectBlockingDelegate: NSObject, URLSessionTaskDelegate {
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
+        completionHandler(nil)
+    }
+}

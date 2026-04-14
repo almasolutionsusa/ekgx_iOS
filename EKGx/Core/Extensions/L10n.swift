@@ -53,10 +53,15 @@ enum L10n {
             static let lastNamePlaceholder      = "auth.register.lastNamePlaceholder".localized
             static let facilityLabel            = "auth.register.facilityLabel".localized
             static let facilityPlaceholder      = "auth.register.facilityPlaceholder".localized
+            static let facilityLoading          = "auth.register.facilityLoading".localized
+            static let facilityNotAssigned      = "auth.register.facilityNotAssigned".localized
+            static let errorFacilityNotAssigned = "auth.register.errorFacilityNotAssigned".localized
             static let roleLabel                = "auth.register.roleLabel".localized
             static let rolePlaceholder          = "auth.register.rolePlaceholder".localized
             static let departmentLabel          = "auth.register.departmentLabel".localized
             static let departmentPlaceholder    = "auth.register.departmentPlaceholder".localized
+            static let phoneLabel               = "auth.register.phoneLabel".localized
+            static let phonePlaceholder         = "auth.register.phonePlaceholder".localized
             static let npiLabel                 = "auth.register.npiLabel".localized
             static let npiPlaceholder           = "auth.register.npiPlaceholder".localized
             static let titleLabel               = "auth.register.titleLabel".localized
@@ -297,6 +302,49 @@ enum L10n {
             static let fieldLabel    = "settings.demo.fieldLabel".localized
             static let fieldPH       = "settings.demo.fieldPH".localized
             static let unlockButton  = "settings.demo.unlockButton".localized
+        }
+    }
+
+    // MARK: - Patient Selection
+
+    enum PatientSelection {
+        enum Nav {
+            static let title    = "patientSelection.nav.title".localized
+            static let subtitle = "patientSelection.nav.subtitle".localized
+        }
+        enum Search {
+            static let title        = "patientSelection.search.title".localized
+            static let firstName    = "patientSelection.search.firstName".localized
+            static let lastName     = "patientSelection.search.lastName".localized
+            static let dob          = "patientSelection.search.dob".localized
+            static let mrn          = "patientSelection.search.mrn".localized
+            static let or           = "patientSelection.search.or".localized
+            static let button       = "patientSelection.search.button".localized
+            static let clearButton  = "patientSelection.search.clearButton".localized
+        }
+        enum Results {
+            static let title         = "patientSelection.results.title".localized
+            static let empty         = "patientSelection.results.empty".localized
+            static let emptySubtitle = "patientSelection.results.emptySubtitle".localized
+        }
+        enum Prompt {
+            static let title    = "patientSelection.prompt.title".localized
+            static let subtitle = "patientSelection.prompt.subtitle".localized
+        }
+        static let confirm   = "patientSelection.confirm".localized
+        static let createNew = "patientSelection.createNew".localized
+
+        enum Create {
+            static let title           = "patientSelection.create.title".localized
+            static let subtitle        = "patientSelection.create.subtitle".localized
+            static let firstName       = "patientSelection.create.firstName".localized
+            static let lastName        = "patientSelection.create.lastName".localized
+            static let dob             = "patientSelection.create.dob".localized
+            static let gender          = "patientSelection.create.gender".localized
+            static let mrn             = "patientSelection.create.mrn".localized
+            static let mrnPlaceholder  = "patientSelection.create.mrnPlaceholder".localized
+            static let cancel          = "patientSelection.create.cancel".localized
+            static let submit          = "patientSelection.create.submit".localized
         }
     }
 

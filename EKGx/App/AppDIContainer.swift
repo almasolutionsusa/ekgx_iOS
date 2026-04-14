@@ -31,7 +31,8 @@ final class AppDIContainer {
 
     private(set) var authService: AuthServiceProtocol
     let checkinService: AppCheckinService
-    let facilityService: AppFacilityService
+    let appInfoService: AppInfoService
+    let patientsService: PatientsService
     let ekgUploadService: EKGUploadService
 
     // MARK: - Device Service
@@ -45,7 +46,8 @@ final class AppDIContainer {
         self.authService      = AuthService()
         let checkin           = AppCheckinService()
         self.checkinService   = checkin
-        self.facilityService  = AppFacilityService(checkinService: checkin)
+        self.appInfoService   = AppInfoService(checkinService: checkin)
+        self.patientsService  = PatientsService()
         self.ekgUploadService = EKGUploadService()
     }
 
@@ -78,7 +80,7 @@ final class AppDIContainer {
     }
 
     func makeRegisterViewModel(router: AppRouter) -> RegisterViewModel {
-        RegisterViewModel(authService: authService, router: router)
+        RegisterViewModel(authService: authService, appInfoService: appInfoService, router: router)
     }
 
     func makeHomeViewModel(router: AppRouter) -> HomeViewModel {
@@ -89,12 +91,21 @@ final class AppDIContainer {
         PatientListViewModel(router: router)
     }
 
+    func makePatientSelectionViewModel(router: AppRouter) -> PatientSelectionViewModel {
+        PatientSelectionViewModel(
+            patientsService: patientsService,
+            appInfoService: appInfoService,
+            diContainer: self,
+            router: router
+        )
+    }
+
     func makeCloudViewModel(router: AppRouter) -> CloudViewModel {
         CloudViewModel(router: router)
     }
 
     func makeSettingsViewModel(router: AppRouter) -> SettingsViewModel {
-        SettingsViewModel(router: router)
+        SettingsViewModel(router: router, authService: authService)
     }
 
     func makeMyAccountViewModel(router: AppRouter) -> MyAccountViewModel {
