@@ -30,6 +30,7 @@ enum APIError: LocalizedError {
     case notFound                     // 404
     case conflict                     // 409
     case serverError(statusCode: Int) // 5xx
+    case backend(message: String)     // Server-provided error message (any status)
     case decodingFailed(Error)
     case networkUnavailable
     case unknown
@@ -42,6 +43,7 @@ enum APIError: LocalizedError {
              .decodingFailed:            return L10n.Auth.Login.errorGeneric
         case .serverError:               return L10n.Auth.Login.errorGeneric
         case .networkUnavailable:        return L10n.Auth.Login.errorNetwork
+        case .backend(let message):     return message
         }
     }
 }
@@ -235,24 +237,68 @@ final class APIClient {
 
             switch http.statusCode {
             case 200...299:
+                // Happy path — but check for nested error envelope:
+                // { status: 200, data: { status: 400, message: "..." } }
+                if let nested = extractNestedError(from: data) {
+                    throw APIError.backend(message: nested)
+                }
                 do {
                     return try decoder.decode(APIResponse<T>.self, from: data)
                 } catch {
                     throw APIError.decodingFailed(error)
                 }
             case 302: throw APIError.invalidCredentials   // Spring redirect to /login
-            case 401: throw APIError.invalidCredentials
-            case 403: throw APIError.forbidden
-            case 404: throw APIError.notFound
-            case 409: throw APIError.conflict
-            case 500...: throw APIError.serverError(statusCode: http.statusCode)
-            default:   throw APIError.unknown
+            case 401:
+                throw extractBackendError(from: data) ?? .invalidCredentials
+            case 403:
+                throw extractBackendError(from: data) ?? .forbidden
+            case 404:
+                throw extractBackendError(from: data) ?? .notFound
+            case 409:
+                throw extractBackendError(from: data) ?? .conflict
+            case 400:
+                throw extractBackendError(from: data) ?? .unknown
+            case 500...:
+                throw extractBackendError(from: data) ?? .serverError(statusCode: http.statusCode)
+            default:
+                throw extractBackendError(from: data) ?? .unknown
             }
         } catch let error as APIError {
             throw error
         } catch {
             throw APIError.networkUnavailable
         }
+    }
+
+    // MARK: - Backend Error Extraction
+
+    /// Pulls a human-readable error message out of an `ApiResponseVoid`-shaped
+    /// response. Handles both top-level `{status, message}` and nested
+    /// `{data: {status, message}}` error envelopes.
+    private func extractBackendError(from data: Data) -> APIError? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return nil
+        }
+        if let nested = json["data"] as? [String: Any],
+           let message = nested["message"] as? String, !message.isEmpty {
+            return .backend(message: message)
+        }
+        if let message = json["message"] as? String,
+           !message.isEmpty, message.lowercased() != "success" {
+            return .backend(message: message)
+        }
+        return nil
+    }
+
+    /// Detects the "HTTP 200 but data.status is a 4xx error" pattern.
+    private func extractNestedError(from data: Data) -> String? {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let nested = json["data"] as? [String: Any],
+              let nestedStatus = nested["status"] as? Int,
+              (400...599).contains(nestedStatus),
+              let message = nested["message"] as? String, !message.isEmpty
+        else { return nil }
+        return message
     }
 
     // MARK: - Debug Logging

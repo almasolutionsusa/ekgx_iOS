@@ -23,7 +23,8 @@ struct SideMenuItem: Identifiable {
 
 struct SideMenuView: View {
 
-    let user: User
+    let userFullName: String
+    let userEmail: String
     let userInitials: String
     let userRoleDisplayName: String
     let isVisible: Bool
@@ -132,7 +133,7 @@ struct SideMenuView: View {
                         .foregroundStyle(AppColors.textOnDark)
                 }
                 VStack(alignment: .leading, spacing: AppMetrics.spacing2) {
-                    Text(user.fullName)
+                    Text(userFullName)
                         .font(AppTypography.bodyMedium)
                         .foregroundStyle(AppColors.textOnDark)
                     Text(userRoleDisplayName)

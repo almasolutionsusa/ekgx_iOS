@@ -93,11 +93,16 @@ enum L10n {
         static let emailEmpty       = "validation.email.empty".localized
         static let emailInvalid     = "validation.email.invalid".localized
         static let emailMismatch    = "validation.email.mismatch".localized
-        static let passwordEmpty    = "validation.password.empty".localized
-        static let passwordTooShort = "validation.password.tooShort".localized
-        static let passwordMismatch = "validation.password.mismatch".localized
-        static let nameEmpty        = "validation.name.empty".localized
-        static let required         = "validation.required".localized
+        static let passwordEmpty     = "validation.password.empty".localized
+        static let passwordTooShort  = "validation.password.tooShort".localized
+        static let passwordMismatch  = "validation.password.mismatch".localized
+        static let passwordNoLowercase = "validation.password.noLowercase".localized
+        static let passwordNoUppercase = "validation.password.noUppercase".localized
+        static let passwordNoDigit     = "validation.password.noDigit".localized
+        static let passwordNoSpecial   = "validation.password.noSpecial".localized
+        static let phoneEmpty        = "validation.phone.empty".localized
+        static let nameEmpty         = "validation.name.empty".localized
+        static let required          = "validation.required".localized
     }
 
     // MARK: - Branding

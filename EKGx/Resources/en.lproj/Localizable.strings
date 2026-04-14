@@ -46,7 +46,7 @@
 "auth.register.rolePlaceholder"              = "Select your role";
 "auth.register.departmentLabel"              = "Department";
 "auth.register.departmentPlaceholder"        = "e.g. Cardiology";
-"auth.register.phoneLabel"                   = "Phone Number (Optional)";
+"auth.register.phoneLabel"                   = "Phone Number";
 "auth.register.phonePlaceholder"             = "+1 (555) 000-0000";
 "auth.register.npiLabel"                     = "NPI Number (Optional)";
 "auth.register.npiPlaceholder"               = "10-digit NPI";
@@ -77,6 +77,11 @@
 "validation.email.mismatch"          = "Email addresses do not match";
 "validation.password.empty"          = "Password is required";
 "validation.password.tooShort"       = "Password must be at least 8 characters";
+"validation.password.noLowercase"    = "Password must contain a letter";
+"validation.password.noUppercase"    = "Password must contain an uppercase letter";
+"validation.password.noDigit"        = "Password must contain a number";
+"validation.password.noSpecial"      = "Password must contain a special character";
+"validation.phone.empty"             = "Phone number is required";
 "validation.password.mismatch"       = "Passwords do not match";
 "validation.name.empty"              = "This field is required";
 "validation.required"                = "Please select an option";

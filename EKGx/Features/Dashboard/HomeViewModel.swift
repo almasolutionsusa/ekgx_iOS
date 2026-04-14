@@ -52,16 +52,6 @@ final class HomeViewModel {
     var showLogoutConfirmation: Bool = false
     var deviceState: DeviceConnectionState = .disconnected
 
-    // MARK: - Current User
-
-    let currentUser: User = User(
-        id: "mock-001",
-        firstName: "Sarah",
-        lastName: "Mitchell",
-        email: "s.mitchell@hospital.com",
-        role: .physician
-    )
-
     // MARK: - Dependencies
 
     private let router: AppRouter
@@ -73,6 +63,20 @@ final class HomeViewModel {
         self.diContainer = diContainer
         self.deviceService = diContainer.deviceService
         deviceState = diContainer.deviceService.currentState
+    }
+
+    // MARK: - Current User (from login response)
+
+    private var sessionUser: SessionUser? { diContainer.authService.loginData?.user }
+
+    var currentUserFullName: String {
+        guard let u = sessionUser else { return "" }
+        let first = u.username
+        return first
+    }
+
+    var currentUserEmail: String {
+        sessionUser?.email ?? ""
     }
 
     /// Call from HomeView .onAppear — re-registers the callback every time we return to home.
@@ -168,12 +172,11 @@ final class HomeViewModel {
     }
 
     var userRoleDisplayName: String {
-        currentUser.role.label
+        sessionUser?.title?.capitalized ?? sessionUser?.role?.capitalized ?? ""
     }
 
     var userInitials: String {
-        let f = currentUser.firstName.first.map(String.init) ?? ""
-        let l = currentUser.lastName.first.map(String.init) ?? ""
-        return (f + l).uppercased()
+        guard let name = sessionUser?.username, !name.isEmpty else { return "?" }
+        return String(name.prefix(2)).uppercased()
     }
 }

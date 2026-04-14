@@ -272,15 +272,18 @@ private struct RegisterFormPanel: View {
                     .id(RegisterViewModel.Field.degree)
                     .onChange(of: viewModel.degree) { _, _ in viewModel.clearFieldError(for: .degree) }
 
-                    OptionalTextField(
+                    ETextField(
                         label: L10n.Auth.Register.phoneLabel,
                         placeholder: L10n.Auth.Register.phonePlaceholder,
                         systemImage: "phone",
                         text: $viewModel.phone,
-                        keyboardType: .phonePad
+                        errorMessage: viewModel.phoneError,
+                        keyboardType: .phonePad,
+                        textContentType: .telephoneNumber
                     )
                     .focused($focus, equals: .phone)
                     .id(RegisterViewModel.Field.phone)
+                    .onChange(of: viewModel.phone) { _, _ in viewModel.clearFieldError(for: .phone) }
                     .onSubmit { focus = .npi }
 
                     OptionalTextField(

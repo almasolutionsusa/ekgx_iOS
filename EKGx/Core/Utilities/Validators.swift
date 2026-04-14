@@ -36,9 +36,21 @@ struct Validators {
         return password.count < 4 ? L10n.Validation.passwordTooShort : nil
     }
 
+    /// HIPAA-compliant password: 8+ chars, must contain a letter,
+    /// a digit, and a special character.
     static func validatePasswordStrong(_ password: String) -> String? {
         if password.isEmpty { return L10n.Validation.passwordEmpty }
-        return password.count < 8 ? L10n.Validation.passwordTooShort : nil
+        if password.count < 8 { return L10n.Validation.passwordTooShort }
+
+        let hasLetter  = password.rangeOfCharacter(from: .letters) != nil
+        let hasDigit   = password.rangeOfCharacter(from: .decimalDigits) != nil
+        let specialSet = CharacterSet(charactersIn: "!@#$%^&*()_+-=[]{}|;:'\",.<>/?`~\\")
+        let hasSpecial = password.rangeOfCharacter(from: specialSet) != nil
+
+        if !hasLetter  { return L10n.Validation.passwordNoLowercase }
+        if !hasDigit   { return L10n.Validation.passwordNoDigit }
+        if !hasSpecial { return L10n.Validation.passwordNoSpecial }
+        return nil
     }
 
     static func validatePasswordMatch(_ password: String, _ confirmation: String) -> String? {

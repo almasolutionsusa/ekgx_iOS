@@ -67,6 +67,7 @@ enum AuthError: LocalizedError {
     case networkUnavailable
     case sessionExpired
     case serverError(statusCode: Int)
+    case backend(message: String)
     case unknown
 
     var errorDescription: String? {
@@ -74,6 +75,7 @@ enum AuthError: LocalizedError {
         case .invalidCredentials:  return L10n.Auth.Login.errorInvalidCredentials
         case .emailAlreadyInUse:   return L10n.Auth.Register.errorEmailInUse
         case .networkUnavailable:  return L10n.Auth.Login.errorNetwork
+        case .backend(let message): return message
         case .sessionExpired,
              .serverError,
              .unknown:             return L10n.Auth.Login.errorGeneric

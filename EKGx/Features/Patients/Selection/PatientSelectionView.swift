@@ -423,42 +423,44 @@ private struct PatientResultCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: AppMetrics.spacing16) {
-                // Avatar
+            HStack(spacing: AppMetrics.spacing24) {
+                // Avatar — larger for hospital iPad at arm's length
                 ZStack {
                     Circle()
                         .fill(AppColors.brandPrimary.opacity(isSelected ? 0.25 : 0.12))
-                        .frame(width: 48, height: 48)
+                        .frame(width: 76, height: 76)
                     Text(initials)
-                        .font(AppTypography.bodySemibold)
+                        .font(AppTypography.title2)
                         .foregroundStyle(AppColors.brandPrimary)
                 }
 
-                VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
+                VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
                     Text(patient.fullName)
-                        .font(AppTypography.bodyMedium)
+                        .font(AppTypography.title2)
                         .foregroundStyle(AppColors.textPrimary)
                         .lineLimit(1)
 
-                    HStack(spacing: AppMetrics.spacing10) {
+                    HStack(spacing: AppMetrics.spacing14) {
                         if !patient.dob.isEmpty {
                             Label(patient.dob, systemImage: "calendar")
-                                .font(AppTypography.caption)
+                                .font(AppTypography.body)
                                 .foregroundStyle(AppColors.textSecondary)
                         }
                         if !patient.gender.isEmpty {
                             Text("·")
+                                .font(AppTypography.body)
                                 .foregroundStyle(AppColors.borderSubtle)
                             Text(patient.gender)
-                                .font(AppTypography.caption)
+                                .font(AppTypography.body)
                                 .foregroundStyle(AppColors.textSecondary)
                         }
                         if !patient.mrn.isEmpty {
                             Text("·")
+                                .font(AppTypography.body)
                                 .foregroundStyle(AppColors.borderSubtle)
                             Text(patient.mrn)
-                                .font(AppTypography.caption)
-                                .foregroundStyle(AppColors.textSecondary)
+                                .font(AppTypography.bodySemibold)
+                                .foregroundStyle(AppColors.textPrimary)
                         }
                     }
                 }
@@ -467,12 +469,12 @@ private struct PatientResultCard: View {
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 24, weight: .semibold))
+                        .font(.system(size: 40, weight: .semibold))
                         .foregroundStyle(AppColors.brandPrimary)
                 }
             }
-            .padding(.horizontal, AppMetrics.spacing20)
-            .padding(.vertical, AppMetrics.spacing16)
+            .padding(.horizontal, AppMetrics.spacing28)
+            .padding(.vertical, AppMetrics.spacing24)
             .background(
                 isSelected
                     ? AppColors.brandPrimary.opacity(0.08)

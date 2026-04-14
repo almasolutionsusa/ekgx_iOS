@@ -49,6 +49,7 @@ final class RegisterViewModel {
     var lastNameError: String?      = nil
     var titleError: String?         = nil
     var degreeError: String?        = nil
+    var phoneError: String?         = nil
     var emailError: String?         = nil
     var confirmEmailError: String?  = nil
     var passwordError: String?      = nil
@@ -120,7 +121,8 @@ final class RegisterViewModel {
         case .confirmEmail:    confirmEmailError = nil
         case .password:        passwordError = nil
         case .confirmPassword: confirmPasswordError = nil
-        case .npi, .phone:     break
+        case .phone:           phoneError = nil
+        case .npi:             break
         }
         errorMessage = nil
     }
@@ -160,13 +162,14 @@ final class RegisterViewModel {
         lastNameError     = lastName.trimmed.isEmpty   ? L10n.Validation.nameEmpty : nil
         titleError        = (title?.isEmpty ?? true)   ? L10n.Validation.required : nil
         degreeError       = (degree?.isEmpty ?? true)  ? L10n.Validation.required : nil
+        phoneError        = phone.trimmed.isEmpty      ? L10n.Validation.phoneEmpty : nil
         emailError        = Validators.validateEmail(email)
         confirmEmailError = email.trimmed != confirmEmail.trimmed
                             ? L10n.Validation.emailMismatch : nil
         passwordError        = Validators.validatePasswordStrong(password)
         confirmPasswordError = Validators.validatePasswordMatch(password, confirmPassword)
 
-        return [firstNameError, lastNameError, titleError, degreeError,
+        return [firstNameError, lastNameError, titleError, degreeError, phoneError,
                 emailError, confirmEmailError,
                 passwordError, confirmPasswordError].allSatisfy { $0 == nil }
     }

@@ -40,7 +40,8 @@ struct HomeView: View {
 
             // Side menu — always on top
             SideMenuView(
-                user: viewModel.currentUser,
+                userFullName: viewModel.currentUserFullName,
+                userEmail: viewModel.currentUserEmail,
                 userInitials: viewModel.userInitials,
                 userRoleDisplayName: viewModel.userRoleDisplayName,
                 isVisible: viewModel.isMenuVisible,
@@ -76,7 +77,7 @@ struct HomeView: View {
 
             // Greeting
             VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
-                Text("\(viewModel.greeting), \(viewModel.currentUser.firstName)")
+                Text("\(viewModel.greeting), \(viewModel.currentUserFullName)")
                     .font(AppTypography.title1)
                     .foregroundStyle(AppColors.textPrimary)
                 Text(L10n.Home.subtitle)
@@ -188,7 +189,7 @@ private struct HomeNavigationBar: View {
     private var userChip: some View {
         HStack(spacing: AppMetrics.spacing10) {
             VStack(alignment: .trailing, spacing: AppMetrics.spacing2) {
-                Text(viewModel.currentUser.fullName)
+                Text(viewModel.currentUserFullName)
                     .font(AppTypography.bodyMedium)
                     .foregroundStyle(AppColors.textPrimary)
                 Text(viewModel.userRoleDisplayName)

@@ -24,6 +24,7 @@ struct AppTypography {
     static let bodyMedium   = Font.custom("Roboto-Medium",   size: 22)
     static let bodySemibold = Font.custom("Roboto-SemiBold", size: 22)
     static let callout      = Font.custom("Roboto-Regular",  size: 20)
+    static let calloutBold  = Font.custom("Roboto-SemiBold", size: 20)
 
     // MARK: - Supporting (Roboto)
 
