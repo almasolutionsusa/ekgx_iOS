@@ -66,8 +66,15 @@ final class SettingsViewModel {
         guard let s = authService.loginData?.appSettings else { return }
 
         if let value = s.minnesotaCode { minnesotaCodeEnabled = value }
-        if let value = s.acNotch {
-            acNotch = value ? .hz060 : .hz000
+
+        // AC Notch enum: "OFF" | "FREQ_50HZ" | "FREQ_60HZ"
+        if let raw = s.acNotch {
+            switch raw.uppercased() {
+            case "OFF":       acNotch = .hz000
+            case "FREQ_50HZ": acNotch = .hz050
+            case "FREQ_60HZ": acNotch = .hz060
+            default:          break
+            }
         }
 
         // EMG is a string from the server: "OFF" | "WEAK" | "STRONG"

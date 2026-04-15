@@ -155,6 +155,8 @@ final class HomeViewModel {
     func logout() {
         showLogoutConfirmation = false
         closeMenu()
+        diContainer.autoLockManager.stop()
+        Task { try? await diContainer.authService.logout() }
         router.navigate(to: .login)
     }
 

@@ -225,6 +225,11 @@
 "settings.demo.fieldPH"              = "Enter code";
 "settings.demo.unlockButton"         = "Unlock";
 
+// MARK: - Auto Lock
+"autoLock.title"                     = "Session Locked";
+"autoLock.subtitle"                  = "Enter your PIN to resume";
+"autoLock.logoutButton"              = "Sign out instead";
+
 // MARK: - Auth · Local Mode
 "auth.login.localMode"               = "Continue Offline";
 "auth.login.localModeSubtitle"       = "Use the app without an internet connection";

@@ -34,6 +34,7 @@ final class AppDIContainer {
     let appInfoService: AppInfoService
     let patientsService: PatientsService
     let ekgUploadService: EKGUploadService
+    let autoLockManager: AutoLockManager
 
     // MARK: - Device Service
 
@@ -49,6 +50,7 @@ final class AppDIContainer {
         self.appInfoService   = AppInfoService(checkinService: checkin)
         self.patientsService  = PatientsService()
         self.ekgUploadService = EKGUploadService()
+        self.autoLockManager  = AutoLockManager()
     }
 
     // MARK: - Mode Switching

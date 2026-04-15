@@ -186,6 +186,7 @@ final class LoginViewModel {
 
         do {
             try await authService.pinLogin(pin: pinInput, appUuid: appUuid)
+            configureAutoLock()
             showPinLogin = false
             router.navigate(to: .dashboard)
         } catch let authError as AuthError {
@@ -204,12 +205,18 @@ final class LoginViewModel {
             let username = email.trimmingCharacters(in: .whitespacesAndNewlines)
             try await authService.login(email: username, password: password)
             saveToHistory(username)
+            configureAutoLock()
             router.navigate(to: .dashboard)
         } catch let authError as AuthError {
             errorMessage = authError.errorDescription
         } catch {
             errorMessage = L10n.Auth.Login.errorGeneric
         }
+    }
+
+    private func configureAutoLock() {
+        let secs = authService.loginData?.appSettings?.autolockSeconds ?? 0
+        diContainer.autoLockManager.configure(timeoutSeconds: secs)
     }
 
     private func validateInputs() -> Bool {

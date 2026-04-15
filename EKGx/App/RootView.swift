@@ -14,6 +14,33 @@ struct RootView: View {
     @Environment(AppDIContainer.self) private var diContainer
 
     var body: some View {
+        ZStack {
+            routedContent
+
+            // Invisible window-level activity tracker (gesture recognizer
+            // attached to UIWindow). Never intercepts touches.
+            ActivityTrackingView {
+                diContainer.autoLockManager.reportActivity()
+            }
+            .frame(width: 0, height: 0)
+            .allowsHitTesting(false)
+
+            // Lock popup — shown on top of the content and blocks all underlying touches.
+            // Not shown on the login/register screens or in local/offline mode.
+            if diContainer.autoLockManager.isLocked
+                && router.currentRoute != .login
+                && router.currentRoute != .register
+                && !diContainer.isLocalMode {
+                LockOverlayView(diContainer: diContainer, router: router)
+                    .transition(.opacity)
+                    .zIndex(100)
+            }
+        }
+        .animation(.easeInOut(duration: 0.25), value: diContainer.autoLockManager.isLocked)
+    }
+
+    @ViewBuilder
+    private var routedContent: some View {
         Group {
             switch router.currentRoute {
 

@@ -10,6 +10,14 @@ import Foundation
 
 enum L10n {
 
+    // MARK: - Auto Lock
+
+    enum AutoLock {
+        static let title         = "autoLock.title".localized
+        static let subtitle      = "autoLock.subtitle".localized
+        static let logoutButton  = "autoLock.logoutButton".localized
+    }
+
     // MARK: - Auth
 
     enum Auth {

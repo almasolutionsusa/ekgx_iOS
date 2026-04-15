@@ -58,7 +58,9 @@ struct SessionMessage: Decodable {
 struct SessionAppSettings: Decodable {
     let lowpass: Double?
     let highpass: Double?
-    let acNotch: Bool?
+    /// "OFF" | "FREQ_50HZ" | "FREQ_60HZ"
+    let acNotch: String?
+    /// "OFF" | "WEAK" | "STRONG"
     let emg: String?
     let minnesotaCode: Bool?
     let autolockSeconds: Int?
