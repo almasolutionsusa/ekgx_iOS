@@ -388,7 +388,7 @@
 "account.security.sectionTitle"      = "Security";
 "account.security.sectionSubtitle"   = "Manage your PIN and account password.";
 "account.security.setPinTitle"       = "Set PIN Code";
-"account.security.setPinSubtitle"    = "4-digit PIN for quick app access.";
+"account.security.setPinSubtitle"    = "6-digit PIN for quick app access.";
 "account.security.changePassTitle"   = "Change Password";
 "account.security.changePassSubtitle" = "Update your account password.";
 
@@ -405,7 +405,7 @@
 
 // MARK: - My Account · Set PIN Sheet
 "account.pin.sheetTitle"             = "Set PIN Code";
-"account.pin.sheetSubtitle"          = "Create a 4-digit PIN for quick, secure app access.";
+"account.pin.sheetSubtitle"          = "Create a 6-digit PIN for quick, secure app access.";
 "account.pin.fieldNew"               = "New PIN";
 "account.pin.fieldNewPH"             = "Enter 6-digit PIN";
 "account.pin.fieldConfirm"           = "Confirm PIN";

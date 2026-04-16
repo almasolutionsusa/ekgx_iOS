@@ -52,6 +52,7 @@ final class MyAccountViewModel {
     var pinInput: String        = ""
     var pinConfirm: String      = ""
     var pinError: String?       = nil
+    var isSubmittingPin: Bool   = false
 
     // MARK: - Change Password state
 
@@ -72,13 +73,50 @@ final class MyAccountViewModel {
     var emailError: String?      = nil
     var phoneError: String?      = nil
 
+    // MARK: - PIN Status (from GET /api/auth/pin/status)
+
+    /// True when the user has a PIN configured at their facility.
+    /// Nil while the status is still loading.
+    var hasPin: Bool? = nil
+    /// Days until the current PIN expires. Nil if no PIN or still loading.
+    var pinDaysUntilExpiry: Int? = nil
+    var isLoadingPinStatus: Bool = false
+
     // MARK: - Dependencies
 
     private let router: AppRouter
+    private let authService: AuthServiceProtocol
 
-    init(router: AppRouter) {
+    init(router: AppRouter, authService: AuthServiceProtocol) {
         self.router = router
+        self.authService = authService
         savedState = currentSnapshot
+    }
+
+    // MARK: - Activation
+
+    /// Call from MyAccountView.onAppear — refreshes PIN status from the server.
+    func activate() {
+        Task { await loadPinStatus() }
+    }
+
+    private func loadPinStatus() async {
+        isLoadingPinStatus = true
+        defer { isLoadingPinStatus = false }
+        do {
+            let data = try await authService.pinStatus()
+            if let days = data?.daysUntilExpiry {
+                hasPin = true
+                pinDaysUntilExpiry = days
+            } else {
+                hasPin = false
+                pinDaysUntilExpiry = nil
+            }
+        } catch {
+            // 404 or auth error typically means "no pin"
+            hasPin = false
+            pinDaysUntilExpiry = nil
+        }
     }
 
     // MARK: - Facility Enum
@@ -137,11 +175,28 @@ final class MyAccountViewModel {
             pinError = L10n.Account.Pin.errorMismatch
             return
         }
-        // Save PIN via Keychain here
-        showSetPinSheet = false
-        pinInput   = ""
-        pinConfirm = ""
-        pinError   = nil
+        Task { await performSubmitPin() }
+    }
+
+    private func performSubmitPin() async {
+        isSubmittingPin = true
+        pinError = nil
+        defer { isSubmittingPin = false }
+
+        let appUuid = UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? ""
+        do {
+            try await authService.setupPin(pin: pinInput, appUuid: appUuid)
+            showSetPinSheet = false
+            pinInput   = ""
+            pinConfirm = ""
+            pinError   = nil
+            // Refresh PIN status so the My Account screen reflects the new PIN.
+            await loadPinStatus()
+        } catch let error as AuthError {
+            pinError = error.errorDescription
+        } catch {
+            pinError = L10n.Auth.Login.errorGeneric
+        }
     }
 
     func cancelPin() {

@@ -111,7 +111,7 @@ final class AppDIContainer {
     }
 
     func makeMyAccountViewModel(router: AppRouter) -> MyAccountViewModel {
-        MyAccountViewModel(router: router)
+        MyAccountViewModel(router: router, authService: authService)
     }
 
     func makeRecordingViewModel(patient: Patient, router: AppRouter) -> RecordingViewModel {

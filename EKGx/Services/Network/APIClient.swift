@@ -209,12 +209,20 @@ final class APIClient {
         let appUuid = UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? ""
         if !appUuid.isEmpty { request.setValue(appUuid, forHTTPHeaderField: "X-App-UUID") }
 
-        // Don't send Bearer token on public endpoints — Spring Security will
-        // reject a stale token with a 302 redirect even on permitAll routes.
+        // Explicit whitelist of unauthenticated endpoints. Everything else
+        // gets the Bearer token — including /api/auth/pin/status, pin/setup,
+        // pin/change, which all require the authenticated session.
         let path = request.url?.path ?? ""
-        let isPublic = path.hasPrefix("/api/auth/")
-                    || path.hasPrefix("/api/app/checkin")
-                    || path.hasPrefix("/api/app/info")
+        let publicPaths: Set<String> = [
+            "/api/auth/login",
+            "/api/auth/pin-login",
+            "/api/auth/register",
+            "/api/auth/forgot-password",
+            "/api/app/checkin",
+            "/api/app/info"
+        ]
+        let isPublic = publicPaths.contains(path)
+
         if !isPublic, let token = TokenStore.shared.accessToken, !token.isEmpty {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }

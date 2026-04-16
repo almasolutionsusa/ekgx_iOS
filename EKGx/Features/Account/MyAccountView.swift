@@ -103,6 +103,7 @@ struct MyAccountView: View {
         } message: {
             Text(L10n.Account.Danger.alertMessage)
         }
+        .onAppear { viewModel.activate() }
     }
 }
 
@@ -722,7 +723,7 @@ private struct SetPinSheet: View {
 
                     HStack(spacing: AppMetrics.spacing12) {
                         SecondaryButton(title: L10n.Common.cancel) { viewModel.cancelPin() }
-                        PrimaryButton(title: L10n.Account.Pin.submitButton, isLoading: false) { viewModel.submitPin() }
+                        PrimaryButton(title: L10n.Account.Pin.submitButton, isLoading: viewModel.isSubmittingPin) { viewModel.submitPin() }
                     }
                 }
                 .padding(.horizontal, AppMetrics.spacing40)
@@ -916,12 +917,4 @@ private struct PasswordFieldView: View {
                 )
         }
     }
-}
-
-// MARK: - Preview
-
-#Preview {
-    let router = AppRouter()
-    MyAccountView(viewModel: MyAccountViewModel(router: router))
-        .environment(router)
 }

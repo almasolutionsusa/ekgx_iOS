@@ -68,8 +68,16 @@ struct SessionAppSettings: Decodable {
 
 // MARK: - Pin Status Response Data
 
-/// Simplified per spec: `daysUntilExpiry` per facility PIN.
+/// Per spec: returns an array of PINs (one per facility) with expiry info.
 struct PinStatusData: Decodable {
+    let pins: [PinStatusEntry]?
+
+    /// Convenience: days until the first (primary) PIN expires.
+    /// Nil when the user has no PIN configured.
+    var daysUntilExpiry: Int? { pins?.first?.daysUntilExpiry }
+}
+
+struct PinStatusEntry: Decodable {
     let daysUntilExpiry: Int?
 }
 
