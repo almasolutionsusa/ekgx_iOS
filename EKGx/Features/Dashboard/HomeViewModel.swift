@@ -101,7 +101,7 @@ final class HomeViewModel {
     // MARK: - Device
 
     func connectDevice() {
-        guard deviceState == .disconnected else { return }
+        guard deviceState != .searching else { return }
         diContainer.switchToRealDevice()
         deviceService = diContainer.deviceService
         deviceService.onConnectionStateChanged = { [weak self] state in
@@ -111,7 +111,7 @@ final class HomeViewModel {
     }
 
     func connectDemo() {
-        guard deviceState == .disconnected else { return }
+        guard deviceState != .searching else { return }
         diContainer.switchToDemo()
         deviceService = diContainer.deviceService
         deviceService.onConnectionStateChanged = { [weak self] state in

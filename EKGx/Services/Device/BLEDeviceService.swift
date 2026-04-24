@@ -4,15 +4,12 @@
 //
 //  Real iCV200BLE Bluetooth device service.
 //
-//  Crash root cause: replacing vhiCVBleManager while its internal CBCentralManager
-//  is mid-scan causes NSAVHCVConnect to receive callbacks after dealloc →
-//  "unrecognized selector" crash.
+//  ONE vhiCVBleManager for the entire app lifetime — never recreated.
 //
-//  Rules:
-//  1. ONE vhiCVBleManager for the entire app lifetime — never recreated.
-//  2. To re-scan: stopScan → short delay → startScan on the same instance.
-//  3. hardReset() is permanently removed.
-//  4. scanPending handles the case where BT is not yet powered on at connect() time.
+//  connect() flow:
+//  - If already disconnected: stopScan → checkBletooth → startScan
+//  - If currently connected: disconnect first, then auto-scan once fully disconnected
+//  - If BT not powered on yet: set scanPending, scan from icvBleManagerBluetoothOn
 //
 
 import Foundation
@@ -30,6 +27,7 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
 
     private let bleManager: vhiCVBleManager   // never replaced
     private var scanPending = false
+    private var scanAfterDisconnect = false    // true = start scan once disConnect callback fires
 
     override init() {
         bleManager = vhiCVBleManager()
@@ -40,33 +38,35 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
     // MARK: - DeviceServiceProtocol
 
     func connect() {
-        guard currentState == .disconnected else { return }
+        switch currentState {
+        case .disconnected:
+            performScan()
 
-        // Stop any lingering scan on the same instance, then re-scan after a
-        // brief yield so the SDK's internal CBCentralManager settles.
-        bleManager.stopScan()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            guard let self else { return }
-            self.bleManager.checkBletooth { [weak self] status in
-                guard let self else { return }
+        case .connected:
+            // Disconnect first; scanAfterDisconnect will trigger scan once done.
+            scanAfterDisconnect = true
+            currentState = .searching
+            onConnectionStateChanged?(.searching)
+            bleManager.collectStop()
+            bleManager.disConnect { [weak self] _ in
                 DispatchQueue.main.async {
-                    if status == .OK {
-                        self.scanPending = false
-                        self.startScan()
-                    } else {
-                        // BT not ready — wait for icvBleManagerBluetoothOn callback.
-                        self.scanPending = true
-                        self.currentState = .searching
-                        self.onConnectionStateChanged?(.searching)
+                    guard let self else { return }
+                    if self.scanAfterDisconnect {
+                        self.scanAfterDisconnect = false
+                        self.performScan()
                     }
                 }
             }
+
+        case .searching:
+            // Already scanning — nothing to do.
+            break
         }
     }
 
     func disconnect() {
         scanPending = false
+        scanAfterDisconnect = false
         bleManager.stopScan()
         bleManager.collectStop()
         if currentState == .connected {
@@ -84,10 +84,24 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
 
     // MARK: - Private
 
-    private func startScan() {
-        currentState = .searching
-        onConnectionStateChanged?(.searching)
-        bleManager.startScan()
+    private func performScan() {
+        bleManager.stopScan()
+        bleManager.checkBletooth { [weak self] status in
+            guard let self else { return }
+            DispatchQueue.main.async {
+                if status == .OK {
+                    self.scanPending = false
+                    self.currentState = .searching
+                    self.onConnectionStateChanged?(.searching)
+                    self.bleManager.startScan()
+                } else {
+                    // BT not ready — wait for icvBleManagerBluetoothOn.
+                    self.scanPending = true
+                    self.currentState = .searching
+                    self.onConnectionStateChanged?(.searching)
+                }
+            }
+        }
     }
 
     private func configureFilters() {
@@ -109,7 +123,9 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
         DispatchQueue.main.async {
             guard self.scanPending else { return }
             self.scanPending = false
-            self.startScan()
+            self.currentState = .searching
+            self.onConnectionStateChanged?(.searching)
+            manager.startScan()
         }
     }
 
