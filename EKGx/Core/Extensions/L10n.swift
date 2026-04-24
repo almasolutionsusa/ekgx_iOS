@@ -458,6 +458,82 @@ enum L10n {
         }
     }
 
+    // MARK: - Waiting List
+
+    enum WaitingList {
+        enum Nav {
+            static let title    = "waitingList.nav.title".localized
+            static let subtitle = "waitingList.nav.subtitle".localized
+        }
+        enum Empty {
+            static let title    = "waitingList.empty.title".localized
+            static let subtitle = "waitingList.empty.subtitle".localized
+        }
+        enum Cancel {
+            static func message(_ name: String) -> String {
+                String(format: "waitingList.cancel.message".localized, name)
+            }
+            static let confirm  = "waitingList.cancel.confirm".localized
+            static let keep     = "waitingList.cancel.keep".localized
+        }
+        enum Add {
+            static let title         = "waitingList.add.title".localized
+            static let subtitle      = "waitingList.add.subtitle".localized
+            static let confirmButton = "waitingList.add.confirmButton".localized
+        }
+    }
+
+    // MARK: - FAQ
+
+    enum FAQ {
+        enum Nav {
+            static let subtitle = "faq.nav.subtitle".localized
+        }
+        static let empty = "faq.empty".localized
+    }
+
+    // MARK: - Indications for Use
+
+    enum IFU {
+        enum Nav {
+            static let subtitle = "ifu.nav.subtitle".localized
+        }
+        static let empty = "ifu.empty".localized
+        static func version(_ v: String) -> String { String(format: "ifu.version".localized, v) }
+        static func effective(_ d: String) -> String { String(format: "ifu.effective".localized, d) }
+    }
+
+    // MARK: - Support
+
+    enum Support {
+        enum Nav {
+            static let subtitle = "support.nav.subtitle".localized
+        }
+        enum Field {
+            static let subject        = "support.field.subject".localized
+            static let subjectPH      = "support.field.subjectPH".localized
+            static let message        = "support.field.message".localized
+            static let contactSection = "support.field.contactSection".localized
+            static let name           = "support.field.name".localized
+            static let namePH         = "support.field.namePH".localized
+            static let email          = "support.field.email".localized
+            static let emailPH        = "support.field.emailPH".localized
+            static let phone          = "support.field.phone".localized
+            static let phonePH        = "support.field.phonePH".localized
+        }
+        enum Section {
+            static let issue   = "support.section.issue".localized
+        }
+        enum Submit {
+            static let button  = "support.submit.button".localized
+        }
+        enum Success {
+            static let title      = "support.success.title".localized
+            static let subtitle   = "support.success.subtitle".localized
+            static let backButton = "support.success.backButton".localized
+        }
+    }
+
     // MARK: - Placeholder
 
     enum Placeholder {

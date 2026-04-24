@@ -115,10 +115,28 @@ struct RootView: View {
                         removal: .move(edge: .trailing).combined(with: .opacity)
                     ))
 
-            case .patientDetail,
-                 .support,
-                 .faq,
-                 .indicationsForUse:
+            case .faq:
+                FAQView(viewModel: diContainer.makeAppContentViewModel(router: router))
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
+
+            case .support:
+                SupportView(viewModel: diContainer.makeAppContentViewModel(router: router))
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
+
+            case .indicationsForUse:
+                IndicationsForUseView(viewModel: diContainer.makeAppContentViewModel(router: router))
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .trailing).combined(with: .opacity),
+                        removal: .move(edge: .trailing).combined(with: .opacity)
+                    ))
+
+            case .patientDetail:
                 PlaceholderView()
                     .transition(.asymmetric(
                         insertion: .move(edge: .trailing).combined(with: .opacity),

@@ -43,11 +43,12 @@ struct ECGLogoView: View {
                     .shadow(color: AppColors.brandPrimary.opacity(0.25), radius: 10, x: 0, y: 4)
             )
 
-            // App title
-            Text(L10n.Branding.appName)
-                .font(AppTypography.title1Extra)
-                .foregroundStyle(AppColors.textPrimary)
-                .tracking(2)
+            // App logo
+            AppImages.logo
+                .resizable()
+                .scaledToFit()
+                .frame(height: 50)
+                .padding(.top)
         }
         .onAppear { startDate = Date() }
     }

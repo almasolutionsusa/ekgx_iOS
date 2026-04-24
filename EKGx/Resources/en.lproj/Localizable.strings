@@ -427,3 +427,48 @@
 "account.password.errorCurrent"      = "Please enter your current password.";
 "account.password.errorTooShort"     = "New password must be at least 8 characters.";
 "account.password.errorMismatch"     = "Passwords do not match.";
+
+// MARK: - Waiting List (Orders Queue)
+"waitingList.nav.title"              = "Waiting List";
+"waitingList.nav.subtitle"           = "patients in queue";
+"waitingList.empty.title"            = "No Orders";
+"waitingList.empty.subtitle"         = "Tap + Add Patient to place a patient in the queue.";
+"waitingList.cancel.message"         = "Remove %@ from the waiting list?";
+"waitingList.cancel.confirm"         = "Cancel Order";
+"waitingList.cancel.keep"            = "Keep";
+"waitingList.add.title"              = "Add to Waiting List";
+"waitingList.add.subtitle"           = "Search for a patient, then confirm to add them to the queue.";
+"waitingList.add.confirmButton"      = "Add to Queue";
+"waitingList.add.cancelTitle"        = "Cancel Order";
+
+// MARK: - FAQ
+"faq.nav.subtitle"                   = "Frequently asked questions";
+"faq.empty"                          = "No FAQ entries available.";
+
+// MARK: - Indications for Use
+"ifu.nav.subtitle"                   = "Intended use and clinical indications";
+"ifu.empty"                          = "Indications for use not available.";
+"ifu.version"                        = "Version %@";
+"ifu.effective"                      = "Effective %@";
+
+// MARK: - Support
+"support.nav.subtitle"               = "Contact the EKGx support team";
+"support.section.issue"              = "Issue Details";
+"support.field.subject"              = "Subject";
+"support.field.subjectPH"            = "Brief description of the issue";
+"support.field.message"              = "Message";
+"support.field.contactSection"       = "Contact Info (Optional)";
+"support.field.name"                 = "Name";
+"support.field.namePH"               = "Your name";
+"support.field.email"                = "Email";
+"support.field.emailPH"              = "your@email.com";
+"support.field.phone"                = "Phone";
+"support.field.phonePH"              = "Optional phone number";
+"support.submit.button"              = "Send Ticket";
+"support.success.title"              = "Ticket Submitted";
+"support.success.subtitle"           = "The EKGx support team will respond to your request shortly.";
+"support.success.backButton"         = "Back to Home";
+
+// MARK: - Common · Content
+"common.retry"                       = "Retry";
+"common.noContent"                   = "No content available.";

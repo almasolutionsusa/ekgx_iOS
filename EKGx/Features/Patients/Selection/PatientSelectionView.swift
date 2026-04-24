@@ -415,7 +415,7 @@ private struct PatientResultsPanel: View {
 
 // MARK: - Patient Result Card
 
-private struct PatientResultCard: View {
+struct PatientResultCard: View {
 
     let patient: SearchedPatient
     let isSelected: Bool
@@ -423,63 +423,60 @@ private struct PatientResultCard: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: AppMetrics.spacing24) {
-                // Avatar — larger for hospital iPad at arm's length
+            HStack(spacing: AppMetrics.spacing16) {
+                // Avatar
                 ZStack {
                     Circle()
                         .fill(AppColors.brandPrimary.opacity(isSelected ? 0.25 : 0.12))
-                        .frame(width: 76, height: 76)
+                        .frame(width: 56, height: 56)
                     Text(initials)
-                        .font(AppTypography.title2)
+                        .font(AppTypography.title3)
                         .foregroundStyle(AppColors.brandPrimary)
                 }
 
-                VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
+                VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
                     Text(patient.fullName)
-                        .font(AppTypography.title2)
+                        .font(AppTypography.bodySemibold)
                         .foregroundStyle(AppColors.textPrimary)
                         .lineLimit(1)
 
-                    HStack(spacing: AppMetrics.spacing14) {
+                    HStack(spacing: AppMetrics.spacing8) {
                         if !patient.dob.isEmpty {
-                            Label(patient.dob, systemImage: "calendar")
-                                .font(AppTypography.body)
+                            Text(formattedDob)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(AppColors.textSecondary)
                         }
                         if !patient.gender.isEmpty {
                             Text("·")
-                                .font(AppTypography.body)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(AppColors.borderSubtle)
                             Text(patient.gender)
-                                .font(AppTypography.body)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(AppColors.textSecondary)
                         }
                         if !patient.mrn.isEmpty {
                             Text("·")
-                                .font(AppTypography.body)
+                                .font(AppTypography.caption)
                                 .foregroundStyle(AppColors.borderSubtle)
                             Text(patient.mrn)
-                                .font(AppTypography.bodySemibold)
+                                .font(AppTypography.captionBold)
                                 .foregroundStyle(AppColors.textPrimary)
                         }
                     }
+                    .lineLimit(1)
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
 
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 40, weight: .semibold))
+                        .font(.system(size: 28, weight: .semibold))
                         .foregroundStyle(AppColors.brandPrimary)
                 }
             }
-            .padding(.horizontal, AppMetrics.spacing28)
-            .padding(.vertical, AppMetrics.spacing24)
-            .background(
-                isSelected
-                    ? AppColors.brandPrimary.opacity(0.08)
-                    : AppColors.surfaceCard
-            )
+            .padding(.horizontal, AppMetrics.spacing20)
+            .padding(.vertical, AppMetrics.spacing16)
+            .background(isSelected ? AppColors.brandPrimary.opacity(0.08) : AppColors.surfaceCard)
             .cornerRadius(AppMetrics.radiusLarge)
             .overlay(
                 RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
@@ -496,6 +493,17 @@ private struct PatientResultCard: View {
         let f = patient.firstName.first.map(String.init) ?? ""
         let l = patient.lastName.first.map(String.init) ?? ""
         return (f + l).uppercased()
+    }
+
+    /// Converts "yyyy-MM-dd" → "M/d/yyyy" for display.
+    private var formattedDob: String {
+        let parser = DateFormatter()
+        parser.dateFormat = "yyyy-MM-dd"
+        parser.timeZone = TimeZone(identifier: "UTC")
+        guard let date = parser.date(from: patient.dob) else { return patient.dob }
+        let display = DateFormatter()
+        display.dateFormat = "M/d/yyyy"
+        return display.string(from: date)
     }
 }
 

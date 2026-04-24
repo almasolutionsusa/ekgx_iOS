@@ -86,9 +86,10 @@ private struct LoginBrandingPanel: View {
                     }
 
                     VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-                        Text(L10n.Branding.appName)
-                            .font(AppTypography.largeTitle)
-                            .foregroundStyle(AppColors.textOnDark)
+                        AppImages.logo
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 40)
 
                         Text(L10n.Branding.tagline)
                             .font(AppTypography.callout)

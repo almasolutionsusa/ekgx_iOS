@@ -33,6 +33,8 @@ final class AppDIContainer {
     let checkinService: AppCheckinService
     let appInfoService: AppInfoService
     let patientsService: PatientsService
+    let ordersService: OrdersService
+    let appContentService: AppContentService
     let ekgUploadService: EKGUploadService
     let autoLockManager: AutoLockManager
 
@@ -49,7 +51,9 @@ final class AppDIContainer {
         self.checkinService   = checkin
         self.appInfoService   = AppInfoService(checkinService: checkin)
         self.patientsService  = PatientsService()
-        self.ekgUploadService = EKGUploadService()
+        self.ordersService      = OrdersService(checkinService: checkin)
+        self.appContentService  = AppContentService(checkinService: checkin)
+        self.ekgUploadService   = EKGUploadService()
         self.autoLockManager  = AutoLockManager()
     }
 
@@ -90,7 +94,12 @@ final class AppDIContainer {
     }
 
     func makePatientListViewModel(router: AppRouter) -> PatientListViewModel {
-        PatientListViewModel(router: router)
+        PatientListViewModel(
+            ordersService: ordersService,
+            patientsService: patientsService,
+            appInfoService: appInfoService,
+            router: router
+        )
     }
 
     func makePatientSelectionViewModel(router: AppRouter) -> PatientSelectionViewModel {
@@ -112,6 +121,10 @@ final class AppDIContainer {
 
     func makeMyAccountViewModel(router: AppRouter) -> MyAccountViewModel {
         MyAccountViewModel(router: router, authService: authService)
+    }
+
+    func makeAppContentViewModel(router: AppRouter) -> AppContentViewModel {
+        AppContentViewModel(contentService: appContentService, router: router)
     }
 
     func makeRecordingViewModel(patient: Patient, router: AppRouter) -> RecordingViewModel {

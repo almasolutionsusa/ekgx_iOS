@@ -89,3 +89,40 @@ struct AppCheckinData: Decodable {
     let facilityName: String?
     let organizationName: String?
 }
+
+// MARK: - Patient Order
+
+struct PatientOrder: Decodable, Identifiable {
+    let id: Int64
+    let uuid: String?
+    let active: Bool?
+    let createdAt: String?
+    let updatedAt: String?
+    let examType: String?       // "EKG" | "VITALS" | "ULTRASOUND"
+    let visibility: String?     // "PRIVATE" | "SHARED"
+    let note: String?
+    let completedAt: String?
+    let completionReason: String?   // "EXAM_COMPLETED" | "MANUAL" | "CANCELLED"
+    let patientUuid: String?
+    let patientFirstName: String?
+    let patientLastName: String?
+    let patientDob: String?
+    let patientMrn: String?
+    let facilityUuid: String?
+    let facilityName: String?
+    let organizationUuid: String?
+    let organizationName: String?
+    let createdByUsername: String?
+    let assignedToUsername: String?
+    let completedByUsername: String?
+    let facilityId: Int64?
+    let organizationId: Int64?
+    let patientId: Int64?
+    let assignedToId: Int64?
+    let createdById: Int64?
+    let completedById: Int64?
+
+    var patientFullName: String {
+        [patientFirstName, patientLastName].compactMap { $0 }.joined(separator: " ")
+    }
+}

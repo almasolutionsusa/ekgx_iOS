@@ -112,10 +112,11 @@ struct SideMenuView: View {
                         .font(.system(size: 22, weight: .semibold))
                         .foregroundStyle(.white)
                 }
-                VStack(alignment: .leading, spacing: AppMetrics.spacing2) {
-                    Text(L10n.Branding.appName)
-                        .font(AppTypography.title3)
-                        .foregroundStyle(AppColors.textOnDark)
+                VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
+                    AppImages.logo
+                        .resizable()
+                        .scaledToFit()
+                        .frame(height: 22)
                     Text(L10n.Branding.tagline)
                         .font(AppTypography.caption)
                         .foregroundStyle(AppColors.textOnDark.opacity(0.55))

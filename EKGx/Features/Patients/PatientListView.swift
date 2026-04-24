@@ -2,17 +2,16 @@
 //  PatientListView.swift
 //  EKGx
 //
-//  Patient list — iPad landscape kiosk screen.
+//  Orders queue (patient waiting list) for the current facility.
 //
 //  ┌─────────────────────────────────────────────────────────────────────────┐
-//  │  [← Back]   Patients (12)          [🔍 Search bar]        [+ Add]      │
+//  │  [← Back]   Orders (4)           [🔍 Search bar]          [+ Add]      │
 //  ├─────────────────────────────────────────────────────────────────────────┤
 //  │                                                                         │
-//  │  ┌──────────────────────────────┐   ┌──────────────────────────────┐   │
-//  │  │  JH  James Hartwell         │   │  MS  Margaret Schultz        │   │
-//  │  │      Male · 59 yrs          │   │      Female · 46 yrs         │   │
-//  │  │      MRN-88210              │   │      MRN-88211               │   │
-//  │  └──────────────────────────────┘   └──────────────────────────────┘   │
+//  │  ┌─────────────────────────────────────────────────────────────────┐   │
+//  │  │  JH  James Hartwell   · EKG · MRN-88210      [Cancel]  09:32   │   │
+//  │  └─────────────────────────────────────────────────────────────────┘   │
+//  │  ...                                                                    │
 //  └─────────────────────────────────────────────────────────────────────────┘
 //
 
@@ -34,46 +33,61 @@ struct PatientListView: View {
 
             VStack(spacing: 0) {
                 PatientListNavBar(viewModel: viewModel)
-                patientContent
+                orderContent
             }
         }
+        .onAppear { viewModel.loadOrders() }
         .sheet(isPresented: $viewModel.showAddPatient) {
-            AddPatientSheet(isPresented: $viewModel.showAddPatient)
+            AddOrderSheet(viewModel: viewModel)
+                .presentationDetents([.large])
+                .presentationSizing(.fitted)
+        }
+        .confirmationDialog(
+            L10n.WaitingList.Cancel.confirm,
+            isPresented: Binding(
+                get: { viewModel.orderPendingCancel != nil },
+                set: { if !$0 { viewModel.orderPendingCancel = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button(L10n.WaitingList.Cancel.confirm, role: .destructive) { viewModel.cancelOrder() }
+            Button(L10n.WaitingList.Cancel.keep, role: .cancel) { viewModel.orderPendingCancel = nil }
+        } message: {
+            if let order = viewModel.orderPendingCancel {
+                Text(L10n.WaitingList.Cancel.message(order.patientFullName))
+            }
         }
     }
 
     // MARK: - Content
 
     @ViewBuilder
-    private var patientContent: some View {
+    private var orderContent: some View {
         if viewModel.isLoading {
             Spacer()
             ProgressView()
                 .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
                 .scaleEffect(1.4)
             Spacer()
-        } else if viewModel.filteredPatients.isEmpty {
+        } else if let error = viewModel.errorMessage {
+            errorState(error)
+        } else if viewModel.filteredOrders.isEmpty {
+            emptyState
+        } else if viewModel.filteredOrders.isEmpty && !viewModel.searchQuery.isEmpty {
             emptyState
         } else {
-            patientGrid
+            orderList
         }
     }
 
-    // MARK: - Patient Grid
+    // MARK: - Order List
 
-    private var patientGrid: some View {
+    private var orderList: some View {
         ScrollView {
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: AppMetrics.spacing16),
-                    GridItem(.flexible(), spacing: AppMetrics.spacing16),
-                    GridItem(.flexible(), spacing: AppMetrics.spacing16),
-                ],
-                spacing: AppMetrics.spacing16
-            ) {
-                ForEach(viewModel.filteredPatients) { patient in
-                    PatientCard(patient: patient) {
-                        viewModel.selectPatient(patient)
+            LazyVStack(spacing: AppMetrics.spacing12) {
+                ForEach(Array(viewModel.filteredOrders.enumerated()), id: \.element.id) { index, order in
+                    OrderRow(order: order, position: index + 1) {
+                        viewModel.confirmCancel(order)
                     }
                 }
             }
@@ -87,27 +101,45 @@ struct PatientListView: View {
     private var emptyState: some View {
         VStack(spacing: AppMetrics.spacing20) {
             Spacer()
-            Image(systemName: viewModel.searchQuery.isEmpty ? "person.2.slash" : "magnifyingglass")
+            Image(systemName: viewModel.searchQuery.isEmpty ? "list.clipboard" : "magnifyingglass")
                 .font(.system(size: 64, weight: .light))
                 .foregroundStyle(AppColors.textSecondary.opacity(0.4))
-
             VStack(spacing: AppMetrics.spacing8) {
-                Text(viewModel.searchQuery.isEmpty ? L10n.Patients.Empty.noPatients : L10n.Patients.Empty.noResults)
+                Text(viewModel.searchQuery.isEmpty ? L10n.WaitingList.Empty.title : L10n.Patients.Empty.noResults)
                     .font(AppTypography.title2)
                     .foregroundStyle(AppColors.textPrimary)
                 Text(viewModel.searchQuery.isEmpty
-                     ? L10n.Patients.Empty.noPatientsSubtitle
+                     ? L10n.WaitingList.Empty.subtitle
                      : L10n.Patients.Empty.noResultsSubtitle(viewModel.searchQuery))
                     .font(AppTypography.callout)
                     .foregroundStyle(AppColors.textSecondary)
                     .multilineTextAlignment(.center)
             }
-
             if !viewModel.searchQuery.isEmpty {
                 Button(L10n.Patients.Empty.clearSearch) { viewModel.clearSearch() }
                     .font(AppTypography.bodyMedium)
                     .foregroundStyle(AppColors.brandPrimary)
             }
+            Spacer()
+        }
+        .padding(.horizontal, AppMetrics.spacing48)
+    }
+
+    // MARK: - Error State
+
+    private func errorState(_ message: String) -> some View {
+        VStack(spacing: AppMetrics.spacing20) {
+            Spacer()
+            Image(systemName: "exclamationmark.triangle")
+                .font(.system(size: 64, weight: .light))
+                .foregroundStyle(AppColors.statusCritical.opacity(0.6))
+            Text(message)
+                .font(AppTypography.callout)
+                .foregroundStyle(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
+            Button("Retry") { viewModel.loadOrders() }
+                .font(AppTypography.bodyMedium)
+                .foregroundStyle(AppColors.brandPrimary)
             Spacer()
         }
         .padding(.horizontal, AppMetrics.spacing48)
@@ -123,12 +155,11 @@ private struct PatientListNavBar: View {
     var body: some View {
         HStack(alignment: .center, spacing: AppMetrics.spacing16) {
 
-            // Back
             Button(action: { viewModel.navigateBack() }) {
                 HStack(spacing: AppMetrics.spacing8) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 15, weight: .semibold))
-                    Text(L10n.Home.Nav.menuButton)
+                    Text(L10n.Common.back)
                         .font(AppTypography.callout)
                 }
                 .foregroundStyle(AppColors.textPrimary)
@@ -138,9 +169,8 @@ private struct PatientListNavBar: View {
                 .cornerRadius(AppMetrics.radiusMedium)
             }
 
-            // Title + count
             VStack(alignment: .leading, spacing: 2) {
-                Text(L10n.Patients.Nav.title)
+                Text(L10n.WaitingList.Nav.title)
                     .font(AppTypography.title2)
                     .foregroundStyle(AppColors.textPrimary)
                 Text(L10n.Patients.Nav.totalCount(viewModel.totalCount))
@@ -150,15 +180,12 @@ private struct PatientListNavBar: View {
 
             Spacer()
 
-            // Search bar
             PatientSearchBar(
                 query: $viewModel.searchQuery,
-                onSearch: { viewModel.searchPatients() },
                 onClear: { viewModel.clearSearch() }
             )
             .frame(width: 340)
 
-            // Add patient
             Button(action: { viewModel.openAddPatient() }) {
                 HStack(spacing: AppMetrics.spacing8) {
                     Image(systemName: "plus")
@@ -185,9 +212,7 @@ private struct PatientListNavBar: View {
 private struct PatientSearchBar: View {
 
     @Binding var query: String
-    let onSearch: () -> Void
     let onClear: () -> Void
-
     @FocusState private var isFocused: Bool
 
     var body: some View {
@@ -200,7 +225,6 @@ private struct PatientSearchBar: View {
                 .font(AppTypography.callout)
                 .foregroundStyle(AppColors.textPrimary)
                 .focused($isFocused)
-                .onSubmit { onSearch() }
                 .submitLabel(.search)
 
             if !query.isEmpty {
@@ -226,289 +250,718 @@ private struct PatientSearchBar: View {
     }
 }
 
-// MARK: - Patient Card
+// MARK: - Order Row
 
-private struct PatientCard: View {
+private struct OrderRow: View {
 
-    let patient: Patient
-    let onTap: () -> Void
+    let order: PatientOrder
+    let position: Int
+    let onCancel: () -> Void
 
-    @State private var isPressed = false
-
-    // Consistent accent color per patient based on their ID
     private var avatarColor: Color {
         let colors: [Color] = [
-            AppColors.brandPrimary,
-            AppColors.brandSecondary,
-            AppColors.statusInfo,
-            AppColors.statusSuccess,
-            Color(red: 0.45, green: 0.31, blue: 0.82),  // purple
-            Color(red: 0.90, green: 0.45, blue: 0.20),  // amber
+            AppColors.brandPrimary, AppColors.brandSecondary,
+            AppColors.statusInfo, AppColors.statusSuccess,
+            Color(red: 0.45, green: 0.31, blue: 0.82),
+            Color(red: 0.90, green: 0.45, blue: 0.20),
         ]
-        let index = abs((patient.id ?? 0)) % colors.count
-        return colors[index]
+        return colors[Int(order.id) % colors.count]
+    }
+
+    private var initials: String {
+        let f = order.patientFirstName?.first.map(String.init) ?? ""
+        let l = order.patientLastName?.first.map(String.init) ?? ""
+        return (f + l).uppercased()
+    }
+
+    private var examBadgeColor: Color {
+        switch order.examType {
+        case "VITALS":     return AppColors.statusSuccess
+        case "ULTRASOUND": return AppColors.statusInfo
+        default:           return AppColors.brandPrimary
+        }
     }
 
     var body: some View {
-        Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 0) {
+        HStack(spacing: 0) {
 
-                // Top accent strip + avatar
-                HStack(alignment: .center, spacing: AppMetrics.spacing16) {
-                    // Avatar circle
-                    ZStack {
-                        Circle()
-                            .fill(avatarColor.opacity(0.15))
-                            .frame(width: 56, height: 56)
-                        Text(patient.initials)
-                            .font(AppTypography.title3)
-                            .foregroundStyle(avatarColor)
-                    }
+            // Left accent strip with queue number
+            VStack(spacing: AppMetrics.spacing4) {
+                Text("#\(position)")
+                    .font(AppTypography.captionBold)
+                    .foregroundStyle(avatarColor)
+            }
+            .frame(width: 44)
+            .frame(maxHeight: .infinity)
+            .background(avatarColor.opacity(0.08))
 
-                    VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
-                        Text(patient.fullName)
-                            .font(AppTypography.bodyMedium)
-                            .foregroundStyle(AppColors.textPrimary)
-                            .lineLimit(1)
+            HStack(spacing: AppMetrics.spacing16) {
 
-                        HStack(spacing: AppMetrics.spacing6) {
-                            Text(patient.genderDisplay)
-                                .font(AppTypography.caption)
-                                .foregroundStyle(AppColors.textSecondary)
-                            Text("·")
-                                .font(AppTypography.caption)
-                                .foregroundStyle(AppColors.borderSubtle)
-                            Text(patient.age)
-                                .font(AppTypography.caption)
-                                .foregroundStyle(AppColors.textSecondary)
+                // Avatar
+                ZStack {
+                    Circle()
+                        .fill(avatarColor.opacity(0.15))
+                        .frame(width: 52, height: 52)
+                    Text(initials)
+                        .font(AppTypography.title3)
+                        .foregroundStyle(avatarColor)
+                }
+
+                // Patient info
+                VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
+                    Text(order.patientFullName)
+                        .font(AppTypography.bodySemibold)
+                        .foregroundStyle(AppColors.textPrimary)
+                        .lineLimit(1)
+
+                    HStack(spacing: AppMetrics.spacing10) {
+                        if let mrn = order.patientMrn, !mrn.isEmpty {
+                            HStack(spacing: AppMetrics.spacing4) {
+                                Image(systemName: "number")
+                                    .font(.system(size: 11, weight: .medium))
+                                Text(mrn)
+                                    .font(AppTypography.caption)
+                            }
+                            .foregroundStyle(AppColors.textSecondary)
+                        }
+                        if let dob = order.patientDob, !dob.isEmpty {
+                            Text("·").foregroundStyle(AppColors.borderSubtle)
+                            HStack(spacing: AppMetrics.spacing4) {
+                                Image(systemName: "calendar")
+                                    .font(.system(size: 11, weight: .medium))
+                                Text(formattedDob(dob))
+                                    .font(AppTypography.caption)
+                            }
+                            .foregroundStyle(AppColors.textSecondary)
                         }
                     }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(AppColors.borderSubtle)
                 }
-                .padding(.horizontal, AppMetrics.spacing20)
-                .padding(.top, AppMetrics.spacing20)
 
-                // Divider
-                Rectangle()
-                    .fill(AppColors.borderSubtle.opacity(0.5))
-                    .frame(height: 1)
-                    .padding(.horizontal, AppMetrics.spacing20)
-                    .padding(.top, AppMetrics.spacing16)
+                Spacer()
 
-                // Footer: IDs
-                HStack(spacing: AppMetrics.spacing16) {
-                    if let mrn = patient.medicalRecordNumber {
-                        PatientBadge(icon: "number", label: mrn, color: AppColors.textSecondary)
-                    }
-                    if let pid = patient.patientId {
-                        PatientBadge(icon: "person.badge.key", label: pid, color: AppColors.textSecondary)
-                    }
-                    Spacer()
+                // Exam type badge
+                if let examType = order.examType {
+                    Text(examType)
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(examBadgeColor)
+                        .padding(.horizontal, AppMetrics.spacing12)
+                        .padding(.vertical, AppMetrics.spacing6)
+                        .background(examBadgeColor.opacity(0.12))
+                        .cornerRadius(AppMetrics.radiusSmall)
                 }
-                .padding(.horizontal, AppMetrics.spacing20)
-                .padding(.vertical, AppMetrics.spacing14)
+
+                // Time added
+                if let createdAt = order.createdAt {
+                    Text(timeLabel(from: createdAt))
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .monospacedDigit()
+                        .frame(width: 44, alignment: .trailing)
+                }
+
+                // Cancel button
+                Button(action: onCancel) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 24))
+                        .foregroundStyle(AppColors.statusCritical.opacity(0.6))
+                }
+                .buttonStyle(.plain)
             }
-            .background(AppColors.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
-                    .strokeBorder(AppColors.borderSubtle.opacity(0.6), lineWidth: AppMetrics.borderWidth)
-            )
-            .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
-            .scaleEffect(isPressed ? 0.97 : 1.0)
-            .brightness(isPressed ? -0.02 : 0)
-            .animation(.easeInOut(duration: 0.1), value: isPressed)
+            .padding(.horizontal, AppMetrics.spacing20)
+            .padding(.vertical, AppMetrics.spacing20)
         }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded   { _ in isPressed = false }
+        .frame(minHeight: 80)
+        .background(AppColors.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                .strokeBorder(AppColors.borderSubtle.opacity(0.5), lineWidth: AppMetrics.borderWidth)
         )
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+    }
+
+    private func formattedDob(_ raw: String) -> String {
+        let parser = DateFormatter()
+        parser.dateFormat = "yyyy-MM-dd"
+        parser.timeZone = TimeZone(identifier: "UTC")
+        guard let date = parser.date(from: raw) else { return raw }
+        let display = DateFormatter()
+        display.dateFormat = "M/d/yyyy"
+        return display.string(from: date)
+    }
+
+    private func timeLabel(from iso: String) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        guard let date = formatter.date(from: iso) else { return "" }
+        let display = DateFormatter()
+        display.dateFormat = "HH:mm"
+        return display.string(from: date)
     }
 }
 
-// MARK: - Patient Badge
+// MARK: - Add Order Sheet (search patient → confirm → create order)
 
-private struct PatientBadge: View {
-    let icon: String
-    let label: String
-    let color: Color
+struct AddOrderSheet: View {
 
-    var body: some View {
-        HStack(spacing: AppMetrics.spacing4) {
-            Image(systemName: icon)
-                .font(.system(size: 11, weight: .medium))
-            Text(label)
-                .font(AppTypography.caption)
-        }
-        .foregroundStyle(color)
-    }
-}
+    @Bindable var viewModel: PatientListViewModel
+    @FocusState private var focused: FocusedField?
 
-// MARK: - Add Patient Sheet
-
-private struct AddPatientSheet: View {
-
-    @Binding var isPresented: Bool
-
-    @State private var firstName = ""
-    @State private var lastName  = ""
-    @State private var birthDate = ""
-    @State private var gender: Gender = .male
-    @State private var mrn = ""
-
-    enum Gender: String, CaseIterable {
-        case male   = "Male"
-        case female = "Female"
-    }
+    enum FocusedField { case firstName, lastName, mrn }
 
     var body: some View {
         ZStack {
             AppColors.surfaceBackground.ignoresSafeArea()
 
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
+            VStack(spacing: 0) {
+                sheetHeader
 
-                    // ── Sheet header
-                    HStack(alignment: .center) {
-                        VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
-                            Text(L10n.Patients.Add.sheetTitle)
-                                .font(AppTypography.title2)
-                                .foregroundStyle(AppColors.textPrimary)
-                            Text(L10n.Patients.Add.sheetSubtitle)
-                                .font(AppTypography.callout)
-                                .foregroundStyle(AppColors.textSecondary)
-                        }
+                HStack(spacing: 0) {
+                    // Left: patient search form
+                    searchForm
+                        .frame(width: 380)
 
-                        Spacer()
-
-                        Button {
-                            isPresented = false
-                        } label: {
-                            Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(AppColors.textSecondary)
-                                .frame(width: 36, height: 36)
-                                .background(AppColors.borderSubtle.opacity(0.5))
-                                .clipShape(Circle())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    .padding(.horizontal, AppMetrics.spacing40)
-                    .padding(.top, AppMetrics.spacing32)
-                    .padding(.bottom, AppMetrics.spacing28)
-
-                    // Divider
                     Rectangle()
                         .fill(AppColors.borderSubtle.opacity(0.6))
-                        .frame(height: 1)
-                        .padding(.horizontal, AppMetrics.spacing40)
+                        .frame(width: 1)
 
-                    // ── Form fields
-                    VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
-
-                        // Row 1: First + Last name
-                        HStack(spacing: AppMetrics.spacing16) {
-                            ETextField(
-                                label: L10n.Patients.Add.firstName,
-                                placeholder: L10n.Patients.Add.firstNamePH,
-                                systemImage: "person",
-                                text: $firstName,
-                                textContentType: .givenName,
-                                autocapitalization: .words
-                            )
-                            ETextField(
-                                label: L10n.Patients.Add.lastName,
-                                placeholder: L10n.Patients.Add.lastNamePH,
-                                systemImage: nil,
-                                text: $lastName,
-                                textContentType: .familyName,
-                                autocapitalization: .words
-                            )
-                        }
-
-                        // Row 2: DOB + Gender
-                        HStack(alignment: .top, spacing: AppMetrics.spacing16) {
-                            ETextField(
-                                label: L10n.Patients.Add.dateOfBirth,
-                                placeholder: L10n.Patients.Add.dateOfBirthPH,
-                                systemImage: "calendar",
-                                text: $birthDate
-                            )
-
-                            // Gender toggle
-                            VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
-                                Text(L10n.Patients.Add.gender.uppercased())
-                                    .font(AppTypography.captionBold)
-                                    .foregroundStyle(AppColors.textSecondary)
-                                    .tracking(0.5)
-
-                                HStack(spacing: AppMetrics.spacing8) {
-                                    ForEach(Gender.allCases, id: \.self) { option in
-                                        Button {
-                                            withAnimation(.easeInOut(duration: 0.15)) { gender = option }
-                                        } label: {
-                                            Text(option.rawValue)
-                                                .font(AppTypography.callout)
-                                                .foregroundStyle(gender == option ? .white : AppColors.textSecondary)
-                                                .frame(maxWidth: .infinity)
-                                                .frame(height: AppMetrics.textFieldHeight)
-                                                .background(gender == option ? AppColors.brandPrimary : AppColors.surfaceCard)
-                                                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                                                        .strokeBorder(
-                                                            gender == option ? AppColors.brandPrimary : AppColors.borderSubtle,
-                                                            lineWidth: AppMetrics.borderWidth
-                                                        )
-                                                )
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                            }
-                        }
-
-                        // Row 3: MRN
-                        ETextField(
-                            label: L10n.Patients.Add.mrn,
-                            placeholder: L10n.Patients.Add.mrnPH,
-                            systemImage: "number",
-                            text: $mrn
-                        )
-                    }
-                    .padding(.horizontal, AppMetrics.spacing40)
-                    .padding(.top, AppMetrics.spacing28)
-
-                    // ── Actions
-                    HStack(spacing: AppMetrics.spacing12) {
-                        SecondaryButton(title: L10n.Patients.Add.cancelButton) { isPresented = false }
-                        PrimaryButton(title: L10n.Patients.Add.submitButton, isLoading: false) {
-                            // TODO: Wire to API
-                            isPresented = false
-                        }
-                    }
-                    .padding(.horizontal, AppMetrics.spacing40)
-                    .padding(.top, AppMetrics.spacing32)
-                    .padding(.bottom, AppMetrics.spacing40)
+                    // Right: results
+                    searchResultsPanel
+                        .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: 720)
-                .frame(maxWidth: .infinity)
+            }
+        }
+        .sheet(isPresented: $viewModel.showCreatePatient) {
+            OrderCreatePatientSheet(viewModel: viewModel)
+        }
+    }
+
+    // MARK: - Header
+
+    private var sheetHeader: some View {
+        HStack(alignment: .center, spacing: AppMetrics.spacing16) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n.WaitingList.Add.title)
+                    .font(AppTypography.title2)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text(L10n.WaitingList.Add.subtitle)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            Spacer()
+            Button(action: { viewModel.closeAddPatient() }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 26))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, AppMetrics.spacing28)
+        .padding(.vertical, AppMetrics.spacing20)
+        .background(AppColors.surfaceCard)
+        .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(height: 1), alignment: .bottom)
+    }
+
+    // MARK: - Search Form (left panel)
+
+    private var searchForm: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+
+                Text(L10n.PatientSelection.Search.title)
+                    .font(AppTypography.title3)
+                    .foregroundStyle(AppColors.textPrimary)
+                    .padding(.top, AppMetrics.spacing24)
+
+                VStack(spacing: AppMetrics.spacing14) {
+                    ETextField(
+                        label: L10n.PatientSelection.Search.firstName,
+                        placeholder: L10n.PatientSelection.Search.firstName,
+                        systemImage: "person",
+                        text: $viewModel.searchFirstName,
+                        errorMessage: viewModel.searchFirstNameError,
+                        textContentType: .givenName,
+                        autocapitalization: .words
+                    )
+                    .focused($focused, equals: .firstName)
+                    .onChange(of: viewModel.searchFirstName) { _, _ in viewModel.searchFirstNameError = nil }
+                    .onSubmit { focused = .lastName }
+
+                    ETextField(
+                        label: L10n.PatientSelection.Search.lastName,
+                        placeholder: L10n.PatientSelection.Search.lastName,
+                        systemImage: "person",
+                        text: $viewModel.searchLastName,
+                        textContentType: .familyName,
+                        autocapitalization: .words
+                    )
+                    .focused($focused, equals: .lastName)
+
+                    AddOrderDOBField(viewModel: viewModel)
+                }
+
+                HStack {
+                    Rectangle().fill(AppColors.borderSubtle).frame(height: 1)
+                    Text(L10n.PatientSelection.Search.or)
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .padding(.horizontal, AppMetrics.spacing12)
+                    Rectangle().fill(AppColors.borderSubtle).frame(height: 1)
+                }
+
+                ETextField(
+                    label: L10n.PatientSelection.Search.mrn,
+                    placeholder: L10n.PatientSelection.Search.mrn,
+                    systemImage: "number",
+                    text: $viewModel.searchMRN
+                )
+                .focused($focused, equals: .mrn)
+                .onSubmit { focused = nil; viewModel.searchPatients() }
+
+                HStack(spacing: AppMetrics.spacing12) {
+                    Button(action: { focused = nil; viewModel.searchPatients() }) {
+                        HStack(spacing: AppMetrics.spacing8) {
+                            if viewModel.isSearching {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                    .scaleEffect(0.9)
+                            } else {
+                                Image(systemName: "magnifyingglass")
+                                    .font(.system(size: 15, weight: .semibold))
+                            }
+                            Text(L10n.PatientSelection.Search.button)
+                                .font(AppTypography.bodyMedium)
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: AppMetrics.buttonHeight)
+                        .background(AppColors.brandPrimary)
+                        .cornerRadius(AppMetrics.radiusMedium)
+                    }
+                    .disabled(viewModel.isSearching)
+
+                    Button(action: { viewModel.clearPatientSearch() }) {
+                        Text(L10n.PatientSelection.Search.clearButton)
+                            .font(AppTypography.bodyMedium)
+                            .foregroundStyle(AppColors.textPrimary)
+                            .padding(.horizontal, AppMetrics.spacing20)
+                            .frame(height: AppMetrics.buttonHeight)
+                            .background(AppColors.borderSubtle.opacity(0.5))
+                            .cornerRadius(AppMetrics.radiusMedium)
+                    }
+                }
+
+                Spacer(minLength: AppMetrics.spacing20)
+            }
+            .padding(.horizontal, AppMetrics.spacing24)
+        }
+    }
+
+    // MARK: - Results Panel (right panel)
+
+    private var searchResultsPanel: some View {
+        VStack(spacing: 0) {
+            if viewModel.isSearching {
+                Spacer()
+                ProgressView()
+                    .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
+                    .scaleEffect(1.4)
+                Spacer()
+            } else if viewModel.hasSearched && viewModel.searchResults.isEmpty {
+                emptySearchResults
+            } else if !viewModel.hasSearched {
+                promptState
+            } else {
+                resultsList
+            }
+
+            confirmBar
+        }
+    }
+
+    private var promptState: some View {
+        VStack(spacing: AppMetrics.spacing16) {
+            Spacer()
+            Image(systemName: "magnifyingglass")
+                .font(.system(size: 64, weight: .light))
+                .foregroundStyle(AppColors.brandPrimary.opacity(0.25))
+            Text(L10n.PatientSelection.Prompt.title)
+                .font(AppTypography.title2)
+                .foregroundStyle(AppColors.textPrimary)
+            Text(L10n.PatientSelection.Prompt.subtitle)
+                .font(AppTypography.callout)
+                .foregroundStyle(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, AppMetrics.spacing32)
+    }
+
+    private var emptySearchResults: some View {
+        VStack(spacing: AppMetrics.spacing16) {
+            Spacer()
+            Image(systemName: "person.slash")
+                .font(.system(size: 64, weight: .light))
+                .foregroundStyle(AppColors.textSecondary.opacity(0.4))
+            Text(L10n.PatientSelection.Results.empty)
+                .font(AppTypography.title3)
+                .foregroundStyle(AppColors.textPrimary)
+            Text(L10n.PatientSelection.Results.emptySubtitle)
+                .font(AppTypography.callout)
+                .foregroundStyle(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, AppMetrics.spacing32)
+    }
+
+    private var resultsList: some View {
+        ScrollView {
+            LazyVStack(spacing: AppMetrics.spacing12) {
+                Text(L10n.PatientSelection.Results.title)
+                    .font(AppTypography.captionBold)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, AppMetrics.spacing8)
+
+                ForEach(viewModel.searchResults) { patient in
+                    PatientResultCard(
+                        patient: patient,
+                        isSelected: viewModel.selectedPatient?.id == patient.id
+                    ) {
+                        viewModel.selectPatient(patient)
+                    }
+                }
+            }
+            .padding(.horizontal, AppMetrics.spacing24)
+            .padding(.top, AppMetrics.spacing16)
+        }
+    }
+
+    private var confirmBar: some View {
+        VStack(spacing: 0) {
+            if let error = viewModel.addOrderError {
+                HStack(spacing: AppMetrics.spacing10) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .foregroundStyle(AppColors.statusCritical)
+                    Text(error)
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.statusCritical)
+                }
+                .padding(.horizontal, AppMetrics.spacing24)
+                .padding(.vertical, AppMetrics.spacing10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(AppColors.statusCritical.opacity(0.07))
+            }
+
+            HStack(spacing: AppMetrics.spacing12) {
+                Spacer()
+
+                Button(action: { viewModel.openCreatePatient() }) {
+                    HStack(spacing: AppMetrics.spacing8) {
+                        Image(systemName: "person.badge.plus")
+                            .font(.system(size: 15, weight: .semibold))
+                        Text(L10n.PatientSelection.createNew)
+                            .font(AppTypography.bodyMedium)
+                    }
+                    .foregroundStyle(AppColors.brandPrimary)
+                    .padding(.horizontal, AppMetrics.spacing20)
+                    .frame(height: AppMetrics.buttonHeight)
+                    .background(AppColors.brandPrimary.opacity(0.10))
+                    .cornerRadius(AppMetrics.radiusMedium)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                            .strokeBorder(AppColors.brandPrimary.opacity(0.3), lineWidth: AppMetrics.borderWidth)
+                    )
+                }
+                .buttonStyle(.plain)
+
+                Button(action: { viewModel.confirmAddOrder() }) {
+                    HStack(spacing: AppMetrics.spacing8) {
+                        if viewModel.isAddingOrder {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.85)
+                        } else {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        Text(L10n.WaitingList.Add.confirmButton)
+                            .font(AppTypography.bodyMedium)
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, AppMetrics.spacing24)
+                    .frame(height: AppMetrics.buttonHeight)
+                    .background(viewModel.canConfirmAdd ? AppColors.brandPrimary : AppColors.brandPrimary.opacity(0.35))
+                    .cornerRadius(AppMetrics.radiusMedium)
+                }
+                .disabled(!viewModel.canConfirmAdd || viewModel.isAddingOrder)
+            }
+            .padding(.horizontal, AppMetrics.spacing24)
+            .padding(.vertical, AppMetrics.spacing16)
+            .background(AppColors.surfaceCard)
+            .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(height: 1), alignment: .top)
+        }
+    }
+}
+
+// MARK: - DOB Field (local to add order sheet)
+
+private struct AddOrderDOBField: View {
+
+    @Bindable var viewModel: PatientListViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
+            Text(L10n.PatientSelection.Search.dob)
+                .font(AppTypography.captionBold)
+                .foregroundStyle(AppColors.textSecondary)
+
+            HStack(spacing: AppMetrics.spacing12) {
+                Image(systemName: "calendar")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(AppColors.textSecondary)
+
+                DatePicker(
+                    "",
+                    selection: Binding(
+                        get: { viewModel.searchDob ?? Date() },
+                        set: { viewModel.searchDob = $0; viewModel.searchDobError = nil }
+                    ),
+                    in: ...Date(),
+                    displayedComponents: .date
+                )
+                .labelsHidden()
+                .datePickerStyle(.compact)
+
+                Spacer()
+            }
+            .padding(.horizontal, AppMetrics.spacing16)
+            .frame(height: AppMetrics.textFieldHeight)
+            .background(AppColors.surfaceCard)
+            .cornerRadius(AppMetrics.radiusMedium)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                    .strokeBorder(
+                        viewModel.searchDobError != nil ? AppColors.statusCritical : AppColors.borderSubtle,
+                        lineWidth: AppMetrics.borderWidth
+                    )
+            )
+
+            if let err = viewModel.searchDobError {
+                Text(err)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.statusCritical)
             }
         }
     }
 }
 
-// MARK: - Preview
+// MARK: - Create Patient Sheet (order flow variant)
 
-#Preview {
-    let router = AppRouter()
-    PatientListView(viewModel: PatientListViewModel(router: router))
-        .environment(router)
+private struct OrderCreatePatientSheet: View {
+
+    @Bindable var viewModel: PatientListViewModel
+    @FocusState private var focused: Field?
+    enum Field { case firstName, lastName, mrn }
+
+    var body: some View {
+        ZStack {
+            AppColors.surfaceBackground.ignoresSafeArea()
+            VStack(spacing: 0) {
+                header
+                ScrollView {
+                    VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+
+                        if let error = viewModel.createErrorMessage {
+                            HStack(spacing: AppMetrics.spacing12) {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(AppColors.statusCritical)
+                                Text(error)
+                                    .font(AppTypography.callout)
+                                    .foregroundStyle(AppColors.statusCritical)
+                            }
+                            .padding(AppMetrics.spacing16)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(AppColors.statusCritical.opacity(0.08))
+                            .cornerRadius(AppMetrics.radiusMedium)
+                        }
+
+                        HStack(spacing: AppMetrics.spacing14) {
+                            ETextField(
+                                label: L10n.PatientSelection.Create.firstName,
+                                placeholder: L10n.PatientSelection.Create.firstName,
+                                systemImage: "person",
+                                text: $viewModel.createFirstName,
+                                errorMessage: viewModel.createFirstNameError,
+                                textContentType: .givenName,
+                                autocapitalization: .words
+                            )
+                            .focused($focused, equals: .firstName)
+                            .onChange(of: viewModel.createFirstName) { _, _ in viewModel.createFirstNameError = nil }
+                            .onSubmit { focused = .lastName }
+
+                            ETextField(
+                                label: L10n.PatientSelection.Create.lastName,
+                                placeholder: L10n.PatientSelection.Create.lastName,
+                                systemImage: "person",
+                                text: $viewModel.createLastName,
+                                errorMessage: viewModel.createLastNameError,
+                                textContentType: .familyName,
+                                autocapitalization: .words
+                            )
+                            .focused($focused, equals: .lastName)
+                            .onChange(of: viewModel.createLastName) { _, _ in viewModel.createLastNameError = nil }
+                        }
+
+                        CreatePatientDOBField(viewModel: viewModel)
+
+                        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
+                            Text(L10n.PatientSelection.Create.gender)
+                                .font(AppTypography.captionBold)
+                                .foregroundStyle(AppColors.textSecondary)
+                            Picker("", selection: $viewModel.createGender) {
+                                ForEach(viewModel.genderOptions, id: \.self) { Text($0).tag($0) }
+                            }
+                            .pickerStyle(.segmented)
+                        }
+
+                        ETextField(
+                            label: L10n.PatientSelection.Create.mrn,
+                            placeholder: L10n.PatientSelection.Create.mrnPlaceholder,
+                            systemImage: "number",
+                            text: $viewModel.createMRN,
+                            errorMessage: viewModel.createMRNError
+                        )
+                        .focused($focused, equals: .mrn)
+                        .onChange(of: viewModel.createMRN) { _, _ in viewModel.createMRNError = nil }
+
+                        Spacer(minLength: AppMetrics.spacing20)
+                    }
+                    .padding(.horizontal, AppMetrics.spacing28)
+                    .padding(.top, AppMetrics.spacing24)
+                }
+                footer
+            }
+        }
+    }
+
+    private var header: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(L10n.PatientSelection.Create.title)
+                    .font(AppTypography.title2)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text(L10n.PatientSelection.Create.subtitle)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            Spacer()
+            Button(action: { viewModel.cancelCreatePatient() }) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 24))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, AppMetrics.spacing28)
+        .padding(.vertical, AppMetrics.spacing20)
+        .background(AppColors.surfaceCard)
+        .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(height: 1), alignment: .bottom)
+    }
+
+    private var footer: some View {
+        HStack(spacing: AppMetrics.spacing12) {
+            Button(action: { viewModel.cancelCreatePatient() }) {
+                Text(L10n.PatientSelection.Create.cancel)
+                    .font(AppTypography.bodyMedium)
+                    .foregroundStyle(AppColors.textPrimary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: AppMetrics.buttonHeight)
+                    .background(AppColors.borderSubtle.opacity(0.5))
+                    .cornerRadius(AppMetrics.radiusMedium)
+            }
+            .buttonStyle(.plain)
+
+            Button(action: { focused = nil; viewModel.submitCreatePatient() }) {
+                HStack(spacing: AppMetrics.spacing8) {
+                    if viewModel.isCreating {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.9)
+                    } else {
+                        Image(systemName: "person.badge.plus")
+                            .font(.system(size: 15, weight: .semibold))
+                    }
+                    Text(L10n.PatientSelection.Create.submit)
+                        .font(AppTypography.bodyMedium)
+                }
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: AppMetrics.buttonHeight)
+                .background(AppColors.brandPrimary)
+                .cornerRadius(AppMetrics.radiusMedium)
+            }
+            .buttonStyle(.plain)
+            .disabled(viewModel.isCreating)
+        }
+        .padding(.horizontal, AppMetrics.spacing28)
+        .padding(.vertical, AppMetrics.spacing20)
+        .background(AppColors.surfaceCard)
+        .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(height: 1), alignment: .top)
+    }
+}
+
+// MARK: - Create Patient DOB Field
+
+private struct CreatePatientDOBField: View {
+
+    @Bindable var viewModel: PatientListViewModel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
+            Text(L10n.PatientSelection.Create.dob)
+                .font(AppTypography.captionBold)
+                .foregroundStyle(AppColors.textSecondary)
+
+            HStack(spacing: AppMetrics.spacing12) {
+                Image(systemName: "calendar")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(AppColors.textSecondary)
+
+                DatePicker(
+                    "",
+                    selection: Binding(
+                        get: { viewModel.createDob ?? Date() },
+                        set: { viewModel.createDob = $0; viewModel.createDobError = nil }
+                    ),
+                    in: ...Date(),
+                    displayedComponents: .date
+                )
+                .labelsHidden()
+                .datePickerStyle(.compact)
+
+                Spacer()
+            }
+            .padding(.horizontal, AppMetrics.spacing16)
+            .frame(height: AppMetrics.textFieldHeight)
+            .background(AppColors.surfaceCard)
+            .cornerRadius(AppMetrics.radiusMedium)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                    .strokeBorder(
+                        viewModel.createDobError != nil ? AppColors.statusCritical : AppColors.borderSubtle,
+                        lineWidth: AppMetrics.borderWidth
+                    )
+            )
+
+            if let err = viewModel.createDobError {
+                Text(err)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.statusCritical)
+            }
+        }
+    }
 }

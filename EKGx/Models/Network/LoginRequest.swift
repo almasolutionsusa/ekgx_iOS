@@ -54,3 +54,24 @@ struct AppCheckinRequest: Encodable {
     let uuid: String
     let version: String
 }
+
+// MARK: - Orders Requests
+
+struct CreateOrderRequest: Encodable {
+    let patientUuid: String
+    let appUuid: String
+    let examType: String?       // "EKG" | "VITALS" | "ULTRASOUND" — defaults to EKG
+    let visibility: String?     // "PRIVATE" | "SHARED" — defaults to SHARED
+    let note: String?
+}
+
+// MARK: - Support Ticket Request
+
+struct SupportTicketRequest: Encodable {
+    let appUuid: String
+    let subject: String
+    let message: String
+    let contactName: String?
+    let contactEmail: String?
+    let contactPhone: String?
+}
