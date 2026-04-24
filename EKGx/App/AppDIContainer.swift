@@ -72,10 +72,13 @@ final class AppDIContainer {
     // MARK: - Device Switching
 
     func switchToDemo() {
+        deviceService.disconnect()
         deviceService = DemoDeviceService()
     }
 
     func switchToRealDevice() {
+        guard !(deviceService is BLEDeviceService) else { return }
+        deviceService.disconnect()
         deviceService = BLEDeviceService()
     }
 
@@ -142,7 +145,9 @@ final class AppDIContainer {
             patient: lastRecordingPatient ?? Patient.mockPatients[0],
             ecgData: lastRecordingData,
             sampleRate: lastRecordingSampleRate,
-            router: router
+            router: router,
+            uploadService: ekgUploadService,
+            checkinService: checkinService
         )
     }
 }

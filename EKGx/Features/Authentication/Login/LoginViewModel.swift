@@ -191,8 +191,10 @@ final class LoginViewModel {
             router.navigate(to: .dashboard)
         } catch let authError as AuthError {
             pinError = authError.errorDescription
+            pinInput = ""
         } catch {
             pinError = L10n.Auth.Login.errorGeneric
+            pinInput = ""
         }
     }
 

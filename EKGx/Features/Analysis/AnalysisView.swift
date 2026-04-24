@@ -59,10 +59,17 @@ struct AnalysisView: View {
                     .transition(.opacity)
                     .zIndex(10)
             }
+            if viewModel.isUploading || viewModel.showUploadResult {
+                UploadStatusOverlay(viewModel: viewModel)
+                    .transition(.opacity)
+                    .zIndex(20)
+            }
         }
         .animation(.easeInOut(duration: 0.2), value: viewModel.showControlsMenu)
         .animation(.easeInOut(duration: 0.2), value: viewModel.showVisualizationMenu)
         .animation(.easeInOut(duration: 0.2), value: viewModel.showRejectConfirm)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.isUploading)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.showUploadResult)
         .navigationBarHidden(true)
         .preferredColorScheme(.light)
         .onAppear { viewModel.runAnalysis() }
@@ -371,6 +378,102 @@ private struct AnalysisNavBar: View {
     }
 }
 
+// MARK: - Upload Status Overlay
+
+private struct UploadStatusOverlay: View {
+
+    @Bindable var viewModel: AnalysisViewModel
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.45).ignoresSafeArea()
+
+            VStack(spacing: AppMetrics.spacing20) {
+                if viewModel.isUploading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
+                        .scaleEffect(1.6)
+                    Text(L10n.Analysis.Upload.sending)
+                        .font(AppTypography.bodyMedium)
+                        .foregroundStyle(AppColors.textPrimary)
+                } else if viewModel.uploadSuccess {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 56, weight: .light))
+                        .foregroundStyle(AppColors.statusSuccess)
+                    Text(L10n.Analysis.Upload.successTitle)
+                        .font(AppTypography.title2)
+                        .foregroundStyle(AppColors.textPrimary)
+                    Text(L10n.Analysis.Upload.successSubtitle)
+                        .font(AppTypography.callout)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .multilineTextAlignment(.center)
+                    HStack(spacing: AppMetrics.spacing12) {
+                        Button(L10n.Analysis.Upload.doneButton) {
+                            viewModel.showUploadResult = false
+                            viewModel.goBack()
+                        }
+                        .font(AppTypography.bodyMedium)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, AppMetrics.spacing32)
+                        .frame(height: AppMetrics.buttonHeight)
+                        .background(AppColors.brandPrimary)
+                        .cornerRadius(AppMetrics.radiusMedium)
+
+                        Button(L10n.Analysis.Upload.stayButton) {
+                            viewModel.showUploadResult = false
+                        }
+                        .font(AppTypography.bodyMedium)
+                        .foregroundStyle(AppColors.brandPrimary)
+                        .padding(.horizontal, AppMetrics.spacing32)
+                        .frame(height: AppMetrics.buttonHeight)
+                        .background(AppColors.brandPrimary.opacity(0.1))
+                        .cornerRadius(AppMetrics.radiusMedium)
+                    }
+                } else if let error = viewModel.uploadError {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 56, weight: .light))
+                        .foregroundStyle(AppColors.statusCritical)
+                    Text(L10n.Analysis.Upload.errorTitle)
+                        .font(AppTypography.title2)
+                        .foregroundStyle(AppColors.textPrimary)
+                    Text(error)
+                        .font(AppTypography.callout)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, AppMetrics.spacing24)
+                    HStack(spacing: AppMetrics.spacing12) {
+                        Button(L10n.Common.retry) {
+                            viewModel.showUploadResult = false
+                            viewModel.uploadEKG()
+                        }
+                        .font(AppTypography.bodyMedium)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, AppMetrics.spacing32)
+                        .frame(height: AppMetrics.buttonHeight)
+                        .background(AppColors.brandPrimary)
+                        .cornerRadius(AppMetrics.radiusMedium)
+
+                        Button(L10n.Common.cancel) {
+                            viewModel.showUploadResult = false
+                        }
+                        .font(AppTypography.bodyMedium)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .padding(.horizontal, AppMetrics.spacing32)
+                        .frame(height: AppMetrics.buttonHeight)
+                        .background(AppColors.borderSubtle.opacity(0.4))
+                        .cornerRadius(AppMetrics.radiusMedium)
+                    }
+                }
+            }
+            .padding(AppMetrics.spacing32)
+            .background(AppColors.surfaceCard)
+            .cornerRadius(AppMetrics.radiusLarge)
+            .shadow(color: .black.opacity(0.2), radius: 24)
+            .padding(.horizontal, AppMetrics.spacing48)
+        }
+    }
+}
+
 // MARK: - Preview
 
 #Preview {
@@ -381,8 +484,14 @@ private struct AnalysisNavBar: View {
               let raw = NSArray(contentsOfFile: path) as? [[NSNumber]] else { return [] }
         return raw
     }()
+    let checkin = AppCheckinService()
     return AnalysisView(viewModel: AnalysisViewModel(
-        patient: patient, ecgData: ecgData, sampleRate: 660, router: router
+        patient: patient,
+        ecgData: ecgData,
+        sampleRate: 660,
+        router: router,
+        uploadService: EKGUploadService(),
+        checkinService: checkin
     ))
 
     .environment(router)

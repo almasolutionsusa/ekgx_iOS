@@ -23,11 +23,9 @@ struct AnalysisControlsMenu: View {
                 Spacer()
 
                 VStack(spacing: 0) {
-                    menuItem(icon: "arrow.up.circle", title: "Send to EMR",  action: { /* TODO */ })
-                    Divider()
-                    menuItem(icon: "xmark.circle",    title: "Reject ECG",   action: {
+                    menuItem(icon: "arrow.up.circle", title: "Send to EMR",  action: {
                         viewModel.showControlsMenu = false
-                        viewModel.showRejectConfirm = true
+                        viewModel.uploadEKG()
                     })
                     Divider()
                     menuItem(icon: "book",            title: "Diagnosis",    action: {
@@ -40,7 +38,17 @@ struct AnalysisControlsMenu: View {
                         viewModel.showVisualizationMenu = true
                     })
                     Divider()
-                    menuItem(icon: "printer",         title: "Print",        action: { /* TODO */ })
+                    menuItem(icon: "printer",         title: "Print",        action: {
+                        viewModel.showControlsMenu = false
+                        printECG(
+                            patient: viewModel.patient,
+                            templateData: viewModel.templateData,
+                            ecgData: viewModel.ecgData,
+                            sampleRate: viewModel.sampleRate,
+                            measurements: viewModel.measurements,
+                            diagnosisLines: viewModel.diagnosisLines
+                        )
+                    })
                 }
                 .frame(width: 110)
                 .background(Color.white)

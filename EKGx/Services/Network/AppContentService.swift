@@ -17,7 +17,23 @@ import Foundation
 struct AppTextContent: Decodable {
     let version: String?
     let effectiveDate: String?
-    let text: String?
+    let content: String?
+
+    // Unified accessor — some endpoints use "text", others use "content".
+    var text: String? { content }
+
+    enum CodingKeys: String, CodingKey {
+        case version, effectiveDate, content, text
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        version       = try c.decodeIfPresent(String.self, forKey: .version)
+        effectiveDate = try c.decodeIfPresent(String.self, forKey: .effectiveDate)
+        // Accept either "content" or "text" from the server.
+        content = try c.decodeIfPresent(String.self, forKey: .content)
+            ?? c.decodeIfPresent(String.self, forKey: .text)
+    }
 }
 
 struct FaqEntry: Decodable, Identifiable {
@@ -25,6 +41,9 @@ struct FaqEntry: Decodable, Identifiable {
     let question: String?
     let answer: String?
     let displayOrder: Int?
+
+    // Stable identity even when server omits id — use question as fallback key.
+    var stableId: String { question ?? UUID().uuidString }
 }
 
 struct FaqContent: Decodable {

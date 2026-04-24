@@ -456,6 +456,14 @@ enum L10n {
             static let qt     = "analysis.leadParam.qt".localized
             static let stj    = "analysis.leadParam.stj".localized
         }
+        enum Upload {
+            static let sending        = "analysis.upload.sending".localized
+            static let successTitle   = "analysis.upload.successTitle".localized
+            static let successSubtitle = "analysis.upload.successSubtitle".localized
+            static let errorTitle     = "analysis.upload.errorTitle".localized
+            static let doneButton     = "analysis.upload.doneButton".localized
+            static let stayButton     = "analysis.upload.stayButton".localized
+        }
     }
 
     // MARK: - Waiting List

@@ -715,31 +715,34 @@ private struct AddOrderDOBField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-            Text(L10n.PatientSelection.Search.dob)
-                .font(AppTypography.captionBold)
-                .foregroundStyle(AppColors.textSecondary)
-
-            HStack(spacing: AppMetrics.spacing12) {
-                Image(systemName: "calendar")
-                    .font(.system(size: 18, weight: .medium))
+            HStack(spacing: AppMetrics.spacing8) {
+                Text(L10n.PatientSelection.Search.dob)
+                    .font(AppTypography.captionBold)
                     .foregroundStyle(AppColors.textSecondary)
-
-                DatePicker(
-                    "",
-                    selection: Binding(
-                        get: { viewModel.searchDob ?? Date() },
-                        set: { viewModel.searchDob = $0; viewModel.searchDobError = nil }
-                    ),
-                    in: ...Date(),
-                    displayedComponents: .date
-                )
-                .labelsHidden()
-                .datePickerStyle(.compact)
-
-                Spacer()
+                if let date = viewModel.searchDob {
+                    Text(date.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year()))
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(AppColors.brandPrimary)
+                        .padding(.horizontal, AppMetrics.spacing8)
+                        .padding(.vertical, AppMetrics.spacing4)
+                        .background(AppColors.brandPrimary.opacity(0.1))
+                        .cornerRadius(AppMetrics.radiusSmall)
+                }
             }
-            .padding(.horizontal, AppMetrics.spacing16)
-            .frame(height: AppMetrics.textFieldHeight)
+
+            DatePicker(
+                "",
+                selection: Binding(
+                    get: { viewModel.searchDob ?? Date() },
+                    set: { viewModel.searchDob = $0; viewModel.searchDobError = nil }
+                ),
+                in: ...Date(),
+                displayedComponents: .date
+            )
+            .labelsHidden()
+            .datePickerStyle(.wheel)
+            .frame(maxWidth: .infinity, maxHeight: 120)
+            .clipped()
             .background(AppColors.surfaceCard)
             .cornerRadius(AppMetrics.radiusMedium)
             .overlay(
@@ -922,31 +925,34 @@ private struct CreatePatientDOBField: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-            Text(L10n.PatientSelection.Create.dob)
-                .font(AppTypography.captionBold)
-                .foregroundStyle(AppColors.textSecondary)
-
-            HStack(spacing: AppMetrics.spacing12) {
-                Image(systemName: "calendar")
-                    .font(.system(size: 18, weight: .medium))
+            HStack(spacing: AppMetrics.spacing8) {
+                Text(L10n.PatientSelection.Create.dob)
+                    .font(AppTypography.captionBold)
                     .foregroundStyle(AppColors.textSecondary)
-
-                DatePicker(
-                    "",
-                    selection: Binding(
-                        get: { viewModel.createDob ?? Date() },
-                        set: { viewModel.createDob = $0; viewModel.createDobError = nil }
-                    ),
-                    in: ...Date(),
-                    displayedComponents: .date
-                )
-                .labelsHidden()
-                .datePickerStyle(.compact)
-
-                Spacer()
+                if let date = viewModel.createDob {
+                    Text(date.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year()))
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(AppColors.brandPrimary)
+                        .padding(.horizontal, AppMetrics.spacing8)
+                        .padding(.vertical, AppMetrics.spacing4)
+                        .background(AppColors.brandPrimary.opacity(0.1))
+                        .cornerRadius(AppMetrics.radiusSmall)
+                }
             }
-            .padding(.horizontal, AppMetrics.spacing16)
-            .frame(height: AppMetrics.textFieldHeight)
+
+            DatePicker(
+                "",
+                selection: Binding(
+                    get: { viewModel.createDob ?? Date() },
+                    set: { viewModel.createDob = $0; viewModel.createDobError = nil }
+                ),
+                in: ...Date(),
+                displayedComponents: .date
+            )
+            .labelsHidden()
+            .datePickerStyle(.wheel)
+            .frame(maxWidth: .infinity, maxHeight: 120)
+            .clipped()
             .background(AppColors.surfaceCard)
             .cornerRadius(AppMetrics.radiusMedium)
             .overlay(

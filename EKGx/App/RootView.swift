@@ -41,110 +41,82 @@ struct RootView: View {
 
     @ViewBuilder
     private var routedContent: some View {
-        Group {
+        ZStack {
             switch router.currentRoute {
 
             case .login:
                 LoginView(viewModel: diContainer.makeLoginViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .opacity,
-                        removal: .opacity
-                    ))
+                    .id(AppRoute.login)
+                    .transition(.opacity)
 
             case .register:
                 RegisterView(viewModel: diContainer.makeRegisterViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .leading).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.register)
+                    .transition(.push(from: .trailing))
 
             case .dashboard:
                 HomeView(viewModel: diContainer.makeHomeViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .opacity
-                    ))
+                    .id(AppRoute.dashboard)
+                    .transition(.opacity)
 
             case .patientList:
                 PatientListView(viewModel: diContainer.makePatientListViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.patientList)
+                    .transition(.push(from: .trailing))
 
             case .cloudReports:
                 CloudView(viewModel: diContainer.makeCloudViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.cloudReports)
+                    .transition(.push(from: .trailing))
 
             case .settings:
                 SettingsView(viewModel: diContainer.makeSettingsViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.settings)
+                    .transition(.push(from: .trailing))
 
             case .myAccount:
                 MyAccountView(viewModel: diContainer.makeMyAccountViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.myAccount)
+                    .transition(.push(from: .trailing))
 
             case .patientSelection:
                 PatientSelectionView(viewModel: diContainer.makePatientSelectionViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.patientSelection)
+                    .transition(.push(from: .trailing))
 
-            case .ecgRecording(let patientId):
-                let patient = Patient.mockPatients.first { $0.uniqueId == patientId } ?? Patient.mockPatients[0]
+            case .ecgRecording:
+                let patient = diContainer.lastRecordingPatient ?? Patient.mockPatients[0]
                 RecordingView(viewModel: diContainer.makeRecordingViewModel(patient: patient, router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.ecgRecording(patientId: ""))
+                    .transition(.push(from: .trailing))
 
             case .ecgAnalysis:
                 AnalysisView(viewModel: diContainer.makeAnalysisViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.ecgAnalysis(recordingId: ""))
+                    .transition(.push(from: .trailing))
 
             case .faq:
                 FAQView(viewModel: diContainer.makeAppContentViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.faq)
+                    .transition(.push(from: .trailing))
 
             case .support:
                 SupportView(viewModel: diContainer.makeAppContentViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.support)
+                    .transition(.push(from: .trailing))
 
             case .indicationsForUse:
                 IndicationsForUseView(viewModel: diContainer.makeAppContentViewModel(router: router))
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .move(edge: .trailing).combined(with: .opacity)
-                    ))
+                    .id(AppRoute.indicationsForUse)
+                    .transition(.push(from: .trailing))
 
             case .patientDetail:
                 PlaceholderView()
-                    .transition(.asymmetric(
-                        insertion: .move(edge: .trailing).combined(with: .opacity),
-                        removal: .opacity
-                    ))
+                    .id(AppRoute.patientDetail(patientId: ""))
+                    .transition(.push(from: .trailing))
             }
         }
-        .animation(.easeInOut(duration: 0.3), value: router.currentRoute)
+        .animation(.snappy(duration: 0.35), value: router.currentRoute)
     }
 }
 

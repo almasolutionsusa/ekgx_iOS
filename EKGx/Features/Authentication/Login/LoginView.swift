@@ -542,10 +542,7 @@ private struct PinLoginSheet: View {
             Button {
                 pinFocused = true
             } label: {
-                Text(viewModel.pinInput.isEmpty ? L10n.Auth.Login.pinPlaceholder : "")
-                    .font(AppTypography.title1)
-                    .foregroundStyle(AppColors.textSecondary)
-                    .frame(height: 44)
+                Color.clear.frame(height: 44)
             }
             .padding(.bottom, AppMetrics.spacing8)
 

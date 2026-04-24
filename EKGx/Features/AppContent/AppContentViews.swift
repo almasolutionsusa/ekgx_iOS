@@ -55,7 +55,7 @@ private struct ContentNavBar: View {
 struct FAQView: View {
 
     @State private var viewModel: AppContentViewModel
-    @State private var expandedId: Int64? = nil
+    @State private var expandedId: String? = nil
 
     init(viewModel: AppContentViewModel) {
         _viewModel = State(wrappedValue: viewModel)
@@ -91,10 +91,10 @@ struct FAQView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: AppMetrics.spacing10) {
-                    ForEach(viewModel.faqEntries) { entry in
-                        FAQRow(entry: entry, isExpanded: expandedId == entry.id) {
+                    ForEach(viewModel.faqEntries, id: \.stableId) { entry in
+                        FAQRow(entry: entry, isExpanded: expandedId == entry.stableId) {
                             withAnimation(.easeInOut(duration: 0.2)) {
-                                expandedId = expandedId == entry.id ? nil : entry.id
+                                expandedId = expandedId == entry.stableId ? nil : entry.stableId
                             }
                         }
                     }

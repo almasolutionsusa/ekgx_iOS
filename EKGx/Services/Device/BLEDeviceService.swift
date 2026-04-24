@@ -3,7 +3,16 @@
 //  EKGx
 //
 //  Real iCV200BLE Bluetooth device service.
-//  Swap into AppDIContainer by replacing DemoDeviceService with BLEDeviceService.
+//
+//  Crash root cause: replacing vhiCVBleManager while its internal CBCentralManager
+//  is mid-scan causes NSAVHCVConnect to receive callbacks after dealloc →
+//  "unrecognized selector" crash.
+//
+//  Rules:
+//  1. ONE vhiCVBleManager for the entire app lifetime — never recreated.
+//  2. To re-scan: stopScan → short delay → startScan on the same instance.
+//  3. hardReset() is permanently removed.
+//  4. scanPending handles the case where BT is not yet powered on at connect() time.
 //
 
 import Foundation
@@ -17,11 +26,10 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
     var onLeadStatus: (([Bool]) -> Void)?
     var onBattery: ((Int) -> Void)?
     private(set) var currentState: DeviceConnectionState = .disconnected
-
-    // Updated from bleManager.rate / bleManager.uVpb after device connects.
     private(set) var sampleRate: Int = 660
 
-    private var bleManager: vhiCVBleManager
+    private let bleManager: vhiCVBleManager   // never replaced
+    private var scanPending = false
 
     override init() {
         bleManager = vhiCVBleManager()
@@ -29,42 +37,46 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
         bleManager.delegate = self
     }
 
-    private func resetManager() {
-        bleManager.delegate = nil
-        bleManager = vhiCVBleManager()
-        bleManager.delegate = self
-    }
-
     // MARK: - DeviceServiceProtocol
 
     func connect() {
         guard currentState == .disconnected else { return }
-        bleManager.checkBletooth { [weak self] status in
+
+        // Stop any lingering scan on the same instance, then re-scan after a
+        // brief yield so the SDK's internal CBCentralManager settles.
+        bleManager.stopScan()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             guard let self else { return }
-            DispatchQueue.main.async {
-                if status == .OK {
-                    self.currentState = .searching
-                    self.onConnectionStateChanged?(.searching)
-                    self.bleManager.startScan()
+            self.bleManager.checkBletooth { [weak self] status in
+                guard let self else { return }
+                DispatchQueue.main.async {
+                    if status == .OK {
+                        self.scanPending = false
+                        self.startScan()
+                    } else {
+                        // BT not ready — wait for icvBleManagerBluetoothOn callback.
+                        self.scanPending = true
+                        self.currentState = .searching
+                        self.onConnectionStateChanged?(.searching)
+                    }
                 }
-                // TODO: Surface .poweredOff / .unsupported / .unauthorized error to UI
             }
         }
     }
 
     func disconnect() {
+        scanPending = false
         bleManager.stopScan()
         bleManager.collectStop()
         if currentState == .connected {
             bleManager.disConnect { [weak self] _ in
                 DispatchQueue.main.async {
-                    self?.resetManager()
                     self?.currentState = .disconnected
                     self?.onConnectionStateChanged?(.disconnected)
                 }
             }
         } else {
-            resetManager()
             currentState = .disconnected
             onConnectionStateChanged?(.disconnected)
         }
@@ -72,9 +84,15 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
 
     // MARK: - Private
 
+    private func startScan() {
+        currentState = .searching
+        onConnectionStateChanged?(.searching)
+        bleManager.startScan()
+    }
+
     private func configureFilters() {
-        let rate  = Double(bleManager.rate > 0 ? bleManager.rate : 660)
-        let uVpb  = bleManager.uVpb > 0 ? bleManager.uVpb : 4.88
+        let rate = Double(bleManager.rate > 0 ? bleManager.rate : 660)
+        let uVpb = bleManager.uVpb > 0 ? bleManager.uVpb : 4.88
         vhECGFiltersLib.shared().setFilterWithRate(Int32(rate), uVpb: uVpb)
         vhECGFiltersLib.shared().setFilterSwitch(true)
         vhECGFiltersLib.shared().setFilterFreqNotch(.notchType_50)
@@ -86,6 +104,14 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
 // MARK: - vhiCVBleManagerDelegate
 
 extension BLEDeviceService: vhiCVBleManagerDelegate {
+
+    func icvBleManagerBluetoothOn(_ manager: vhiCVBleManager) {
+        DispatchQueue.main.async {
+            guard self.scanPending else { return }
+            self.scanPending = false
+            self.startScan()
+        }
+    }
 
     func icvBleManager(_ manager: vhiCVBleManager, foundDeviceName name: String) {
         manager.connect(name, isAutoCollect: true)
@@ -103,21 +129,14 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
             switch status {
             case .connected:
                 manager.stopScan()
-                // Read actual rate + uVpb from device and reconfigure filters.
                 self.sampleRate = Int(manager.rate > 0 ? manager.rate : 660)
                 self.configureFilters()
                 self.currentState = .connected
                 self.onConnectionStateChanged?(.connected)
-                // Read initial battery from property (delegate may fire later or not at all)
                 if manager.batVol > 0 {
                     self.onBattery?(Int(manager.batVol))
                 }
-            case .disconnectedError:
-                // Connection timed out or failed — recreate manager so next scan works cleanly
-                self.resetManager()
-                self.currentState = .disconnected
-                self.onConnectionStateChanged?(.disconnected)
-            case .disconnected, .lostDevice:
+            case .disconnectedError, .disconnected, .lostDevice:
                 self.currentState = .disconnected
                 self.onConnectionStateChanged?(.disconnected)
             default:

@@ -45,6 +45,13 @@ final class AnalysisViewModel {
     // Editable diagnosis — user can add/remove items
     var diagnosisLines: [String] = []
 
+    // MARK: - Upload state
+
+    var isUploading: Bool = false
+    var uploadSuccess: Bool = false
+    var uploadError: String? = nil
+    var showUploadResult: Bool = false
+
     // MARK: - Data
 
     let patient: Patient
@@ -67,14 +74,25 @@ final class AnalysisViewModel {
     var mergeTaxis:  String = "—"
 
     private let router: AppRouter
+    private let uploadService: EKGUploadService
+    private let checkinService: AppCheckinService
 
     // MARK: - Init
 
-    init(patient: Patient, ecgData: ECGLeads, sampleRate: Int = 660, router: AppRouter) {
-        self.patient    = patient
-        self.ecgData    = ecgData
-        self.sampleRate = sampleRate
-        self.router     = router
+    init(
+        patient: Patient,
+        ecgData: ECGLeads,
+        sampleRate: Int = 660,
+        router: AppRouter,
+        uploadService: EKGUploadService,
+        checkinService: AppCheckinService
+    ) {
+        self.patient        = patient
+        self.ecgData        = ecgData
+        self.sampleRate     = sampleRate
+        self.router         = router
+        self.uploadService  = uploadService
+        self.checkinService = checkinService
     }
 
     // MARK: - Analysis
@@ -107,6 +125,73 @@ final class AnalysisViewModel {
                 }
             }
         }
+    }
+
+    // MARK: - Upload
+
+    func uploadEKG() {
+        guard !isUploading else { return }
+        isUploading = true
+        uploadError = nil
+        showUploadResult = false
+
+        Task {
+            do {
+                let appUuid = checkinService.appUuid
+                let fileData = EKGUploadService.serialise(ecgData: ecgData)
+                let m = measurements?.merge
+
+                var payload = EKGUploadPayload(
+                    patientUuid: patient.patientId ?? patient.uniqueId ?? "",
+                    appUuid: appUuid
+                )
+                payload.heartRate   = nilIfEmpty(m?.hr)
+                payload.prInterval  = nilIfEmpty(m?.pr)
+                payload.qrsDuration = nilIfEmpty(m?.qrs)
+                payload.qtInterval  = nilIfEmpty(m?.qt)
+                payload.qtCorrected = nilIfEmpty(m?.qTc)
+                payload.pAxis       = nilIfEmpty(m?.paxis)
+                payload.qrsAxis     = nilIfEmpty(m?.qrSaxis)
+                payload.diagnosis   = diagnosisLines.isEmpty ? nil : diagnosisLines.joined(separator: "; ")
+                payload.duration    = String(ecgData.first?.count ?? 0)
+                payload.recordedAt  = Date()
+                payload.appVersion  = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+                payload.fileData    = fileData
+
+                print("── EKG Upload Payload ──────────────────")
+                print("  patientUuid : \(payload.patientUuid)")
+                print("  appUuid     : \(payload.appUuid)")
+                print("  heartRate   : \(payload.heartRate ?? "nil")")
+                print("  prInterval  : \(payload.prInterval ?? "nil")")
+                print("  qrsDuration : \(payload.qrsDuration ?? "nil")")
+                print("  qtInterval  : \(payload.qtInterval ?? "nil")")
+                print("  qtCorrected : \(payload.qtCorrected ?? "nil")")
+                print("  pAxis       : \(payload.pAxis ?? "nil")")
+                print("  qrsAxis     : \(payload.qrsAxis ?? "nil")")
+                print("  diagnosis   : \(payload.diagnosis ?? "nil")")
+                print("  duration    : \(payload.duration ?? "nil")")
+                print("  appVersion  : \(payload.appVersion ?? "nil")")
+                print("  recordedAt  : \(payload.recordedAt?.description ?? "nil")")
+                print("  fileData    : \(payload.fileData?.count ?? 0) bytes")
+                print("────────────────────────────────────────")
+
+                try await uploadService.upload(payload: payload)
+                uploadSuccess = true
+            } catch let error as APIError {
+                uploadError = error.localizedDescription
+                uploadSuccess = false
+            } catch {
+                uploadError = error.localizedDescription
+                uploadSuccess = false
+            }
+            isUploading = false
+            showUploadResult = true
+        }
+    }
+
+    private func nilIfEmpty(_ s: String?) -> String? {
+        guard let s, !s.isEmpty, s != "—" else { return nil }
+        return s
     }
 
     // MARK: - Navigation

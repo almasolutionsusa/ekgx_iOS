@@ -314,6 +314,12 @@
 "analysis.failed.title"              = "Analysis Failed";
 "analysis.failed.subtitle"           = "The ECG data could not be analyzed. The recording may be too short or contain excessive noise. Please redo the recording.";
 "analysis.failed.redoButton"         = "Redo Recording";
+"analysis.upload.sending"            = "Sending to EMR…";
+"analysis.upload.successTitle"       = "Sent Successfully";
+"analysis.upload.successSubtitle"    = "The ECG has been delivered to the EMR system.";
+"analysis.upload.errorTitle"         = "Upload Failed";
+"analysis.upload.doneButton"         = "Done";
+"analysis.upload.stayButton"         = "Stay";
 "analysis.leadParam.lead"            = "Lead";
 "analysis.leadParam.morpho"          = "Morpho";
 "analysis.leadParam.pa"              = "Pa (mV)";
