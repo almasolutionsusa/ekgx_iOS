@@ -55,6 +55,24 @@ final class AppDIContainer {
         self.appContentService  = AppContentService(checkinService: checkin)
         self.ekgUploadService   = EKGUploadService()
         self.autoLockManager  = AutoLockManager()
+        self.autoLockManager.onWillLock = { [weak self] in
+            self?.deviceService.disconnect()
+        }
+    }
+
+    // MARK: - Session Expiry
+
+    /// Wire this up from EKGxApp with the router so any 302 forces logout + login redirect.
+    func configureSessionExpiry(router: AppRouter) {
+        APIClient.shared.onSessionExpired = { [weak self] in
+            guard let self else { return }
+            Task { @MainActor in
+                try? await self.authService.logout()
+                self.autoLockManager.stop()
+                self.clearRecordingSession()
+                router.navigate(to: .login)
+            }
+        }
     }
 
     // MARK: - Mode Switching
@@ -123,7 +141,7 @@ final class AppDIContainer {
     }
 
     func makeMyAccountViewModel(router: AppRouter) -> MyAccountViewModel {
-        MyAccountViewModel(router: router, authService: authService)
+        MyAccountViewModel(router: router, authService: authService, appInfoService: appInfoService)
     }
 
     func makeAppContentViewModel(router: AppRouter) -> AppContentViewModel {
@@ -139,6 +157,12 @@ final class AppDIContainer {
     var lastRecordingPatient: Patient?
     var lastRecordingData: ECGLeads = []
     var lastRecordingSampleRate: Int = 660
+
+    func clearRecordingSession() {
+        lastRecordingPatient = nil
+        lastRecordingData = []
+        lastRecordingSampleRate = 660
+    }
 
     func makeAnalysisViewModel(router: AppRouter) -> AnalysisViewModel {
         AnalysisViewModel(

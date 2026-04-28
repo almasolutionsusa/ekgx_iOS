@@ -26,6 +26,7 @@ struct APIResponse<T: Decodable>: Decodable {
 
 enum APIError: LocalizedError {
     case invalidCredentials           // 401
+    case sessionExpired               // 302 → Spring redirects to /login
     case forbidden                    // 403
     case notFound                     // 404
     case conflict                     // 409
@@ -38,12 +39,13 @@ enum APIError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidCredentials:        return L10n.Auth.Login.errorInvalidCredentials
+        case .sessionExpired:            return L10n.Auth.Login.errorSessionExpired
         case .forbidden, .notFound,
              .conflict, .unknown,
              .decodingFailed:            return L10n.Auth.Login.errorGeneric
         case .serverError:               return L10n.Auth.Login.errorGeneric
         case .networkUnavailable:        return L10n.Auth.Login.errorNetwork
-        case .backend(let message):     return message
+        case .backend(let message):      return message
         }
     }
 }
@@ -97,6 +99,9 @@ final class APIClient {
         let cookies = cookieStorage.cookies(for: baseURL) ?? []
         return cookies.contains { $0.name == "JSESSIONID" }
     }
+
+    /// Called on any 302 response — wired up by AppDIContainer to force logout.
+    var onSessionExpired: (() -> Void)?
 
     /// Clears all session cookies (logout).
     func clearSession() {
@@ -255,7 +260,10 @@ final class APIClient {
                 } catch {
                     throw APIError.decodingFailed(error)
                 }
-            case 302: throw APIError.invalidCredentials   // Spring redirect to /login
+            case 302:
+                let handler = onSessionExpired
+                Task { @MainActor in handler?() }
+                throw APIError.sessionExpired
             case 401:
                 throw extractBackendError(from: data) ?? .invalidCredentials
             case 403:

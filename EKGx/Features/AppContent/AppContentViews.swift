@@ -55,7 +55,7 @@ private struct ContentNavBar: View {
 struct FAQView: View {
 
     @State private var viewModel: AppContentViewModel
-    @State private var expandedId: String? = nil
+    @State private var expandedId: Int? = nil
 
     init(viewModel: AppContentViewModel) {
         _viewModel = State(wrappedValue: viewModel)
@@ -91,10 +91,10 @@ struct FAQView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: AppMetrics.spacing10) {
-                    ForEach(viewModel.faqEntries, id: \.stableId) { entry in
-                        FAQRow(entry: entry, isExpanded: expandedId == entry.stableId) {
+                    ForEach(Array(viewModel.faqEntries.enumerated()), id: \.offset) { index, entry in
+                        FAQRow(entry: entry, isExpanded: expandedId == index) {
                             withAnimation(.easeInOut(duration: 0.2)) {
-                                expandedId = expandedId == entry.stableId ? nil : entry.stableId
+                                expandedId = expandedId == index ? nil : index
                             }
                         }
                     }
@@ -253,7 +253,7 @@ struct SupportView: View {
     @State private var viewModel: AppContentViewModel
     @FocusState private var focused: SupportField?
 
-    enum SupportField { case subject, message, name, email, phone }
+    enum SupportField { case subject, message, phone }
 
     init(viewModel: AppContentViewModel) {
         _viewModel = State(wrappedValue: viewModel)
@@ -352,28 +352,6 @@ struct SupportView: View {
                     .font(AppTypography.captionBold)
                     .foregroundStyle(AppColors.textSecondary)
                     .padding(.top, AppMetrics.spacing4)
-
-                HStack(spacing: AppMetrics.spacing14) {
-                    ETextField(
-                        label: L10n.Support.Field.name,
-                        placeholder: L10n.Support.Field.namePH,
-                        systemImage: "person",
-                        text: $viewModel.supportContactName,
-                        textContentType: .name,
-                        autocapitalization: .words
-                    )
-                    .focused($focused, equals: .name)
-
-                    ETextField(
-                        label: L10n.Support.Field.email,
-                        placeholder: L10n.Support.Field.emailPH,
-                        systemImage: "envelope",
-                        text: $viewModel.supportContactEmail,
-                        textContentType: .emailAddress,
-                        autocapitalization: .never
-                    )
-                    .focused($focused, equals: .email)
-                }
 
                 ETextField(
                     label: L10n.Support.Field.phone,

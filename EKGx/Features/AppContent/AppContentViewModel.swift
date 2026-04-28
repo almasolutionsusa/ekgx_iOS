@@ -27,8 +27,6 @@ final class AppContentViewModel {
 
     var supportSubject: String = ""
     var supportMessage: String = ""
-    var supportContactName: String = ""
-    var supportContactEmail: String = ""
     var supportContactPhone: String = ""
     var isSubmitting: Bool = false
     var submitSuccess: Bool = false
@@ -98,13 +96,13 @@ final class AppContentViewModel {
             try await contentService.submitSupportTicket(
                 subject: supportSubject.trimmingCharacters(in: .whitespacesAndNewlines),
                 message: supportMessage.trimmingCharacters(in: .whitespacesAndNewlines),
-                contactName:  supportContactName.isEmpty  ? nil : supportContactName,
-                contactEmail: supportContactEmail.isEmpty ? nil : supportContactEmail,
+                contactName:  nil,
+                contactEmail: nil,
                 contactPhone: supportContactPhone.isEmpty ? nil : supportContactPhone
             )
             submitSuccess = true
             supportSubject = ""; supportMessage = ""
-            supportContactName = ""; supportContactEmail = ""; supportContactPhone = ""
+            supportContactPhone = ""
         } catch let error as APIError {
             submitError = error.errorDescription
         } catch {

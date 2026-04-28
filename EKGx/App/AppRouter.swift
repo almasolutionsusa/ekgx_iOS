@@ -36,6 +36,8 @@ final class AppRouter {
 
     var currentRoute: AppRoute = .login
     var navigationPath: NavigationPath = NavigationPath()
+    /// Set to true by screens opened from the side menu so Back re-opens it.
+    var reopenMenuOnBack: Bool = false
 
     // MARK: - Navigation
 

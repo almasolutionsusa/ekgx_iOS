@@ -13,9 +13,11 @@ enum L10n {
     // MARK: - Auto Lock
 
     enum AutoLock {
-        static let title         = "autoLock.title".localized
-        static let subtitle      = "autoLock.subtitle".localized
-        static let logoutButton  = "autoLock.logoutButton".localized
+        static let title              = "autoLock.title".localized
+        static let subtitle           = "autoLock.subtitle".localized
+        static let subtitleEmailUser  = "autoLock.subtitleEmailUser".localized
+        static let errorWrongUser     = "autoLock.errorWrongUser".localized
+        static let logoutButton       = "autoLock.logoutButton".localized
     }
 
     // MARK: - Auth
@@ -36,6 +38,7 @@ enum L10n {
             static let errorInvalidCredentials = "auth.login.errorInvalidCredentials".localized
             static let errorNetwork            = "auth.login.errorNetwork".localized
             static let errorGeneric            = "auth.login.errorGeneric".localized
+            static let errorSessionExpired     = "auth.login.errorSessionExpired".localized
             static let forgotPasswordTitle     = "auth.login.forgotPasswordTitle".localized
             static let forgotPasswordSubtitle  = "auth.login.forgotPasswordSubtitle".localized
             static let forgotPasswordEmailLabel = "auth.login.forgotPasswordEmailLabel".localized

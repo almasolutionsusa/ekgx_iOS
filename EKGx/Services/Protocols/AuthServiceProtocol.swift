@@ -72,13 +72,13 @@ enum AuthError: LocalizedError {
 
     var errorDescription: String? {
         switch self {
-        case .invalidCredentials:  return L10n.Auth.Login.errorInvalidCredentials
-        case .emailAlreadyInUse:   return L10n.Auth.Register.errorEmailInUse
-        case .networkUnavailable:  return L10n.Auth.Login.errorNetwork
+        case .invalidCredentials:   return L10n.Auth.Login.errorInvalidCredentials
+        case .emailAlreadyInUse:    return L10n.Auth.Register.errorEmailInUse
+        case .networkUnavailable:   return L10n.Auth.Login.errorNetwork
+        case .sessionExpired:       return L10n.Auth.Login.errorSessionExpired
         case .backend(let message): return message
-        case .sessionExpired,
-             .serverError,
-             .unknown:             return L10n.Auth.Login.errorGeneric
+        case .serverError,
+             .unknown:              return L10n.Auth.Login.errorGeneric
         }
     }
 }

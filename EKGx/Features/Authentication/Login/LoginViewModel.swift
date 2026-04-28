@@ -186,6 +186,7 @@ final class LoginViewModel {
 
         do {
             try await authService.pinLogin(pin: pinInput, appUuid: appUuid)
+            diContainer.clearRecordingSession()
             configureAutoLock()
             showPinLogin = false
             router.navigate(to: .dashboard)
@@ -207,6 +208,7 @@ final class LoginViewModel {
             let username = email.trimmingCharacters(in: .whitespacesAndNewlines)
             try await authService.login(email: username, password: password)
             saveToHistory(username)
+            diContainer.clearRecordingSession()
             configureAutoLock()
             router.navigate(to: .dashboard)
         } catch let authError as AuthError {

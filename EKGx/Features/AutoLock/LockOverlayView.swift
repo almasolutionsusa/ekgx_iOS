@@ -3,9 +3,14 @@
 //  EKGx
 //
 //  Popup overlay shown on top of the active screen when the session is
-//  auto-locked. Fully blocks interaction with the underlying view — no taps
-//  pass through. User unlocks with their PIN and resumes exactly where they
-//  left off.
+//  auto-locked. Fully blocks interaction with the underlying view.
+//
+//  PIN mode  (loginMethod == "PIN"):
+//    Shows PIN dots. Only the currently logged-in user's PIN is accepted.
+//    Any other PIN → "Incorrect PIN" error even if valid for another user.
+//
+//  Email mode (loginMethod != "PIN"):
+//    No PIN entry — user must log out and re-authenticate.
 //
 
 import SwiftUI
@@ -22,13 +27,30 @@ struct LockOverlayView: View {
     @State private var isSubmitting: Bool = false
     @FocusState private var pinFocused: Bool
 
+    private var loginMethod: String? {
+        diContainer.authService.loginData?.loginMethod
+    }
+
+    private var isPinUser: Bool {
+        loginMethod?.uppercased() == "PIN"
+    }
+
+    private var lockedUserId: Int64? {
+        diContainer.authService.loginData?.user.id
+    }
+
     var body: some View {
         ZStack {
-            // Blocking backdrop — swallows ALL touches behind the card.
-            Color.black.opacity(0.55)
+            // Full-screen blur — fully obscures underlying patient data.
+            Rectangle()
+                .fill(.ultraThinMaterial)
                 .ignoresSafeArea()
                 .contentShape(Rectangle())
-                .onTapGesture { pinFocused = true }
+                .onTapGesture { if isPinUser { pinFocused = true } }
+
+            Color.black.opacity(0.4)
+                .ignoresSafeArea()
+                .allowsHitTesting(false)
 
             // Card
             VStack(spacing: AppMetrics.spacing24) {
@@ -48,69 +70,71 @@ struct LockOverlayView: View {
                     Text(L10n.AutoLock.title)
                         .font(AppTypography.title2)
                         .foregroundStyle(AppColors.textPrimary)
-                    Text(L10n.AutoLock.subtitle)
+                    Text(isPinUser ? L10n.AutoLock.subtitle : L10n.AutoLock.subtitleEmailUser)
                         .font(AppTypography.callout)
                         .foregroundStyle(AppColors.textSecondary)
                         .multilineTextAlignment(.center)
                 }
 
-                // PIN dots
-                HStack(spacing: AppMetrics.spacing20) {
-                    ForEach(0..<6, id: \.self) { index in
-                        ZStack {
-                            Circle()
-                                .stroke(
-                                    index < pinInput.count
-                                        ? AppColors.brandPrimary
-                                        : AppColors.borderSubtle,
-                                    lineWidth: 2
-                                )
-                                .frame(width: 22, height: 22)
-                            if index < pinInput.count {
+                if isPinUser {
+                    // PIN dots
+                    HStack(spacing: AppMetrics.spacing20) {
+                        ForEach(0..<6, id: \.self) { index in
+                            ZStack {
                                 Circle()
-                                    .fill(AppColors.brandPrimary)
-                                    .frame(width: 14, height: 14)
+                                    .stroke(
+                                        index < pinInput.count
+                                            ? AppColors.brandPrimary
+                                            : AppColors.borderSubtle,
+                                        lineWidth: 2
+                                    )
+                                    .frame(width: 22, height: 22)
+                                if index < pinInput.count {
+                                    Circle()
+                                        .fill(AppColors.brandPrimary)
+                                        .frame(width: 14, height: 14)
+                                }
+                            }
+                            .animation(.easeInOut(duration: 0.15), value: pinInput.count)
+                        }
+                    }
+
+                    // Hidden input
+                    SecureField("", text: $pinInput)
+                        .keyboardType(.numberPad)
+                        .textContentType(.oneTimeCode)
+                        .focused($pinFocused)
+                        .frame(width: 1, height: 1)
+                        .opacity(0.01)
+                        .onChange(of: pinInput) { _, newValue in
+                            let digits = newValue.filter(\.isNumber)
+                            if digits.count > 6 {
+                                pinInput = String(digits.prefix(6))
+                            } else if digits != newValue {
+                                pinInput = digits
+                            }
+                            errorMessage = nil
+                            if pinInput.count == 6 {
+                                Task { await submit() }
                             }
                         }
-                        .animation(.easeInOut(duration: 0.15), value: pinInput.count)
+
+                    // Error / loading
+                    if let error = errorMessage {
+                        Text(error)
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.statusCritical)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, AppMetrics.spacing20)
+                            .transition(.opacity)
+                            .animation(.easeInOut(duration: 0.2), value: errorMessage)
+                    } else if isSubmitting {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
                     }
                 }
 
-                // Hidden input
-                SecureField("", text: $pinInput)
-                    .keyboardType(.numberPad)
-                    .textContentType(.oneTimeCode)
-                    .focused($pinFocused)
-                    .frame(width: 1, height: 1)
-                    .opacity(0.01)
-                    .onChange(of: pinInput) { _, newValue in
-                        let digits = newValue.filter(\.isNumber)
-                        if digits.count > 6 {
-                            pinInput = String(digits.prefix(6))
-                        } else if digits != newValue {
-                            pinInput = digits
-                        }
-                        errorMessage = nil
-                        if pinInput.count == 6 {
-                            Task { await submit() }
-                        }
-                    }
-
-                // Error
-                if let error = errorMessage {
-                    Text(error)
-                        .font(AppTypography.caption)
-                        .foregroundStyle(AppColors.statusCritical)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, AppMetrics.spacing20)
-                        .transition(.opacity)
-                        .animation(.easeInOut(duration: 0.2), value: errorMessage)
-                } else if isSubmitting {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
-                }
-
-                // Sign out escape hatch
+                // Logout button
                 Button(action: logoutAndReturnToLogin) {
                     Text(L10n.AutoLock.logoutButton)
                         .font(AppTypography.subheadline)
@@ -129,7 +153,7 @@ struct LockOverlayView: View {
             )
             .padding(.horizontal, AppMetrics.spacing40)
         }
-        .onAppear { pinFocused = true }
+        .onAppear { if isPinUser { pinFocused = true } }
     }
 
     // MARK: - Actions
@@ -140,9 +164,23 @@ struct LockOverlayView: View {
         errorMessage = nil
         defer { isSubmitting = false }
 
+        let expectedUserId = lockedUserId
         let appUuid = diContainer.checkinService.appUuid
+
         do {
             try await diContainer.authService.pinLogin(pin: pinInput, appUuid: appUuid)
+
+            // Verify the PIN belongs to the currently locked user
+            let returnedUserId = diContainer.authService.loginData?.user.id
+            guard returnedUserId == expectedUserId else {
+                // Wrong user's PIN — re-authenticate as the original user is no longer possible,
+                // so reject and force logout.
+                errorMessage = L10n.AutoLock.errorWrongUser
+                pinInput = ""
+                try? await diContainer.authService.logout()
+                return
+            }
+
             pinInput = ""
             diContainer.autoLockManager.unlock()
         } catch let error as AuthError {

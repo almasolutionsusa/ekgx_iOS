@@ -45,6 +45,8 @@ struct EKGxApp: App {
                 .statusBarHidden(true)
                 .persistentSystemOverlays(.hidden)
                 .task {
+                    // Wire global session expiry handler — any 302 forces logout + login redirect.
+                    diContainer.configureSessionExpiry(router: router)
                     // Fire-and-forget: registers the app install with the server.
                     // Failure is silently ignored — app works fully offline.
                     await diContainer.checkinService.checkin()

@@ -30,7 +30,7 @@ final class SettingsViewModel {
     // MARK: - Security
 
     var demoDataEnabled: Bool  = false
-    var autoLock: AutoLock     = .threeMinutes
+    var autoLock: AutoLock     = .threeMinutes  // minimum enforced — no "Disabled" option
 
     // MARK: - Demo code gate
     var showDemoCodeEntry: Bool   = false
@@ -118,14 +118,11 @@ final class SettingsViewModel {
             }
         }
 
-        // Autolock in seconds (180 → 3 min, 300 → 5 min, 0 → disabled)
+        // Autolock in seconds (180 → 3 min, 300 → 5 min, 0 or unknown → 3 min minimum)
         if let secs = s.autolockSeconds {
             switch secs {
-            case 0:   autoLock = .disabled
-            case 180: autoLock = .threeMinutes
             case 300: autoLock = .fiveMinutes
-            default:
-                autoLock = secs < 240 ? .threeMinutes : .fiveMinutes
+            default:  autoLock = secs >= 240 ? .fiveMinutes : .threeMinutes
             }
         }
     }
@@ -273,7 +270,6 @@ enum ACNotch: String, CaseIterable, Identifiable {
 
 enum AutoLock: String, CaseIterable, Identifiable {
     var id: String { rawValue }
-    case disabled     = "Disabled"
     case threeMinutes = "3 min"
     case fiveMinutes  = "5 min"
 }

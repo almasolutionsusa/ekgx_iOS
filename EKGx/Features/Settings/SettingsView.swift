@@ -255,7 +255,7 @@ private struct SettingsCard<Content: View>: View {
     var body: some View {
         VStack(spacing: 0) { content }
             .background(AppColors.surfaceCard)
-            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
+            .cornerRadius(AppMetrics.radiusLarge)
             .overlay(
                 RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
                     .strokeBorder(AppColors.borderSubtle.opacity(0.6), lineWidth: AppMetrics.borderWidth)
@@ -343,33 +343,17 @@ private struct PickerRow<T: RawRepresentable & CaseIterable & Identifiable & Has
 
                 Spacer()
 
-                Menu {
+                Picker("", selection: $selection) {
                     ForEach(Array(T.allCases as! [T])) { option in
-                        Button {
-                            selection = option
-                        } label: {
-                            HStack {
-                                Text(option.rawValue)
-                                if selection == option {
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
+                        Text(option.rawValue).tag(option)
                     }
-                } label: {
-                    HStack(spacing: AppMetrics.spacing6) {
-                        Text(selection.rawValue)
-                            .font(AppTypography.callout)
-                            .foregroundStyle(AppColors.brandPrimary)
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(AppColors.brandPrimary)
-                    }
-                    .padding(.horizontal, AppMetrics.spacing14)
-                    .padding(.vertical, AppMetrics.spacing8)
-                    .background(AppColors.brandPrimary.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusSmall))
                 }
+                .pickerStyle(.menu)
+                .tint(AppColors.brandPrimary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 4)
+                .background(AppColors.brandPrimary.opacity(0.08))
+                .cornerRadius(8)
             }
             .padding(.horizontal, AppMetrics.spacing20)
             .padding(.vertical, AppMetrics.spacing16)

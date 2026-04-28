@@ -283,7 +283,7 @@ private struct ProfilePictureSection: View {
                 Text("\(viewModel.firstName) \(viewModel.lastName)")
                     .font(AppTypography.title3)
                     .foregroundStyle(AppColors.textPrimary)
-                Text(viewModel.currentFacility.rawValue)
+                Text(viewModel.facilityName)
                     .font(AppTypography.callout)
                     .foregroundStyle(AppColors.textSecondary)
                 Text(viewModel.role)
@@ -306,6 +306,45 @@ private struct ProfilePictureSection: View {
         let f = viewModel.firstName.prefix(1).uppercased()
         let l = viewModel.lastName.prefix(1).uppercased()
         return "\(f)\(l)"
+    }
+}
+
+// MARK: - Locked (read-only) Field
+
+private struct LockedField: View {
+    let label: String
+    let systemImage: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
+            Text(label.uppercased())
+                .font(AppTypography.captionBold)
+                .foregroundStyle(AppColors.textSecondary)
+                .tracking(0.5)
+
+            HStack(spacing: AppMetrics.spacing12) {
+                Image(systemName: systemImage)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(AppColors.textSecondary)
+                Text(value.isEmpty ? "—" : value)
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppColors.textSecondary)
+                Spacer()
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(AppColors.borderSubtle)
+            }
+            .padding(.horizontal, AppMetrics.spacing16)
+            .frame(height: AppMetrics.textFieldHeight)
+            .background(AppColors.borderSubtle.opacity(0.2))
+            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
+            .overlay(
+                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                    .strokeBorder(AppColors.borderSubtle.opacity(0.5), lineWidth: AppMetrics.borderWidth)
+            )
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -336,23 +375,15 @@ private struct PersonalInfoSection: View {
                 )
             }
             HStack(spacing: AppMetrics.spacing16) {
-                ETextField(
+                LockedField(
                     label: L10n.Account.Personal.workEmail,
-                    placeholder: L10n.Account.Personal.workEmailPH,
                     systemImage: "envelope",
-                    text: $viewModel.workEmail,
-                    errorMessage: viewModel.emailError,
-                    keyboardType: .emailAddress,
-                    textContentType: .emailAddress
+                    value: viewModel.workEmail
                 )
-                ETextField(
+                LockedField(
                     label: L10n.Account.Personal.phone,
-                    placeholder: L10n.Account.Personal.phonePH,
                     systemImage: "phone",
-                    text: $viewModel.phone,
-                    errorMessage: viewModel.phoneError,
-                    keyboardType: .phonePad,
-                    textContentType: .telephoneNumber
+                    value: viewModel.phone
                 )
             }
         }
@@ -426,53 +457,11 @@ private struct FacilityRoleSection: View {
     var body: some View {
         VStack(spacing: AppMetrics.spacing16) {
 
-            VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
-                Text(L10n.Account.Facility.currentFacility.uppercased())
-                    .font(AppTypography.captionBold)
-                    .foregroundStyle(AppColors.textSecondary)
-                    .tracking(0.5)
-
-                Menu {
-                    ForEach(MyAccountViewModel.Facility.allCases) { facility in
-                        Button {
-                            viewModel.currentFacility = facility
-                        } label: {
-                            HStack {
-                                Text(facility.rawValue)
-                                if viewModel.currentFacility == facility {
-                                    Spacer()
-                                    Image(systemName: "checkmark")
-                                }
-                            }
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Image(systemName: "building.2.crop.circle")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundStyle(AppColors.textSecondary)
-                            .frame(width: AppMetrics.iconSizeMedium)
-
-                        Text(viewModel.currentFacility.rawValue)
-                            .font(AppTypography.body)
-                            .foregroundStyle(AppColors.textPrimary)
-
-                        Spacer()
-
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-                    .padding(.horizontal, AppMetrics.spacing16)
-                    .frame(height: AppMetrics.textFieldHeight)
-                    .background(AppColors.surfaceCard)
-                    .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                            .strokeBorder(AppColors.borderSubtle, lineWidth: AppMetrics.borderWidth)
-                    )
-                }
-            }
+            LockedField(
+                label: L10n.Account.Facility.currentFacility,
+                systemImage: "building.2.crop.circle",
+                value: viewModel.facilityName
+            )
 
             HStack(spacing: AppMetrics.spacing16) {
                 ETextField(

@@ -5,6 +5,7 @@
 
 import Foundation
 import SwiftUI
+import UIKit
 
 private extension Patient {
     var genderSDK: vhECGPatientGender {
@@ -135,6 +136,9 @@ final class AnalysisViewModel {
         uploadError = nil
         showUploadResult = false
 
+        // Render the ECG image on @MainActor before entering the async Task
+        let imageData = renderECGImage()
+
         Task {
             do {
                 let appUuid = checkinService.appUuid
@@ -157,6 +161,7 @@ final class AnalysisViewModel {
                 payload.recordedAt  = Date()
                 payload.appVersion  = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
                 payload.fileData    = fileData
+                payload.imageData   = imageData
 
                 print("── EKG Upload Payload ──────────────────")
                 print("  patientUuid : \(payload.patientUuid)")
@@ -173,20 +178,40 @@ final class AnalysisViewModel {
                 print("  appVersion  : \(payload.appVersion ?? "nil")")
                 print("  recordedAt  : \(payload.recordedAt?.description ?? "nil")")
                 print("  fileData    : \(payload.fileData?.count ?? 0) bytes")
+                print("  imageData   : \(payload.imageData?.count ?? 0) bytes")
                 print("────────────────────────────────────────")
 
                 try await uploadService.upload(payload: payload)
                 uploadSuccess = true
             } catch let error as APIError {
-                uploadError = error.localizedDescription
+                switch error {
+                case .sessionExpired, .invalidCredentials:
+                    uploadError = L10n.Auth.Login.errorSessionExpired
+                default:
+                    uploadError = error.errorDescription ?? L10n.Auth.Login.errorGeneric
+                }
                 uploadSuccess = false
             } catch {
-                uploadError = error.localizedDescription
+                uploadError = L10n.Auth.Login.errorGeneric
                 uploadSuccess = false
             }
             isUploading = false
             showUploadResult = true
         }
+    }
+
+    private func renderECGImage() -> Data? {
+        let view = ECGPrintView(
+            patient: patient,
+            templateData: templateData,
+            ecgData: ecgData,
+            sampleRate: sampleRate,
+            measurements: measurements,
+            diagnosisLines: diagnosisLines
+        )
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2.0
+        return renderer.uiImage.flatMap { $0.jpegData(compressionQuality: 0.85) }
     }
 
     private func nilIfEmpty(_ s: String?) -> String? {

@@ -146,6 +146,7 @@ final class AuthService: AuthServiceProtocol {
     private func mapAPIError(_ error: APIError) -> AuthError {
         switch error {
         case .invalidCredentials:   return .invalidCredentials
+        case .sessionExpired:       return .sessionExpired
         case .conflict:             return .emailAlreadyInUse
         case .networkUnavailable:   return .networkUnavailable
         case .forbidden:            return .sessionExpired

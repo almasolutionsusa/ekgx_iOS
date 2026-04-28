@@ -17,6 +17,7 @@
 "auth.login.errorInvalidCredentials" = "Invalid email or password. Please try again.";
 "auth.login.errorNetwork"            = "Network unavailable. Check your connection and retry.";
 "auth.login.errorGeneric"            = "An unexpected error occurred. Please contact IT support.";
+"auth.login.errorSessionExpired"     = "Your session has expired. Please log in again.";
 "auth.login.forgotPasswordTitle"     = "Reset Password";
 "auth.login.forgotPasswordSubtitle"  = "Enter your email address and we'll send you a link to reset your password.";
 "auth.login.forgotPasswordEmailLabel" = "Email Address";
@@ -228,7 +229,9 @@
 // MARK: - Auto Lock
 "autoLock.title"                     = "Session Locked";
 "autoLock.subtitle"                  = "Enter your PIN to resume";
-"autoLock.logoutButton"              = "Sign out instead";
+"autoLock.subtitleEmailUser"         = "This session was started with email login. Please sign out and use your PIN to unlock.";
+"autoLock.errorWrongUser"            = "Incorrect PIN for this session. Please sign out.";
+"autoLock.logoutButton"              = "Sign out";
 
 // MARK: - Auth · Local Mode
 "auth.login.localMode"               = "Continue Offline";

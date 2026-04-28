@@ -32,6 +32,9 @@ final class AutoLockManager {
     /// The configured timeout in seconds. 0 disables autolock.
     private(set) var timeoutSeconds: TimeInterval = 0
 
+    /// Called just before the screen locks — use it to stop BLE scanning.
+    var onWillLock: (() -> Void)?
+
     // MARK: - Internal
 
     private var timer: Timer?
@@ -81,6 +84,7 @@ final class AutoLockManager {
 
     private func lockNow() {
         guard !isLocked else { return }
+        onWillLock?()
         isLocked = true
         timer?.invalidate()
         timer = nil

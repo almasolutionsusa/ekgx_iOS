@@ -49,7 +49,6 @@ final class HomeViewModel {
     // MARK: - UI State
 
     var isMenuVisible: Bool = false
-    var showLogoutConfirmation: Bool = false
     var deviceState: DeviceConnectionState = .disconnected
 
     // MARK: - Dependencies
@@ -85,6 +84,10 @@ final class HomeViewModel {
         deviceState = deviceService.currentState
         deviceService.onConnectionStateChanged = { [weak self] state in
             withAnimation { self?.deviceState = state }
+        }
+        if router.reopenMenuOnBack {
+            router.reopenMenuOnBack = false
+            openMenu()
         }
     }
 
@@ -144,16 +147,21 @@ final class HomeViewModel {
 
     // MARK: - Side Menu Navigation
 
-    func navigateToSettings()          { closeMenu(); router.navigate(to: .settings) }
-    func navigateToMyAccount()         { closeMenu(); router.navigate(to: .myAccount) }
-    func navigateToSupport()           { closeMenu(); router.navigate(to: .support) }
-    func navigateToFAQ()               { closeMenu(); router.navigate(to: .faq) }
-    func navigateToIndicationsForUse() { closeMenu(); router.navigate(to: .indicationsForUse) }
+    func navigateToSettings()          { navigateFromMenu(to: .settings) }
+    func navigateToMyAccount()         { navigateFromMenu(to: .myAccount) }
+    func navigateToSupport()           { navigateFromMenu(to: .support) }
+    func navigateToFAQ()               { navigateFromMenu(to: .faq) }
+    func navigateToIndicationsForUse() { navigateFromMenu(to: .indicationsForUse) }
 
-    func confirmLogout() { showLogoutConfirmation = true }
+    private func navigateFromMenu(to route: AppRoute) {
+        closeMenu()
+        router.reopenMenuOnBack = true
+        router.navigate(to: route)
+    }
+
+    func confirmLogout() { logout() }
 
     func logout() {
-        showLogoutConfirmation = false
         closeMenu()
         diContainer.autoLockManager.stop()
         Task { try? await diContainer.authService.logout() }
