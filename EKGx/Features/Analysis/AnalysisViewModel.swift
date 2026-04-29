@@ -77,6 +77,9 @@ final class AnalysisViewModel {
     private let router: AppRouter
     private let uploadService: EKGUploadService
     private let checkinService: AppCheckinService
+    private let recordingStore: LocalRecordingStore
+    /// The locally persisted recording created when analysis starts.
+    private var localRecordingId: String? = nil
 
     // MARK: - Init
 
@@ -89,15 +92,17 @@ final class AnalysisViewModel {
         totalDuration: Int? = nil,
         router: AppRouter,
         uploadService: EKGUploadService,
-        checkinService: AppCheckinService
+        checkinService: AppCheckinService,
+        recordingStore: LocalRecordingStore
     ) {
-        self.patient        = patient
-        self.ecgData        = ecgData
-        self.sampleRate     = sampleRate
-        self.totalDuration  = totalDuration
-        self.router         = router
-        self.uploadService  = uploadService
-        self.checkinService = checkinService
+        self.patient         = patient
+        self.ecgData         = ecgData
+        self.sampleRate      = sampleRate
+        self.totalDuration   = totalDuration
+        self.router          = router
+        self.uploadService   = uploadService
+        self.checkinService  = checkinService
+        self.recordingStore  = recordingStore
     }
 
     // MARK: - Analysis
@@ -124,7 +129,8 @@ final class AnalysisViewModel {
                     self.leadParameters  = obj.parametersResult
                     self.templateData    = template
                     self.copyMergeStrings(from: obj.measurementsResult)
-                    self.state             = .success
+                    self.state           = .success
+                    self.saveLocalRecording()
                 } else {
                     self.state = .failed
                 }
@@ -207,6 +213,9 @@ final class AnalysisViewModel {
 
                 try await uploadService.upload(payload: payload)
                 uploadSuccess = true
+                if let rid = localRecordingId {
+                    recordingStore.updateStatus(id: rid, status: .synced)
+                }
             } catch let error as APIError {
                 switch error {
                 case .sessionExpired, .invalidCredentials:
@@ -215,9 +224,15 @@ final class AnalysisViewModel {
                     uploadError = error.errorDescription ?? L10n.Auth.Login.errorGeneric
                 }
                 uploadSuccess = false
+                if let rid = localRecordingId {
+                    recordingStore.updateStatus(id: rid, status: .failed)
+                }
             } catch {
                 uploadError = L10n.Auth.Login.errorGeneric
                 uploadSuccess = false
+                if let rid = localRecordingId {
+                    recordingStore.updateStatus(id: rid, status: .failed)
+                }
             }
             isUploading = false
             showUploadResult = true
@@ -236,6 +251,28 @@ final class AnalysisViewModel {
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2.0
         return renderer.uiImage.flatMap { $0.jpegData(compressionQuality: 0.85) }
+    }
+
+    private func saveLocalRecording() {
+        guard localRecordingId == nil else { return }
+        let m = measurements?.merge
+        let fileData = EKGUploadService.serialise(ecgData: ecgData)
+        let image = renderECGImage()
+        let recording = ECGRecording.makePending(
+            patient:        patient,
+            durationSeconds: ecgData.first?.count.map { $0 / sampleRate } ?? 0,
+            sampleRate:     sampleRate,
+            diagnosis:      diagnosisLines.isEmpty ? nil : diagnosisLines.joined(separator: "; "),
+            heartRate:      nilIfEmpty(m?.hr),
+            prInterval:     nilIfEmpty(m?.pr),
+            qrsDuration:    nilIfEmpty(m?.qrs),
+            qtInterval:     nilIfEmpty(m?.qt),
+            qtCorrected:    nilIfEmpty(m?.qTc),
+            fileSize:       fileData.count,
+            appVersion:     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+        )
+        recordingStore.save(recording: recording, ecgFileData: fileData, imageData: image)
+        localRecordingId = recording.id
     }
 
     private func nilIfEmpty(_ s: String?) -> String? {

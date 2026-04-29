@@ -11,7 +11,7 @@ final class CloudViewModel {
 
     // MARK: - Patient list state
 
-    var patients: [Patient] = Patient.mockPatients
+    var patients: [Patient] = []
     var searchQuery: String = ""
     var selectedPatient: Patient? = nil
 
@@ -23,9 +23,11 @@ final class CloudViewModel {
     // MARK: - Dependencies
 
     private let router: AppRouter
+    private let recordingStore: LocalRecordingStore
 
-    init(router: AppRouter) {
+    init(router: AppRouter, recordingStore: LocalRecordingStore) {
         self.router = router
+        self.recordingStore = recordingStore
     }
 
     // MARK: - Computed
@@ -41,6 +43,29 @@ final class CloudViewModel {
     }
 
     // MARK: - Actions
+
+    func activate() {
+        // Build patient list from locally stored recordings
+        let allRecordings = recordingStore.allRecordings()
+        if !allRecordings.isEmpty {
+            // Derive unique patients from recording snapshots
+            var seen = Set<String>()
+            patients = allRecordings.compactMap { rec -> Patient? in
+                guard seen.insert(rec.patientId).inserted else { return nil }
+                return Patient(
+                    id: nil,
+                    patientId: rec.patientId,
+                    uniqueId: rec.patientId,
+                    firstName: rec.patientName.components(separatedBy: " ").first ?? rec.patientName,
+                    lastName: rec.patientName.components(separatedBy: " ").dropFirst().joined(separator: " "),
+                    birthDate: rec.patientDob,
+                    gender: rec.patientGender,
+                    medicalRecordNumber: rec.patientMrn,
+                    hasPhoto: nil
+                )
+            }
+        }
+    }
 
     func selectPatient(_ patient: Patient) {
         selectedPatient = patient
@@ -58,17 +83,10 @@ final class CloudViewModel {
     // MARK: - Private
 
     private func loadRecordings(for patient: Patient) {
-        guard let uid = patient.uniqueId else {
-            recordings = []
-            return
-        }
+        let pid = patient.patientId ?? patient.uniqueId ?? ""
+        guard !pid.isEmpty else { recordings = []; return }
         isLoadingRecordings = true
-        // Simulate network fetch (replace with real API call)
-        Task {
-            try? await Task.sleep(nanoseconds: 400_000_000)
-            recordings = ECGRecording.mockRecordings(for: uid)
-                .sorted { $0.recordedAt > $1.recordedAt }
-            isLoadingRecordings = false
-        }
+        recordings = recordingStore.recordings(for: pid)
+        isLoadingRecordings = false
     }
 }

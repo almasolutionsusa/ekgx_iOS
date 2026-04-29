@@ -52,6 +52,7 @@ struct CloudView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .onAppear { viewModel.activate() }
     }
 }
 
@@ -432,8 +433,8 @@ private struct RecordingRow: View {
                     .foregroundStyle(AppColors.textSecondary)
                     .labelStyle(CompactLabelStyle())
 
-                    if let notes = recording.notes {
-                        Text(notes)
+                    if let diagnosis = recording.diagnosis {
+                        Text(diagnosis)
                             .font(AppTypography.caption)
                             .foregroundStyle(AppColors.textSecondary.opacity(0.8))
                             .lineLimit(1)
@@ -448,7 +449,7 @@ private struct RecordingRow: View {
                     Text(recording.formattedFileSize)
                         .font(AppTypography.captionBold)
                         .foregroundStyle(AppColors.textSecondary)
-                    Text(recording.technicianName)
+                    Text(recording.appVersion.map { "v\($0)" } ?? "")
                         .font(AppTypography.caption)
                         .foregroundStyle(AppColors.textSecondary.opacity(0.7))
                         .lineLimit(1)

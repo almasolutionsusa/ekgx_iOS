@@ -37,6 +37,7 @@ final class AppDIContainer {
     let appContentService: AppContentService
     let ekgUploadService: EKGUploadService
     let autoLockManager: AutoLockManager
+    let recordingStore: LocalRecordingStore
 
     // MARK: - Device Service
 
@@ -55,6 +56,7 @@ final class AppDIContainer {
         self.appContentService  = AppContentService(checkinService: checkin)
         self.ekgUploadService   = EKGUploadService()
         self.autoLockManager  = AutoLockManager()
+        self.recordingStore   = LocalRecordingStore()
         self.autoLockManager.onWillLock = { [weak self] in
             self?.deviceService.disconnect()
         }
@@ -133,7 +135,7 @@ final class AppDIContainer {
     }
 
     func makeCloudViewModel(router: AppRouter) -> CloudViewModel {
-        CloudViewModel(router: router)
+        CloudViewModel(router: router, recordingStore: recordingStore)
     }
 
     func makeSettingsViewModel(router: AppRouter) -> SettingsViewModel {
@@ -178,7 +180,8 @@ final class AppDIContainer {
             totalDuration: lastRecordingTotalDuration,
             router: router,
             uploadService: ekgUploadService,
-            checkinService: checkinService
+            checkinService: checkinService,
+            recordingStore: recordingStore
         )
     }
 }
