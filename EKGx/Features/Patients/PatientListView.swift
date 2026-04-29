@@ -36,7 +36,15 @@ struct PatientListView: View {
                 orderContent
             }
         }
-        .onAppear { viewModel.loadOrders() }
+        .onAppear {
+            viewModel.clearActiveOrder()
+            viewModel.loadOrders()
+        }
+        .alert("Device Not Connected", isPresented: $viewModel.showDeviceAlert) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Please connect to the EKG device from the home screen before starting a recording.")
+        }
         .sheet(isPresented: $viewModel.showAddPatient) {
             AddOrderSheet(viewModel: viewModel)
                 .presentationDetents([.large])
@@ -86,9 +94,13 @@ struct PatientListView: View {
         ScrollView {
             LazyVStack(spacing: AppMetrics.spacing12) {
                 ForEach(Array(viewModel.filteredOrders.enumerated()), id: \.element.id) { index, order in
-                    OrderRow(order: order, position: index + 1) {
-                        viewModel.confirmCancel(order)
-                    }
+                    OrderRow(
+                        order: order,
+                        position: index + 1,
+                        isActive: viewModel.activeOrderId == order.id,
+                        onSelect: { viewModel.startRecording(for: order) },
+                        onCancel: { viewModel.confirmCancel(order) }
+                    )
                 }
             }
             .padding(.horizontal, AppMetrics.spacing32)
@@ -256,6 +268,8 @@ private struct OrderRow: View {
 
     let order: PatientOrder
     let position: Int
+    let isActive: Bool
+    let onSelect: () -> Void
     let onCancel: () -> Void
 
     private var avatarColor: Color {
@@ -283,6 +297,11 @@ private struct OrderRow: View {
     }
 
     var body: some View {
+        Button(action: onSelect) { orderContent }
+            .buttonStyle(.plain)
+    }
+
+    private var orderContent: some View {
         HStack(spacing: 0) {
 
             // Left accent strip with queue number
@@ -371,11 +390,14 @@ private struct OrderRow: View {
             .padding(.vertical, AppMetrics.spacing20)
         }
         .frame(minHeight: 80)
-        .background(AppColors.surfaceCard)
+        .background(isActive ? AppColors.brandPrimary.opacity(0.06) : AppColors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
         .overlay(
             RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
-                .strokeBorder(AppColors.borderSubtle.opacity(0.5), lineWidth: AppMetrics.borderWidth)
+                .strokeBorder(
+                    isActive ? AppColors.brandPrimary.opacity(0.5) : AppColors.borderSubtle.opacity(0.5),
+                    lineWidth: isActive ? 1.5 : AppMetrics.borderWidth
+                )
         )
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
     }

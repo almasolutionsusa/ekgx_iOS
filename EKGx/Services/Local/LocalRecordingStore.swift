@@ -52,6 +52,7 @@ final class LocalRecordingStore {
         entity.ecgFileData     = ecgFileData
         entity.imageData       = imageData
         entity.appVersion      = recording.appVersion
+        entity.username        = recording.username
         persist()
         return entity
     }
@@ -97,6 +98,25 @@ final class LocalRecordingStore {
         request.sortDescriptors = [NSSortDescriptor(key: "recordedAt", ascending: false)]
         let entities = (try? context.fetch(request)) ?? []
         return entities.compactMap { ECGRecording(entity: $0) }
+    }
+
+    // MARK: - Delete
+
+    func delete(id: String) {
+        let request: NSFetchRequest<ECGRecordingEntity> = ECGRecordingEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        guard let entity = try? context.fetch(request).first else { return }
+        context.delete(entity)
+        persist()
+    }
+
+    /// Raw ECG binary for a given recording ID (may be nil if not stored).
+    func ecgFileData(for id: String) -> Data? {
+        let request: NSFetchRequest<ECGRecordingEntity> = ECGRecordingEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        return (try? context.fetch(request).first)?.ecgFileData
     }
 
     // MARK: - Private

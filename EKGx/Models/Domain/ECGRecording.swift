@@ -31,6 +31,7 @@ struct ECGRecording: Identifiable, Codable, Hashable {
     let qtInterval: String?
     let qtCorrected: String?
     let appVersion: String?
+    let username: String?
 
     // MARK: - Status
 
@@ -126,6 +127,7 @@ extension ECGRecording {
         self.qtInterval    = entity.qtInterval
         self.qtCorrected   = entity.qtCorrected
         self.appVersion    = entity.appVersion
+        self.username      = entity.username
     }
 
     /// Build a new pending recording from an analysis context.
@@ -140,7 +142,8 @@ extension ECGRecording {
         qtInterval: String?,
         qtCorrected: String?,
         fileSize: Int,
-        appVersion: String?
+        appVersion: String?,
+        username: String? = nil
     ) -> ECGRecording {
         ECGRecording(
             id:             UUID().uuidString,
@@ -161,7 +164,8 @@ extension ECGRecording {
             qrsDuration:    qrsDuration,
             qtInterval:     qtInterval,
             qtCorrected:    qtCorrected,
-            appVersion:     appVersion
+            appVersion:     appVersion,
+            username:       username
         )
     }
 }
@@ -216,7 +220,8 @@ extension ECGRecording {
                     qrsDuration:    "90",
                     qtInterval:     "400",
                     qtCorrected:    "420",
-                    appVersion:     "1.0"
+                    appVersion:     "1.0",
+                    username:       "dr.demo"
                 ))
                 id += 1
             }

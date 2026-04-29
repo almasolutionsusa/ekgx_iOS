@@ -61,6 +61,9 @@ final class PatientListViewModel {
     var orderPendingCancel: PatientOrder? = nil
     var isCancelling: Bool = false
 
+    // Device not connected alert
+    var showDeviceAlert: Bool = false
+
     // MARK: - Computed
 
     var filteredOrders: [PatientOrder] {
@@ -83,12 +86,14 @@ final class PatientListViewModel {
     private let patientsService: PatientsService
     private let appInfoService: AppInfoService
     private let router: AppRouter
+    private let diContainer: AppDIContainer
 
-    init(ordersService: OrdersService, patientsService: PatientsService, appInfoService: AppInfoService, router: AppRouter) {
+    init(ordersService: OrdersService, patientsService: PatientsService, appInfoService: AppInfoService, router: AppRouter, diContainer: AppDIContainer) {
         self.ordersService   = ordersService
         self.patientsService = patientsService
         self.appInfoService  = appInfoService
         self.router          = router
+        self.diContainer     = diContainer
     }
 
     // MARK: - Load Orders
@@ -121,6 +126,44 @@ final class PatientListViewModel {
     func navigateBack() {
         router.navigate(to: .dashboard)
     }
+
+    // MARK: - Start recording from waiting list
+
+    func startRecording(for order: PatientOrder) {
+        guard diContainer.deviceService.currentState == .connected else {
+            showDeviceAlert = true
+            return
+        }
+        let patient = Patient(
+            id: order.patientId.map { Int($0) },
+            patientId: order.patientUuid,
+            uniqueId: order.patientUuid,
+            firstName: order.patientFirstName ?? "",
+            lastName: order.patientLastName ?? "",
+            birthDate: order.patientDob ?? "",
+            gender: "Unknown",
+            medicalRecordNumber: order.patientMrn,
+            hasPhoto: nil
+        )
+        diContainer.lastRecordingPatient = patient
+        diContainer.lastRecordingExistingId = nil
+        diContainer.recordingSessionStartedAt = Date()
+        activeOrderId = order.id
+        router.recordingReturnRoute = .patientList
+        router.navigate(to: .ecgRecording(patientId: order.patientUuid ?? ""))
+    }
+
+    // MARK: - Complete active order after recording
+
+    /// Called when the user returns from analysis — cancels the order via API and removes it locally.
+    func clearActiveOrder() {
+        guard let oid = activeOrderId else { return }
+        activeOrderId = nil
+        orders.removeAll { $0.id == oid }
+        Task { await performCancelOrder(id: oid) }
+    }
+
+    private(set) var activeOrderId: Int64? = nil
 
     // MARK: - Open Add Order Sheet
 

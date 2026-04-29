@@ -20,14 +20,23 @@ final class CloudViewModel {
     var recordings: [ECGRecording] = []
     var isLoadingRecordings: Bool = false
 
+    // MARK: - Upload state (per recording)
+
+    var uploadingIds: Set<String> = []
+    var uploadResultId: String? = nil
+    var uploadResultSuccess: Bool = false
+    var uploadResultMessage: String? = nil
+
     // MARK: - Dependencies
 
     private let router: AppRouter
     private let recordingStore: LocalRecordingStore
+    private let diContainer: AppDIContainer
 
-    init(router: AppRouter, recordingStore: LocalRecordingStore) {
+    init(router: AppRouter, recordingStore: LocalRecordingStore, diContainer: AppDIContainer) {
         self.router = router
         self.recordingStore = recordingStore
+        self.diContainer = diContainer
     }
 
     // MARK: - Computed
@@ -48,7 +57,6 @@ final class CloudViewModel {
         // Build patient list from locally stored recordings
         let allRecordings = recordingStore.allRecordings()
         if !allRecordings.isEmpty {
-            // Derive unique patients from recording snapshots
             var seen = Set<String>()
             patients = allRecordings.compactMap { rec -> Patient? in
                 guard seen.insert(rec.patientId).inserted else { return nil }
@@ -65,6 +73,10 @@ final class CloudViewModel {
                 )
             }
         }
+        // Re-fetch recordings so status changes (e.g. pending → synced) are reflected.
+        if let patient = selectedPatient {
+            loadRecordings(for: patient)
+        }
     }
 
     func selectPatient(_ patient: Patient) {
@@ -78,6 +90,102 @@ final class CloudViewModel {
 
     func navigateBack() {
         router.navigate(to: .dashboard)
+    }
+
+    // MARK: - Open recording in Analysis view
+
+    func openRecording(_ recording: ECGRecording) {
+        let rawData = recordingStore.ecgFileData(for: recording.id)
+        let leads: ECGLeads
+        if let raw = rawData, !raw.isEmpty {
+            leads = EKGUploadService.deserialise(data: raw, leadCount: recording.leadCount)
+        } else {
+            leads = []
+        }
+        diContainer.lastRecordingPatient = Patient(
+            id: nil,
+            patientId: recording.patientId,
+            uniqueId: recording.patientId,
+            firstName: recording.patientName.components(separatedBy: " ").first ?? recording.patientName,
+            lastName: recording.patientName.components(separatedBy: " ").dropFirst().joined(separator: " "),
+            birthDate: recording.patientDob,
+            gender: recording.patientGender,
+            medicalRecordNumber: recording.patientMrn,
+            hasPhoto: nil
+        )
+        diContainer.lastRecordingData = leads
+        diContainer.lastRecordingSampleRate = recording.sampleRate
+        diContainer.lastRecordingTotalDuration = nil
+        diContainer.lastRecordingExistingId = recording.id
+        router.analysisReturnRoute = .cloudReports
+        router.navigate(to: .ecgAnalysis(recordingId: recording.id))
+    }
+
+    // MARK: - Upload pending / failed recording
+
+    func uploadRecording(_ recording: ECGRecording) {
+        guard recording.status != .synced,
+              !uploadingIds.contains(recording.id) else { return }
+
+        uploadingIds.insert(recording.id)
+        uploadResultId = nil
+
+        Task {
+            do {
+                let rawData  = recordingStore.ecgFileData(for: recording.id)
+                let appUuid  = diContainer.checkinService.appUuid
+
+                var payload  = EKGUploadPayload(
+                    patientUuid: recording.patientId,
+                    appUuid: appUuid
+                )
+                payload.heartRate    = recording.heartRate
+                payload.prInterval   = recording.prInterval
+                payload.qrsDuration  = recording.qrsDuration
+                payload.qtInterval   = recording.qtInterval
+                payload.qtCorrected  = recording.qtCorrected
+                payload.diagnosis    = recording.diagnosis
+                payload.duration     = String(recording.durationSeconds)
+                payload.appVersion   = recording.appVersion
+                payload.recordedAt   = recording.recordedAt
+                payload.fileData     = rawData
+
+                try await diContainer.ekgUploadService.upload(payload: payload)
+
+                recordingStore.updateStatus(id: recording.id, status: .synced)
+                // refresh list
+                if let patient = selectedPatient {
+                    recordings = recordingStore.recordings(for: patient.patientId ?? patient.uniqueId ?? "")
+                }
+                uploadResultId = recording.id
+                uploadResultSuccess = true
+                uploadResultMessage = nil
+            } catch {
+                recordingStore.updateStatus(id: recording.id, status: .failed)
+                if let patient = selectedPatient {
+                    recordings = recordingStore.recordings(for: patient.patientId ?? patient.uniqueId ?? "")
+                }
+                uploadResultId = recording.id
+                uploadResultSuccess = false
+                uploadResultMessage = (error as? LocalizedError)?.errorDescription
+            }
+            uploadingIds.remove(recording.id)
+        }
+    }
+
+    // MARK: - Delete recording
+
+    func deleteRecording(_ recording: ECGRecording) {
+        recordingStore.delete(id: recording.id)
+        recordings.removeAll { $0.id == recording.id }
+        // Remove patient from list if they have no more recordings
+        let pid = recording.patientId
+        if recordingStore.recordings(for: pid).isEmpty {
+            patients.removeAll { ($0.patientId ?? $0.uniqueId) == pid }
+            if selectedPatient?.patientId == pid {
+                selectedPatient = nil
+            }
+        }
     }
 
     // MARK: - Private

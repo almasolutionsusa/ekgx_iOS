@@ -160,7 +160,7 @@ private struct PatientPanel: View {
                         ForEach(viewModel.filteredPatients) { patient in
                             PatientRow(
                                 patient: patient,
-                                isSelected: viewModel.selectedPatient?.id == patient.id
+                                isSelected: viewModel.selectedPatient?.patientId == patient.patientId
                             ) {
                                 viewModel.selectPatient(patient)
                             }
@@ -361,7 +361,15 @@ private struct RecordingsPanel: View {
         ScrollView {
             LazyVStack(spacing: AppMetrics.spacing12) {
                 ForEach(viewModel.recordings) { recording in
-                    RecordingRow(recording: recording)
+                    RecordingRow(
+                        recording: recording,
+                        isUploading: viewModel.uploadingIds.contains(recording.id),
+                        onTap: { viewModel.openRecording(recording) },
+                        onUpload: recording.status != .synced
+                            ? { viewModel.uploadRecording(recording) }
+                            : nil,
+                        onDelete: { viewModel.deleteRecording(recording) }
+                    )
                 }
             }
             .padding(.horizontal, AppMetrics.spacing32)
@@ -375,6 +383,10 @@ private struct RecordingsPanel: View {
 private struct RecordingRow: View {
 
     let recording: ECGRecording
+    let isUploading: Bool
+    let onTap: () -> Void
+    let onUpload: (() -> Void)?
+    let onDelete: () -> Void
 
     @State private var isPressed = false
 
@@ -387,9 +399,7 @@ private struct RecordingRow: View {
     }
 
     var body: some View {
-        Button {
-            // TODO: Navigate to ECG viewer
-        } label: {
+        Button(action: onTap) {
             HStack(spacing: AppMetrics.spacing20) {
 
                 // Left: ECG icon
@@ -433,31 +443,58 @@ private struct RecordingRow: View {
                     .foregroundStyle(AppColors.textSecondary)
                     .labelStyle(CompactLabelStyle())
 
-                    if let diagnosis = recording.diagnosis {
-                        Text(diagnosis)
-                            .font(AppTypography.caption)
-                            .foregroundStyle(AppColors.textSecondary.opacity(0.8))
-                            .lineLimit(1)
-                            .italic()
+                    HStack(spacing: AppMetrics.spacing16) {
+                        if let diagnosis = recording.diagnosis {
+                            Text(diagnosis)
+                                .font(AppTypography.caption)
+                                .foregroundStyle(AppColors.textSecondary.opacity(0.8))
+                                .lineLimit(1)
+                                .italic()
+                        }
+                        if let username = recording.username {
+                            Label(username, systemImage: "person")
+                                .font(AppTypography.caption)
+                                .foregroundStyle(AppColors.textSecondary)
+                                .labelStyle(CompactLabelStyle())
+                        }
                     }
                 }
 
                 Spacer()
 
-                // Right: file size + chevron
-                VStack(alignment: .trailing, spacing: AppMetrics.spacing6) {
-                    Text(recording.formattedFileSize)
-                        .font(AppTypography.captionBold)
-                        .foregroundStyle(AppColors.textSecondary)
-                    Text(recording.appVersion.map { "v\($0)" } ?? "")
-                        .font(AppTypography.caption)
-                        .foregroundStyle(AppColors.textSecondary.opacity(0.7))
-                        .lineLimit(1)
-                }
+                // Right: upload button (pending/failed) + file size + chevron
+                HStack(spacing: AppMetrics.spacing12) {
+                    if let onUpload {
+                        Button(action: onUpload) {
+                            if isUploading {
+                                ProgressView()
+                                    .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
+                                    .frame(width: 32, height: 32)
+                            } else {
+                                Image(systemName: "icloud.and.arrow.up")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundStyle(statusColor)
+                                    .frame(width: 32, height: 32)
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(isUploading)
+                    }
 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(AppColors.borderSubtle)
+                    VStack(alignment: .trailing, spacing: AppMetrics.spacing6) {
+                        Text(recording.formattedFileSize)
+                            .font(AppTypography.captionBold)
+                            .foregroundStyle(AppColors.textSecondary)
+                        Text(recording.appVersion.map { "v\($0)" } ?? "")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.textSecondary.opacity(0.7))
+                            .lineLimit(1)
+                    }
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundStyle(AppColors.borderSubtle)
+                }
             }
             .padding(.horizontal, AppMetrics.spacing24)
             .padding(.vertical, AppMetrics.spacing18)
@@ -477,6 +514,13 @@ private struct RecordingRow: View {
                 .onChanged { _ in isPressed = true }
                 .onEnded   { _ in isPressed = false }
         )
+        .contextMenu {
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Label("Delete Recording", systemImage: "trash")
+            }
+        }
     }
 }
 
@@ -541,9 +585,9 @@ private extension AppMetrics {
 }
 
 // MARK: - Preview
-
-#Preview {
-    let router = AppRouter()
-    CloudView(viewModel: CloudViewModel(router: router))
-        .environment(router)
-}
+//
+//#Preview {
+//    let router = AppRouter()
+//    CloudView(viewModel: CloudViewModel(router: router))
+//        .environment(router)
+//}

@@ -38,6 +38,10 @@ final class AppRouter {
     var navigationPath: NavigationPath = NavigationPath()
     /// Set to true by screens opened from the side menu so Back re-opens it.
     var reopenMenuOnBack: Bool = false
+    /// Route to return to when the user presses Back from Analysis. Defaults to .dashboard.
+    var analysisReturnRoute: AppRoute = .dashboard
+    /// Route to return to when the user exits the Recording screen. Defaults to .dashboard.
+    var recordingReturnRoute: AppRoute = .dashboard
 
     // MARK: - Navigation
 

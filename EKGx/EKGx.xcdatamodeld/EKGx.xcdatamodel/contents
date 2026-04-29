@@ -25,6 +25,7 @@
         <attribute name="ecgFileData"     optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="imageData"       optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
         <attribute name="appVersion"      optional="YES" attributeType="String"/>
+        <attribute name="username"        optional="YES" attributeType="String"/>
     </entity>
     <elements>
         <element name="Item" positionX="-63" positionY="-18" width="128" height="44"/>

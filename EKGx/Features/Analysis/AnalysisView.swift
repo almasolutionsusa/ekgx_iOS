@@ -476,23 +476,23 @@ private struct UploadStatusOverlay: View {
 
 // MARK: - Preview
 
-#Preview {
-    let router = AppRouter()
-    let patient = Patient.mockPatients[0]
-    let ecgData: ECGLeads = {
-        guard let path = Bundle.main.path(forResource: "ecg_demo", ofType: "plist"),
-              let raw = NSArray(contentsOfFile: path) as? [[NSNumber]] else { return [] }
-        return raw
-    }()
-    let checkin = AppCheckinService()
-    return AnalysisView(viewModel: AnalysisViewModel(
-        patient: patient,
-        ecgData: ecgData,
-        sampleRate: 660,
-        router: router,
-        uploadService: EKGUploadService(),
-        checkinService: checkin
-    ))
-
-    .environment(router)
-}
+//#Preview {
+//    let router = AppRouter()
+//    let patient = Patient.mockPatients[0]
+//    let ecgData: ECGLeads = {
+//        guard let path = Bundle.main.path(forResource: "ecg_demo", ofType: "plist"),
+//              let raw = NSArray(contentsOfFile: path) as? [[NSNumber]] else { return [] }
+//        return raw
+//    }()
+//    let checkin = AppCheckinService()
+//    return AnalysisView(viewModel: AnalysisViewModel(
+//        patient: patient,
+//        ecgData: ecgData,
+//        sampleRate: 660,
+//        router: router,
+//        uploadService: EKGUploadService(),
+//        checkinService: checkin
+//    ))
+//
+//    .environment(router)
+//}

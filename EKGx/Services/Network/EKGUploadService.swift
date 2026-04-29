@@ -128,7 +128,7 @@ final class EKGUploadService {
     }
 }
 
-// MARK: - ECGLeads → Binary Serialisation
+// MARK: - ECGLeads ↔ Binary Serialisation
 
 extension EKGUploadService {
     /// Serialise 12-lead ECG data as raw Int16 little-endian binary.
@@ -142,5 +142,26 @@ extension EKGUploadService {
             }
         }
         return data
+    }
+
+    /// Inverse of `serialise`.
+    /// serialise writes lead-by-lead: [lead0_s0, lead0_s1, ..., lead1_s0, lead1_s1, ..., lead11_sN]
+    static func deserialise(data: Data, leadCount: Int = 12) -> [[NSNumber]] {
+        guard leadCount > 0, data.count >= leadCount * 2 else { return [] }
+        let totalSamples = data.count / 2
+        let samplesPerLead = totalSamples / leadCount
+        guard samplesPerLead > 0 else { return [] }
+        var leads: [[NSNumber]] = Array(repeating: [], count: leadCount)
+        data.withUnsafeBytes { ptr in
+            let shorts = ptr.bindMemory(to: Int16.self)
+            for l in 0..<leadCount {
+                leads[l].reserveCapacity(samplesPerLead)
+                for s in 0..<samplesPerLead {
+                    let idx = l * samplesPerLead + s
+                    leads[l].append(NSNumber(value: Int(shorts[idx])))
+                }
+            }
+        }
+        return leads
     }
 }

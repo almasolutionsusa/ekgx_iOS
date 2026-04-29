@@ -61,12 +61,10 @@ struct RootView: View {
 
             case .patientList:
                 PatientListView(viewModel: diContainer.makePatientListViewModel(router: router))
-                    .id(AppRoute.patientList)
                     .transition(.push(from: .trailing))
 
             case .cloudReports:
                 CloudView(viewModel: diContainer.makeCloudViewModel(router: router))
-                    .id(AppRoute.cloudReports)
                     .transition(.push(from: .trailing))
 
             case .settings:

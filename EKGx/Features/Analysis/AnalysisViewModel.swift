@@ -78,6 +78,7 @@ final class AnalysisViewModel {
     private let uploadService: EKGUploadService
     private let checkinService: AppCheckinService
     private let recordingStore: LocalRecordingStore
+    private let authService: AuthServiceProtocol
     /// The locally persisted recording created when analysis starts.
     private var localRecordingId: String? = nil
 
@@ -90,19 +91,23 @@ final class AnalysisViewModel {
         ecgData: ECGLeads,
         sampleRate: Int = 660,
         totalDuration: Int? = nil,
+        existingRecordingId: String? = nil,
         router: AppRouter,
         uploadService: EKGUploadService,
         checkinService: AppCheckinService,
-        recordingStore: LocalRecordingStore
+        recordingStore: LocalRecordingStore,
+        authService: AuthServiceProtocol
     ) {
-        self.patient         = patient
-        self.ecgData         = ecgData
-        self.sampleRate      = sampleRate
-        self.totalDuration   = totalDuration
-        self.router          = router
-        self.uploadService   = uploadService
-        self.checkinService  = checkinService
-        self.recordingStore  = recordingStore
+        self.patient           = patient
+        self.ecgData           = ecgData
+        self.sampleRate        = sampleRate
+        self.totalDuration     = totalDuration
+        self.localRecordingId  = existingRecordingId
+        self.router            = router
+        self.uploadService     = uploadService
+        self.checkinService    = checkinService
+        self.recordingStore    = recordingStore
+        self.authService       = authService
     }
 
     // MARK: - Analysis
@@ -250,7 +255,16 @@ final class AnalysisViewModel {
         )
         let renderer = ImageRenderer(content: view)
         renderer.scale = 2.0
-        return renderer.uiImage.flatMap { $0.jpegData(compressionQuality: 0.85) }
+        // Draw into an opaque context so CoreImage doesn't see an alpha channel —
+        // JPEG has no alpha; keeping it causes doubled memory and a CoreImage warning.
+        guard let uiImage = renderer.uiImage else { return nil }
+        let format = UIGraphicsImageRendererFormat()
+        format.opaque = true
+        format.scale = uiImage.scale
+        let opaque = UIGraphicsImageRenderer(size: uiImage.size, format: format).image { ctx in
+            uiImage.draw(at: .zero)
+        }
+        return opaque.jpegData(compressionQuality: 0.85)
     }
 
     private func saveLocalRecording() {
@@ -260,7 +274,7 @@ final class AnalysisViewModel {
         let image = renderECGImage()
         let recording = ECGRecording.makePending(
             patient:        patient,
-            durationSeconds: ecgData.first?.count.map { $0 / sampleRate } ?? 0,
+            durationSeconds: (ecgData.first?.count ?? 0) / max(sampleRate, 1),
             sampleRate:     sampleRate,
             diagnosis:      diagnosisLines.isEmpty ? nil : diagnosisLines.joined(separator: "; "),
             heartRate:      nilIfEmpty(m?.hr),
@@ -269,7 +283,8 @@ final class AnalysisViewModel {
             qtInterval:     nilIfEmpty(m?.qt),
             qtCorrected:    nilIfEmpty(m?.qTc),
             fileSize:       fileData.count,
-            appVersion:     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
+            appVersion:     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+            username:       authService.currentUser?.username
         )
         recordingStore.save(recording: recording, ecgFileData: fileData, imageData: image)
         localRecordingId = recording.id
@@ -283,11 +298,15 @@ final class AnalysisViewModel {
     // MARK: - Navigation
 
     func goBack() {
-        router.navigate(to: .dashboard)
+        let dest = router.analysisReturnRoute
+        router.analysisReturnRoute = .dashboard
+        router.navigate(to: dest)
     }
 
     func confirmReject() {
-        router.navigate(to: .dashboard)
+        let dest = router.analysisReturnRoute
+        router.analysisReturnRoute = .dashboard
+        router.navigate(to: dest)
     }
 
     // MARK: - Helpers

@@ -160,7 +160,9 @@ final class RecordingViewModel {
 
     func confirmExit() {
         resetRecording()
-        router.navigate(to: .dashboard)
+        let dest = router.recordingReturnRoute
+        router.recordingReturnRoute = .dashboard
+        router.navigate(to: dest)
     }
 
     func proceedToAnalysis() {
@@ -168,6 +170,7 @@ final class RecordingViewModel {
         diContainer.lastRecordingPatient = patient
         diContainer.lastRecordingData = ecgDataBuffer
         diContainer.lastRecordingSampleRate = deviceService.sampleRate
+        diContainer.lastRecordingExistingId = nil
         if let start = diContainer.recordingSessionStartedAt {
             diContainer.lastRecordingTotalDuration = Int(Date().timeIntervalSince(start))
         }

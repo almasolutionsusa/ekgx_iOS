@@ -116,13 +116,18 @@ final class AppDIContainer {
         HomeViewModel(router: router, diContainer: self)
     }
 
+    private var _patientListViewModel: PatientListViewModel?
     func makePatientListViewModel(router: AppRouter) -> PatientListViewModel {
-        PatientListViewModel(
+        if let existing = _patientListViewModel { return existing }
+        let vm = PatientListViewModel(
             ordersService: ordersService,
             patientsService: patientsService,
             appInfoService: appInfoService,
-            router: router
+            router: router,
+            diContainer: self
         )
+        _patientListViewModel = vm
+        return vm
     }
 
     func makePatientSelectionViewModel(router: AppRouter) -> PatientSelectionViewModel {
@@ -134,8 +139,12 @@ final class AppDIContainer {
         )
     }
 
+    private var _cloudViewModel: CloudViewModel?
     func makeCloudViewModel(router: AppRouter) -> CloudViewModel {
-        CloudViewModel(router: router, recordingStore: recordingStore)
+        if let existing = _cloudViewModel { return existing }
+        let vm = CloudViewModel(router: router, recordingStore: recordingStore, diContainer: self)
+        _cloudViewModel = vm
+        return vm
     }
 
     func makeSettingsViewModel(router: AppRouter) -> SettingsViewModel {
@@ -163,6 +172,8 @@ final class AppDIContainer {
     var recordingSessionStartedAt: Date? = nil
     /// Seconds from patient confirmation to analysis view. Nil if timer wasn't started.
     var lastRecordingTotalDuration: Int? = nil
+    /// Set when reopening an existing recording from Cloud — prevents duplicate local save.
+    var lastRecordingExistingId: String? = nil
 
     func clearRecordingSession() {
         lastRecordingPatient = nil
@@ -170,6 +181,7 @@ final class AppDIContainer {
         lastRecordingSampleRate = 660
         recordingSessionStartedAt = nil
         lastRecordingTotalDuration = nil
+        lastRecordingExistingId = nil
     }
 
     func makeAnalysisViewModel(router: AppRouter) -> AnalysisViewModel {
@@ -178,10 +190,12 @@ final class AppDIContainer {
             ecgData: lastRecordingData,
             sampleRate: lastRecordingSampleRate,
             totalDuration: lastRecordingTotalDuration,
+            existingRecordingId: lastRecordingExistingId,
             router: router,
             uploadService: ekgUploadService,
             checkinService: checkinService,
-            recordingStore: recordingStore
+            recordingStore: recordingStore,
+            authService: authService
         )
     }
 }
