@@ -494,8 +494,8 @@ private struct SecurityActionsSection: View {
             SecurityActionButton(
                 icon: "lock.circle.fill",
                 iconColor: AppColors.brandPrimary,
-                title: L10n.Account.Security.setPinTitle,
-                subtitle: L10n.Account.Security.setPinSubtitle,
+                title: (viewModel.hasPin == true) ? L10n.Account.Security.changePinTitle : L10n.Account.Security.setPinTitle,
+                subtitle: (viewModel.hasPin == true) ? L10n.Account.Security.changePinSubtitle : L10n.Account.Security.setPinSubtitle,
                 action: { viewModel.openSetPin() }
             )
 
@@ -631,7 +631,7 @@ private struct SetPinSheet: View {
     @Bindable var viewModel: MyAccountViewModel
     @FocusState private var focusedField: PinField?
 
-    enum PinField { case pin, confirm }
+    enum PinField { case old, pin, confirm }
 
     var body: some View {
         ZStack {
@@ -641,10 +641,10 @@ private struct SetPinSheet: View {
 
                 HStack {
                     VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
-                        Text(L10n.Account.Pin.sheetTitle)
+                        Text(viewModel.hasPin == true ? L10n.Account.Pin.changeSheetTitle : L10n.Account.Pin.sheetTitle)
                             .font(AppTypography.title2)
                             .foregroundStyle(AppColors.textPrimary)
-                        Text(L10n.Account.Pin.sheetSubtitle)
+                        Text(viewModel.hasPin == true ? L10n.Account.Pin.changeSheetSubtitle : L10n.Account.Pin.sheetSubtitle)
                             .font(AppTypography.callout)
                             .foregroundStyle(AppColors.textSecondary)
                     }
@@ -682,6 +682,15 @@ private struct SetPinSheet: View {
                     .padding(.top, AppMetrics.spacing8)
 
                     VStack(spacing: AppMetrics.spacing12) {
+                        if viewModel.hasPin == true {
+                            PinInputField(
+                                label: L10n.Account.Pin.fieldCurrent,
+                                placeholder: L10n.Account.Pin.fieldCurrentPH,
+                                text: $viewModel.pinOld,
+                                focusedField: $focusedField,
+                                fieldTag: .old
+                            )
+                        }
                         PinInputField(
                             label: L10n.Account.Pin.fieldNew,
                             placeholder: L10n.Account.Pin.fieldNewPH,
@@ -712,7 +721,7 @@ private struct SetPinSheet: View {
 
                     HStack(spacing: AppMetrics.spacing12) {
                         SecondaryButton(title: L10n.Common.cancel) { viewModel.cancelPin() }
-                        PrimaryButton(title: L10n.Account.Pin.submitButton, isLoading: viewModel.isSubmittingPin) { viewModel.submitPin() }
+                        PrimaryButton(title: viewModel.hasPin == true ? L10n.Account.Pin.changeSubmitButton : L10n.Account.Pin.submitButton, isLoading: viewModel.isSubmittingPin) { viewModel.submitPin() }
                     }
                 }
                 .padding(.horizontal, AppMetrics.spacing40)
@@ -723,7 +732,7 @@ private struct SetPinSheet: View {
                 Spacer()
             }
         }
-        .onAppear { focusedField = .pin }
+        .onAppear { focusedField = viewModel.hasPin == true ? .old : .pin }
     }
 }
 

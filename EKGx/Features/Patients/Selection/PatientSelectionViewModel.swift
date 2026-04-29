@@ -188,8 +188,8 @@ final class PatientSelectionViewModel {
 
     func confirm() {
         guard let patient = selected else { return }
-        // Stash into DI container so RecordingViewModel can pick it up
         diContainer.lastRecordingPatient = patient.toPatient()
+        diContainer.recordingSessionStartedAt = Date()
         router.navigate(to: .ecgRecording(patientId: patient.id))
     }
 

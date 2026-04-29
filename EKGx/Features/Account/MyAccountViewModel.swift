@@ -48,6 +48,7 @@ final class MyAccountViewModel {
 
     // MARK: - PIN state
 
+    var pinOld: String          = ""
     var pinInput: String        = ""
     var pinConfirm: String      = ""
     var pinError: String?       = nil
@@ -152,6 +153,7 @@ final class MyAccountViewModel {
     // MARK: - PIN
 
     func openSetPin() {
+        pinOld     = ""
         pinInput   = ""
         pinConfirm = ""
         pinError   = nil
@@ -159,6 +161,12 @@ final class MyAccountViewModel {
     }
 
     func submitPin() {
+        if hasPin == true {
+            guard pinOld.count == 6, pinOld.allSatisfy(\.isNumber) else {
+                pinError = L10n.Account.Pin.errorDigits
+                return
+            }
+        }
         guard pinInput.count == 6, pinInput.allSatisfy(\.isNumber) else {
             pinError = L10n.Account.Pin.errorDigits
             return
@@ -175,14 +183,20 @@ final class MyAccountViewModel {
         pinError = nil
         defer { isSubmittingPin = false }
 
-        let appUuid = UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? ""
         do {
-            try await authService.setupPin(pin: pinInput, appUuid: appUuid)
+            if hasPin == true {
+                let userId     = authService.loginData?.user.id ?? 0
+                let facilityId = authService.loginData?.facilityId ?? 0
+                try await authService.changePin(userId: userId, facilityId: facilityId, oldPin: pinOld, newPin: pinInput)
+            } else {
+                let appUuid = UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? ""
+                try await authService.setupPin(pin: pinInput, appUuid: appUuid)
+            }
             showSetPinSheet = false
+            pinOld     = ""
             pinInput   = ""
             pinConfirm = ""
             pinError   = nil
-            // Refresh PIN status so the My Account screen reflects the new PIN.
             await loadPinStatus()
         } catch let error as AuthError {
             pinError = error.errorDescription
@@ -193,6 +207,7 @@ final class MyAccountViewModel {
 
     func cancelPin() {
         showSetPinSheet = false
+        pinOld     = ""
         pinInput   = ""
         pinConfirm = ""
         pinError   = nil

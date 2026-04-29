@@ -182,34 +182,17 @@ private struct HomeNavigationBar: View {
 
     private var userChip: some View {
         Button(action: { viewModel.confirmLogout() }) {
-            HStack(spacing: AppMetrics.spacing10) {
-                VStack(alignment: .trailing, spacing: AppMetrics.spacing2) {
-                    Text(viewModel.currentUserFullName)
-                        .font(AppTypography.bodyMedium)
-                        .foregroundStyle(AppColors.textPrimary)
-                    Text(viewModel.userRoleDisplayName)
-                        .font(AppTypography.captionBold)
-                        .foregroundStyle(AppColors.brandPrimary)
-                }
-                ZStack(alignment: .bottomTrailing) {
-                    Circle()
-                        .fill(AppColors.brandPrimary)
-                        .frame(width: 40, height: 40)
-                    Text(viewModel.userInitials)
-                        .font(AppTypography.bodySemibold)
-                        .foregroundStyle(.white)
-
-                    Circle()
-                        .fill(AppColors.surfaceCard)
-                        .frame(width: 16, height: 16)
-                        .overlay(
-                            Image(systemName: "power")
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundStyle(AppColors.statusCritical)
-                        )
-                        .offset(x: 2, y: 2)
-                }
+            HStack(spacing: AppMetrics.spacing8) {
+                Image(systemName: "power")
+                    .font(.system(size: 15, weight: .semibold))
+                Text(L10n.Menu.logout)
+                    .font(AppTypography.callout)
             }
+            .foregroundStyle(AppColors.statusCritical)
+            .padding(.horizontal, AppMetrics.spacing16)
+            .padding(.vertical, AppMetrics.spacing8)
+            .background(AppColors.statusCritical.opacity(0.08))
+            .cornerRadius(AppMetrics.radiusMedium)
         }
         .buttonStyle(.plain)
     }

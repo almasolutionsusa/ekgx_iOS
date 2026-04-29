@@ -398,6 +398,8 @@
 "account.security.sectionSubtitle"   = "Manage your PIN and account password.";
 "account.security.setPinTitle"       = "Set PIN Code";
 "account.security.setPinSubtitle"    = "6-digit PIN for quick app access.";
+"account.security.changePinTitle"    = "Change PIN Code";
+"account.security.changePinSubtitle" = "Update your 6-digit PIN.";
 "account.security.changePassTitle"   = "Change Password";
 "account.security.changePassSubtitle" = "Update your account password.";
 
@@ -415,11 +417,16 @@
 // MARK: - My Account · Set PIN Sheet
 "account.pin.sheetTitle"             = "Set PIN Code";
 "account.pin.sheetSubtitle"          = "Create a 6-digit PIN for quick, secure app access.";
+"account.pin.changeSheetTitle"       = "Change PIN Code";
+"account.pin.changeSheetSubtitle"    = "Enter your current PIN, then set a new one.";
+"account.pin.fieldCurrent"           = "Current PIN";
+"account.pin.fieldCurrentPH"         = "Enter current 6-digit PIN";
 "account.pin.fieldNew"               = "New PIN";
 "account.pin.fieldNewPH"             = "Enter 6-digit PIN";
 "account.pin.fieldConfirm"           = "Confirm PIN";
 "account.pin.fieldConfirmPH"         = "Re-enter 6-digit PIN";
 "account.pin.submitButton"           = "Set PIN";
+"account.pin.changeSubmitButton"     = "Change PIN";
 "account.pin.errorDigits"            = "PIN must be exactly 6 digits.";
 "account.pin.errorMismatch"          = "PINs do not match. Please try again.";
 

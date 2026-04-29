@@ -80,10 +80,13 @@ final class AnalysisViewModel {
 
     // MARK: - Init
 
+    let totalDuration: Int?
+
     init(
         patient: Patient,
         ecgData: ECGLeads,
         sampleRate: Int = 660,
+        totalDuration: Int? = nil,
         router: AppRouter,
         uploadService: EKGUploadService,
         checkinService: AppCheckinService
@@ -91,6 +94,7 @@ final class AnalysisViewModel {
         self.patient        = patient
         self.ecgData        = ecgData
         self.sampleRate     = sampleRate
+        self.totalDuration  = totalDuration
         self.router         = router
         self.uploadService  = uploadService
         self.checkinService = checkinService
@@ -166,7 +170,8 @@ final class AnalysisViewModel {
                 payload.sv1         = nilIfEmpty(m?.sv1)
                 payload.sv5         = nilIfEmpty(m?.sv5)
                 payload.diagnosis   = diagnosisLines.isEmpty ? nil : diagnosisLines.joined(separator: "; ")
-                payload.duration    = String(ecgData.first?.count ?? 0)
+                payload.duration      = String(ecgData.first?.count ?? 0)
+                payload.totalDuration = totalDuration.map { String($0) }
                 payload.recordedAt  = Date()
                 payload.appVersion  = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
                 payload.fileData    = fileData
@@ -192,7 +197,8 @@ final class AnalysisViewModel {
                 print("  sv1         : \(payload.sv1 ?? "nil")")
                 print("  sv5         : \(payload.sv5 ?? "nil")")
                 print("  diagnosis   : \(payload.diagnosis ?? "nil")")
-                print("  duration    : \(payload.duration ?? "nil")")
+                print("  duration      : \(payload.duration ?? "nil")")
+                print("  totalDuration : \(payload.totalDuration ?? "nil")")
                 print("  appVersion  : \(payload.appVersion ?? "nil")")
                 print("  recordedAt  : \(payload.recordedAt?.description ?? "nil")")
                 print("  fileData    : \(payload.fileData?.count ?? 0) bytes")

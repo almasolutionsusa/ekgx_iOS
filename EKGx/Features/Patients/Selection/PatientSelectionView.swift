@@ -48,6 +48,7 @@ struct PatientSelectionView: View {
 
                     PatientResultsPanel(viewModel: viewModel)
                         .frame(maxWidth: .infinity)
+                        .onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
                 }
             }
         }
@@ -115,8 +116,10 @@ private struct PatientSearchForm: View {
                     .foregroundStyle(AppColors.textPrimary)
                     .padding(.top, AppMetrics.spacing24)
 
-                // Name + DOB group
+                // DOB + Name group
                 VStack(spacing: AppMetrics.spacing14) {
+                    DOBField(viewModel: viewModel)
+
                     ETextField(
                         label: L10n.PatientSelection.Search.firstName,
                         placeholder: L10n.PatientSelection.Search.firstName,
@@ -139,8 +142,6 @@ private struct PatientSearchForm: View {
                         autocapitalization: .words
                     )
                     .focused($focused, equals: .lastName)
-
-                    DOBField(viewModel: viewModel)
                 }
 
                 // OR Divider
@@ -163,46 +164,52 @@ private struct PatientSearchForm: View {
                 .focused($focused, equals: .mrn)
                 .onSubmit { focused = nil; viewModel.search() }
 
-                // Buttons
-                HStack(spacing: AppMetrics.spacing12) {
-                    Button(action: {
-                        focused = nil
-                        viewModel.search()
-                    }) {
-                        HStack(spacing: AppMetrics.spacing8) {
-                            if viewModel.isSearching {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .scaleEffect(0.9)
-                            } else {
-                                Image(systemName: "magnifyingglass")
-                                    .font(.system(size: 15, weight: .semibold))
-                            }
-                            Text(L10n.PatientSelection.Search.button)
-                                .font(AppTypography.bodyMedium)
-                        }
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: AppMetrics.buttonHeight)
-                        .background(AppColors.brandPrimary)
-                        .cornerRadius(AppMetrics.radiusMedium)
-                    }
-                    .disabled(viewModel.isSearching)
-
-                    Button(action: { viewModel.clearSearch() }) {
-                        Text(L10n.PatientSelection.Search.clearButton)
-                            .font(AppTypography.bodyMedium)
-                            .foregroundStyle(AppColors.textPrimary)
-                            .padding(.horizontal, AppMetrics.spacing20)
-                            .frame(height: AppMetrics.buttonHeight)
-                            .background(AppColors.borderSubtle.opacity(0.5))
-                            .cornerRadius(AppMetrics.radiusMedium)
-                    }
-                }
-
                 Spacer(minLength: AppMetrics.spacing20)
             }
             .padding(.horizontal, AppMetrics.spacing28)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .onTapGesture { focused = nil }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            // Buttons pinned above keyboard at all times
+            HStack(spacing: AppMetrics.spacing12) {
+                Button(action: {
+                    focused = nil
+                    viewModel.search()
+                }) {
+                    HStack(spacing: AppMetrics.spacing8) {
+                        if viewModel.isSearching {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.9)
+                        } else {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        Text(L10n.PatientSelection.Search.button)
+                            .font(AppTypography.bodyMedium)
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: AppMetrics.buttonHeight)
+                    .background(AppColors.brandPrimary)
+                    .cornerRadius(AppMetrics.radiusMedium)
+                }
+                .disabled(viewModel.isSearching)
+
+                Button(action: { viewModel.clearSearch() }) {
+                    Text(L10n.PatientSelection.Search.clearButton)
+                        .font(AppTypography.bodyMedium)
+                        .foregroundStyle(AppColors.textPrimary)
+                        .padding(.horizontal, AppMetrics.spacing20)
+                        .frame(height: AppMetrics.buttonHeight)
+                        .background(AppColors.borderSubtle.opacity(0.5))
+                        .cornerRadius(AppMetrics.radiusMedium)
+                }
+            }
+            .padding(.horizontal, AppMetrics.spacing28)
+            .padding(.vertical, AppMetrics.spacing12)
+            .background(AppColors.surfaceBackground)
         }
     }
 }

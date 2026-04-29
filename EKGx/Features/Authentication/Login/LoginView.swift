@@ -34,6 +34,7 @@ struct LoginView: View {
         }
         .ignoresSafeArea()
         .background(AppColors.surfaceBackground)
+        .onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
         .task {
             // Poll until appInfoService has data (checkin + getInfo run at app launch)
             for _ in 0..<20 {

@@ -616,6 +616,8 @@ enum L10n {
             static let sectionSubtitle   = "account.security.sectionSubtitle".localized
             static let setPinTitle       = "account.security.setPinTitle".localized
             static let setPinSubtitle    = "account.security.setPinSubtitle".localized
+            static let changePinTitle    = "account.security.changePinTitle".localized
+            static let changePinSubtitle = "account.security.changePinSubtitle".localized
             static let changePassTitle   = "account.security.changePassTitle".localized
             static let changePassSubtitle = "account.security.changePassSubtitle".localized
         }
@@ -633,15 +635,20 @@ enum L10n {
         }
 
         enum Pin {
-            static let sheetTitle    = "account.pin.sheetTitle".localized
-            static let sheetSubtitle = "account.pin.sheetSubtitle".localized
-            static let fieldNew      = "account.pin.fieldNew".localized
-            static let fieldNewPH    = "account.pin.fieldNewPH".localized
-            static let fieldConfirm  = "account.pin.fieldConfirm".localized
-            static let fieldConfirmPH = "account.pin.fieldConfirmPH".localized
-            static let submitButton  = "account.pin.submitButton".localized
-            static let errorDigits   = "account.pin.errorDigits".localized
-            static let errorMismatch = "account.pin.errorMismatch".localized
+            static let sheetTitle         = "account.pin.sheetTitle".localized
+            static let sheetSubtitle      = "account.pin.sheetSubtitle".localized
+            static let changeSheetTitle   = "account.pin.changeSheetTitle".localized
+            static let changeSheetSubtitle = "account.pin.changeSheetSubtitle".localized
+            static let fieldCurrent       = "account.pin.fieldCurrent".localized
+            static let fieldCurrentPH     = "account.pin.fieldCurrentPH".localized
+            static let fieldNew           = "account.pin.fieldNew".localized
+            static let fieldNewPH         = "account.pin.fieldNewPH".localized
+            static let fieldConfirm       = "account.pin.fieldConfirm".localized
+            static let fieldConfirmPH     = "account.pin.fieldConfirmPH".localized
+            static let submitButton       = "account.pin.submitButton".localized
+            static let changeSubmitButton = "account.pin.changeSubmitButton".localized
+            static let errorDigits        = "account.pin.errorDigits".localized
+            static let errorMismatch      = "account.pin.errorMismatch".localized
         }
 
         enum Password {

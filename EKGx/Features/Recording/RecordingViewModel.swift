@@ -168,6 +168,9 @@ final class RecordingViewModel {
         diContainer.lastRecordingPatient = patient
         diContainer.lastRecordingData = ecgDataBuffer
         diContainer.lastRecordingSampleRate = deviceService.sampleRate
+        if let start = diContainer.recordingSessionStartedAt {
+            diContainer.lastRecordingTotalDuration = Int(Date().timeIntervalSince(start))
+        }
         router.navigate(to: .ecgAnalysis(recordingId: ""))
     }
 

@@ -40,6 +40,7 @@ struct EKGUploadPayload {
     var sv5: String?
     var diagnosis: String?
     var duration: String?
+    var totalDuration: String?
     var appVersion: String?
     var recordedAt: Date?
 
@@ -117,8 +118,9 @@ final class EKGUploadService {
         if let v = p.rv1          { q["rV1"]          = v }
         if let v = p.sv5          { q["sV5"]          = v }
         if let v = p.diagnosis    { q["diagnosis"]    = v }
-        if let v = p.duration     { q["duration"]     = v }
-        if let v = p.appVersion   { q["appVersion"]   = v }
+        if let v = p.duration      { q["duration"]      = v }
+        if let v = p.totalDuration { q["totalDuration"] = v }
+        if let v = p.appVersion    { q["appVersion"]    = v }
         if let date = p.recordedAt {
             q["recordedAt"] = ISO8601DateFormatter().string(from: date)
         }

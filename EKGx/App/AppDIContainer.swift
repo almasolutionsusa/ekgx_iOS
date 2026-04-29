@@ -157,11 +157,17 @@ final class AppDIContainer {
     var lastRecordingPatient: Patient?
     var lastRecordingData: ECGLeads = []
     var lastRecordingSampleRate: Int = 660
+    /// Stamped when the user confirms a patient — used to compute totalDuration on upload.
+    var recordingSessionStartedAt: Date? = nil
+    /// Seconds from patient confirmation to analysis view. Nil if timer wasn't started.
+    var lastRecordingTotalDuration: Int? = nil
 
     func clearRecordingSession() {
         lastRecordingPatient = nil
         lastRecordingData = []
         lastRecordingSampleRate = 660
+        recordingSessionStartedAt = nil
+        lastRecordingTotalDuration = nil
     }
 
     func makeAnalysisViewModel(router: AppRouter) -> AnalysisViewModel {
@@ -169,6 +175,7 @@ final class AppDIContainer {
             patient: lastRecordingPatient ?? Patient.mockPatients[0],
             ecgData: lastRecordingData,
             sampleRate: lastRecordingSampleRate,
+            totalDuration: lastRecordingTotalDuration,
             router: router,
             uploadService: ekgUploadService,
             checkinService: checkinService
