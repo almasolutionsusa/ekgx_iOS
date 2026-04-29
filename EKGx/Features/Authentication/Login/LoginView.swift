@@ -22,8 +22,11 @@ struct LoginView: View {
     var body: some View {
         GeometryReader { geometry in
             HStack(spacing: 0) {
-                LoginBrandingPanel()
-                    .frame(width: geometry.size.width * AppMetrics.sidebarWidthRatio)
+                LoginBrandingPanel(
+                    organizationName: viewModel.organizationName,
+                    facilityName: viewModel.facilityName
+                )
+                .frame(width: geometry.size.width * AppMetrics.sidebarWidthRatio)
 
                 LoginFormPanel(viewModel: viewModel)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -31,6 +34,14 @@ struct LoginView: View {
         }
         .ignoresSafeArea()
         .background(AppColors.surfaceBackground)
+        .task {
+            // Poll until appInfoService has data (checkin + getInfo run at app launch)
+            for _ in 0..<20 {
+                viewModel.refreshFacilityInfo()
+                if viewModel.facilityName != nil { break }
+                try? await Task.sleep(for: .milliseconds(300))
+            }
+        }
         .overlay {
             if viewModel.isLoading {
                 LoadingOverlay()
@@ -50,6 +61,9 @@ struct LoginView: View {
 // MARK: - Branding Panel (Left)
 
 private struct LoginBrandingPanel: View {
+
+    let organizationName: String?
+    let facilityName: String?
 
     @State private var pulseAnimation = false
 
@@ -100,6 +114,17 @@ private struct LoginBrandingPanel: View {
 
                 Spacer()
 
+                // Facility / org badge — between badge and powered-by
+                if organizationName != nil || facilityName != nil {
+                    FacilityBadge(
+                        organizationName: organizationName,
+                        facilityName: facilityName
+                    )
+                    .padding(.bottom, AppMetrics.spacing20)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+                    .animation(.easeOut(duration: 0.4), value: facilityName)
+                }
+
                 // Animated ECG pulse indicator
                 HStack(spacing: AppMetrics.spacing8) {
                     Circle()
@@ -121,6 +146,43 @@ private struct LoginBrandingPanel: View {
             .padding(.horizontal, AppMetrics.spacing40)
         }
         .onAppear { pulseAnimation = true }
+    }
+}
+
+// MARK: - Facility Badge
+
+private struct FacilityBadge: View {
+
+    let organizationName: String?
+    let facilityName: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let org = organizationName {
+                HStack(spacing: AppMetrics.spacing8) {
+                    Image(systemName: "building.2.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(AppColors.brandPrimary.opacity(0.8))
+                    Text(org)
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(AppColors.textOnDark.opacity(0.55))
+                        .lineLimit(1)
+                }
+                .padding(.bottom, AppMetrics.spacing6)
+            }
+
+            if let facility = facilityName {
+                HStack(spacing: AppMetrics.spacing8) {
+                    Image(systemName: "cross.case.fill")
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundStyle(AppColors.ecgWaveform.opacity(0.9))
+                    Text(facility)
+                        .font(AppTypography.bodyMedium)
+                        .foregroundStyle(AppColors.textOnDark.opacity(0.9))
+                        .lineLimit(1)
+                }
+            }
+        }
     }
 }
 

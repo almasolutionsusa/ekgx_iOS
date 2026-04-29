@@ -113,6 +113,11 @@ final class LoginViewModel {
     var emailError: String? = nil
     var passwordError: String? = nil
 
+    // MARK: - Facility / Org info (tracked vars so SwiftUI re-renders when data arrives)
+
+    var facilityName: String?     = nil
+    var organizationName: String? = nil
+
     // MARK: - Dependencies
 
     private let authService: AuthServiceProtocol
@@ -125,6 +130,15 @@ final class LoginViewModel {
         self.authService  = authService
         self.diContainer  = diContainer
         self.router       = router
+        // Seed immediately if already cached (e.g. app relaunched)
+        self.facilityName     = diContainer.appInfoService.cached?.facilityName
+        self.organizationName = diContainer.appInfoService.cached?.organizationName
+    }
+
+    /// Call from LoginView .onAppear to pick up data once the async checkin/info calls complete.
+    func refreshFacilityInfo() {
+        facilityName     = diContainer.appInfoService.cached?.facilityName
+        organizationName = diContainer.appInfoService.cached?.organizationName
     }
 
     // MARK: - Actions
