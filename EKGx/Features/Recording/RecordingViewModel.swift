@@ -65,6 +65,13 @@ final class RecordingViewModel {
     var showDeviceDisconnected: Bool = false
     var isFiltersEnabled: Bool = true
 
+    // MARK: - Reconnect State
+
+    private(set) var isReconnecting: Bool = false
+    private(set) var reconnectAttempt: Int = 0
+    let maxReconnectAttempts = 5
+    private var reconnectTimer: Timer?
+
     // MARK: - Patient
 
     let patient: Patient
@@ -104,12 +111,16 @@ final class RecordingViewModel {
         setupDeviceCallbacks()
         deviceService.onConnectionStateChanged = { [weak self] state in
             guard let self else { return }
-            Task { @MainActor in
-                guard state == .disconnected else { return }
-                if self.recordingState == .recording {
+            DispatchQueue.main.async {
+                switch state {
+                case .connected where self.isReconnecting:
+                    self.handleReconnectSuccess()
+                case .disconnected where !self.isReconnecting:
                     self.stopTimers()
+                    self.startReconnectFlow()
+                default:
+                    break
                 }
-                self.showDeviceDisconnected = true
             }
         }
     }
@@ -148,7 +159,9 @@ final class RecordingViewModel {
     }
 
     func resetRecording() {
-        stopTimers()
+        stopTimers()          // also stops reconnectTimer
+        isReconnecting = false
+        reconnectAttempt = 0
         ecgDataBuffer = []
         latestECGFrame = []
         frameCount = 0
@@ -198,6 +211,10 @@ final class RecordingViewModel {
         deviceService.currentState == .connected
     }
 
+    var connectedDeviceName: String? {
+        deviceService.connectedDeviceName
+    }
+
     // MARK: - Private
 
     private func finishRecording() {
@@ -211,18 +228,72 @@ final class RecordingViewModel {
         countTimer = nil
         signalWatchdog?.invalidate()
         signalWatchdog = nil
+        reconnectTimer?.invalidate()
+        reconnectTimer = nil
     }
 
     private func resetWatchdog() {
         signalWatchdog?.invalidate()
         signalWatchdog = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] _ in
-            guard let self else { return }
-            Task { @MainActor in
-                guard self.recordingState == .recording else { return }
-                self.stopTimers()
-                self.showDeviceDisconnected = true
+            guard let self, self.recordingState == .recording, !self.isReconnecting else { return }
+            self.stopTimers()
+            self.startReconnectFlow()
+        }
+    }
+
+    // MARK: - Reconnect Flow
+    //
+    // Uses a Timer per attempt (not async/await + sleep) so there are no Swift
+    // Concurrency cancellation surprises. Each attempt gives the device 8 seconds
+    // to appear; if onConnectionStateChanged(.connected) fires sooner, success is
+    // handled immediately without waiting for the timer.
+
+    private func startReconnectFlow() {
+        guard !isReconnecting else { return }
+        isReconnecting = true
+        reconnectAttempt = 0
+        scheduleReconnectAttempt()
+    }
+
+    private func scheduleReconnectAttempt() {
+        reconnectAttempt += 1
+        deviceService.connect()
+        reconnectTimer?.invalidate()
+        reconnectTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: false) { [weak self] _ in
+            guard let self, self.isReconnecting else { return }
+            if self.deviceService.currentState == .connected {
+                self.handleReconnectSuccess()
+            } else if self.reconnectAttempt < self.maxReconnectAttempts {
+                self.scheduleReconnectAttempt()
+            } else {
+                self.handleReconnectFailure()
             }
         }
+    }
+
+    private func handleReconnectSuccess() {
+        reconnectTimer?.invalidate()
+        reconnectTimer = nil
+        isReconnecting = false
+        reconnectAttempt = 0
+        if recordingState == .recording {
+            countTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                guard let self else { return }
+                self.elapsedSeconds += 1
+                if self.selectedDuration != .continuous,
+                   self.elapsedSeconds >= self.selectedDuration.recordSeconds {
+                    self.finishRecording()
+                }
+            }
+        }
+    }
+
+    private func handleReconnectFailure() {
+        reconnectTimer?.invalidate()
+        reconnectTimer = nil
+        isReconnecting = false
+        reconnectAttempt = 0
+        showDeviceDisconnected = true
     }
 
     private func setupDeviceCallbacks() {

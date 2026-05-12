@@ -103,6 +103,10 @@ final class APIClient {
     /// Called on any 302 response — wired up by AppDIContainer to force logout.
     var onSessionExpired: (() -> Void)?
 
+    /// Called on every API error with the human-readable message.
+    /// Wire this to ErrorToastManager at app startup to get global error toasts.
+    var onError: ((String) -> Void)?
+
     /// Clears all session cookies (logout).
     func clearSession() {
         cookieStorage.cookies(for: baseURL)?.forEach { cookieStorage.deleteCookie($0) }
@@ -280,9 +284,18 @@ final class APIClient {
                 throw extractBackendError(from: data) ?? .unknown
             }
         } catch let error as APIError {
+            if let message = error.errorDescription {
+                let handler = onError
+                Task { @MainActor in handler?(message) }
+            }
             throw error
         } catch {
-            throw APIError.networkUnavailable
+            let err = APIError.networkUnavailable
+            if let message = err.errorDescription {
+                let handler = onError
+                Task { @MainActor in handler?(message) }
+            }
+            throw err
         }
     }
 

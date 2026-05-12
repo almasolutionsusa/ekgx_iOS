@@ -62,6 +62,13 @@ struct RecordingView: View {
                 )
             }
 
+            if viewModel.isReconnecting {
+                ReconnectingOverlay(
+                    attempt: viewModel.reconnectAttempt,
+                    maxAttempts: viewModel.maxReconnectAttempts
+                )
+            }
+
             if viewModel.showDeviceDisconnected {
                 DeviceDisconnectedOverlay(
                     onDismiss: {
@@ -282,6 +289,12 @@ private struct RecordingControlsPanel: View {
         VStack(spacing: AppMetrics.spacing12) {
             resetButton
             recordButton
+            if let name = viewModel.connectedDeviceName {
+                Label(name, systemImage: "antenna.radiowaves.left.and.right")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
         }
     }
 
@@ -403,6 +416,59 @@ private struct RecordingControlsPanel: View {
     }
 }
 
+// MARK: - Reconnecting Overlay
+
+private struct ReconnectingOverlay: View {
+
+    let attempt: Int
+    let maxAttempts: Int
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.65).ignoresSafeArea()
+
+            VStack(spacing: AppMetrics.spacing20) {
+                Image(systemName: "wifi.exclamationmark")
+                    .font(.system(size: 48))
+                    .foregroundStyle(AppColors.statusWarning)
+
+                ProgressView()
+                    .scaleEffect(1.4)
+                    .tint(AppColors.brandPrimary)
+
+                Text(L10n.Recording.Reconnecting.title)
+                    .font(AppTypography.title2)
+                    .foregroundStyle(AppColors.textPrimary)
+
+                Text(L10n.Recording.Reconnecting.subtitle)
+                    .font(AppTypography.callout)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+
+                if attempt > 0 {
+                    Text(L10n.Recording.Reconnecting.attempt(attempt, of: maxAttempts))
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(AppColors.textSecondary)
+
+                    HStack(spacing: AppMetrics.spacing8) {
+                        ForEach(1...maxAttempts, id: \.self) { i in
+                            Circle()
+                                .fill(i <= attempt ? AppColors.brandPrimary : AppColors.borderSubtle)
+                                .frame(width: 8, height: 8)
+                                .animation(.easeInOut(duration: 0.3), value: attempt)
+                        }
+                    }
+                }
+            }
+            .padding(AppMetrics.spacing24 + 4)
+            .background(AppColors.surfaceCard)
+            .cornerRadius(20)
+            .shadow(color: .black.opacity(0.25), radius: 24)
+            .padding(.horizontal, 60)
+        }
+    }
+}
+
 // MARK: - Device Disconnected Overlay
 
 private struct DeviceDisconnectedOverlay: View {
@@ -413,31 +479,31 @@ private struct DeviceDisconnectedOverlay: View {
         ZStack {
             Color.black.opacity(0.5).ignoresSafeArea()
 
-            VStack(spacing: 20) {
+            VStack(spacing: AppMetrics.spacing20) {
                 Image(systemName: "wifi.slash")
                     .font(.system(size: 44))
-                    .foregroundColor(AppColors.statusCritical)
+                    .foregroundStyle(AppColors.statusCritical)
 
                 Text(L10n.Recording.DeviceDisconnected.title)
                     .font(AppTypography.title2)
-                    .foregroundColor(.black)
+                    .foregroundStyle(AppColors.textPrimary)
 
                 Text(L10n.Recording.DeviceDisconnected.subtitle)
                     .font(AppTypography.callout)
-                    .foregroundColor(Color(UIColor.darkGray))
+                    .foregroundStyle(AppColors.textSecondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 8)
+                    .padding(.horizontal, AppMetrics.spacing8)
 
                 Button(L10n.Recording.DeviceDisconnected.button, action: onDismiss)
                     .font(AppTypography.bodyMedium)
-                    .foregroundColor(.white)
+                    .foregroundStyle(AppColors.textOnDark)
                     .padding(.horizontal, 32)
                     .padding(.vertical, 14)
                     .background(AppColors.brandPrimary)
                     .cornerRadius(AppMetrics.radiusMedium)
             }
             .padding(28)
-            .background(Color.white)
+            .background(AppColors.surfaceCard)
             .cornerRadius(16)
             .shadow(color: .black.opacity(0.2), radius: 20)
             .padding(.horizontal, 40)

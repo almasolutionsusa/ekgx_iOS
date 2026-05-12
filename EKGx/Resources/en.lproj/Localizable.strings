@@ -285,8 +285,11 @@
 "recording.controls.elapsed"         = "Elapsed";
 "recording.stats.bpm"                = "bpm";
 "recording.deviceDisconnected.title"   = "Device Disconnected";
-"recording.deviceDisconnected.subtitle" = "The ECG device lost connection. Please reconnect the device and try again.";
+"recording.deviceDisconnected.subtitle" = "The ECG device lost connection and could not be recovered. Please reconnect manually and try again.";
 "recording.deviceDisconnected.button"  = "Go to Dashboard";
+"recording.reconnecting.title"         = "Connection Lost";
+"recording.reconnecting.subtitle"      = "Attempting to reconnect to the ECG device…";
+"recording.reconnecting.attempt"       = "Attempt %d of %d";
 
 // MARK: - Analysis Result
 "analysis.nav.backButton"            = "Recording";

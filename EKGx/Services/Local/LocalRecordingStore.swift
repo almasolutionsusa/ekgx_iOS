@@ -111,6 +111,16 @@ final class LocalRecordingStore {
         persist()
     }
 
+    /// Status of a recording by ID, or nil if not found.
+    func status(for id: String) -> ECGRecording.RecordingStatus? {
+        let request: NSFetchRequest<ECGRecordingEntity> = ECGRecordingEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        guard let entity = try? context.fetch(request).first,
+              let raw = entity.status else { return nil }
+        return ECGRecording.RecordingStatus(rawValue: raw)
+    }
+
     /// Raw ECG binary for a given recording ID (may be nil if not stored).
     func ecgFileData(for id: String) -> Data? {
         let request: NSFetchRequest<ECGRecordingEntity> = ECGRecordingEntity.fetchRequest()
@@ -125,4 +135,5 @@ final class LocalRecordingStore {
         guard context.hasChanges else { return }
         try? context.save()
     }
+
 }

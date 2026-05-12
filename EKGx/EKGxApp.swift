@@ -47,6 +47,12 @@ struct EKGxApp: App {
                 .task {
                     // Wire global session expiry handler — any 302 forces logout + login redirect.
                     diContainer.configureSessionExpiry(router: router)
+                    // Wire global API error toast — every failed request auto-surfaces a message.
+                    // Session-expired errors are handled by configureSessionExpiry instead.
+                    APIClient.shared.onError = { [weak diContainer] message in
+                        guard message != L10n.Auth.Login.errorSessionExpired else { return }
+                        diContainer?.errorToast.show(message)
+                    }
                     // Fire-and-forget: registers the app install with the server.
                     // Failure is silently ignored — app works fully offline.
                     await diContainer.checkinService.checkin()

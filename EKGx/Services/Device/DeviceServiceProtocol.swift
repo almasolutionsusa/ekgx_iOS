@@ -16,6 +16,8 @@ protocol DeviceServiceProtocol: AnyObject {
     var onBattery: ((Int) -> Void)? { get set }
     var currentState: DeviceConnectionState { get }
     var sampleRate: Int { get }
+    /// Name of the currently connected device, nil if not connected.
+    var connectedDeviceName: String? { get }
 
     func connect()
     func disconnect()

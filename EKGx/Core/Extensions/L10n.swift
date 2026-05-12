@@ -401,6 +401,13 @@ enum L10n {
             static let subtitle = "recording.deviceDisconnected.subtitle".localized
             static let button   = "recording.deviceDisconnected.button".localized
         }
+        enum Reconnecting {
+            static let title    = "recording.reconnecting.title".localized
+            static let subtitle = "recording.reconnecting.subtitle".localized
+            static func attempt(_ n: Int, of max: Int) -> String {
+                String(format: "recording.reconnecting.attempt".localized, n, max)
+            }
+        }
     }
 
     // MARK: - Analysis Result

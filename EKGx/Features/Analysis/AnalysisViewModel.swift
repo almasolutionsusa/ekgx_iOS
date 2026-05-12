@@ -53,6 +53,12 @@ final class AnalysisViewModel {
     var uploadError: String? = nil
     var showUploadResult: Bool = false
 
+    /// True when the local recording is already synced — upload button should be disabled.
+    var isAlreadySynced: Bool {
+        guard let id = localRecordingId else { return false }
+        return recordingStore.status(for: id) == .synced
+    }
+
     // MARK: - Data
 
     let patient: Patient

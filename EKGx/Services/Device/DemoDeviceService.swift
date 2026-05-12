@@ -19,6 +19,7 @@ final class DemoDeviceService: DeviceServiceProtocol {
     var onLeadStatus: (([Bool]) -> Void)?
     var onBattery: ((Int) -> Void)?
     private(set) var currentState: DeviceConnectionState = .disconnected
+    let connectedDeviceName: String? = "EKG Demo Device"
 
     // Matches ecg.plist source device — 660 Hz, 25 samples per ~38ms tick
     let sampleRate: Int = 660

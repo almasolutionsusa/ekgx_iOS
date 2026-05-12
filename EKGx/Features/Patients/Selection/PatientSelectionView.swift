@@ -108,68 +108,90 @@ private struct PatientSearchForm: View {
     enum FocusedField { case firstName, lastName, mrn }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
 
-                Text(L10n.PatientSelection.Search.title)
-                    .font(AppTypography.title3)
-                    .foregroundStyle(AppColors.textPrimary)
-                    .padding(.top, AppMetrics.spacing24)
+                    Text(L10n.PatientSelection.Search.title)
+                        .font(AppTypography.title3)
+                        .foregroundStyle(AppColors.textPrimary)
+                        .padding(.top, AppMetrics.spacing24)
 
-                // DOB + Name group
-                VStack(spacing: AppMetrics.spacing14) {
-                    DOBField(viewModel: viewModel)
+                    // DOB + Name group
+                    VStack(spacing: AppMetrics.spacing14) {
+                        DOBField(viewModel: viewModel)
 
+                        ETextField(
+                            label: L10n.PatientSelection.Search.firstName,
+                            placeholder: L10n.PatientSelection.Search.firstName,
+                            systemImage: "person",
+                            text: $viewModel.firstName,
+                            errorMessage: viewModel.firstNameError,
+                            textContentType: .givenName,
+                            autocapitalization: .words
+                        )
+                        .focused($focused, equals: .firstName)
+                        .submitLabel(.next)
+                        .onChange(of: viewModel.firstName) { _, _ in viewModel.firstNameError = nil }
+                        .onSubmit { focused = .lastName }
+
+                        ETextField(
+                            label: L10n.PatientSelection.Search.lastName,
+                            placeholder: L10n.PatientSelection.Search.lastName,
+                            systemImage: "person",
+                            text: $viewModel.lastName,
+                            textContentType: .familyName,
+                            autocapitalization: .words
+                        )
+                        .id("lastName")
+                        .focused($focused, equals: .lastName)
+                        .submitLabel(.search)
+                        .onSubmit { focused = nil; viewModel.search() }
+                    }
+
+                    // OR Divider
+                    HStack {
+                        Rectangle().fill(AppColors.borderSubtle).frame(height: 1)
+                        Text(L10n.PatientSelection.Search.or)
+                            .font(AppTypography.captionBold)
+                            .foregroundStyle(AppColors.textSecondary)
+                            .padding(.horizontal, AppMetrics.spacing12)
+                        Rectangle().fill(AppColors.borderSubtle).frame(height: 1)
+                    }
+
+                    // MRN-only search
                     ETextField(
-                        label: L10n.PatientSelection.Search.firstName,
-                        placeholder: L10n.PatientSelection.Search.firstName,
-                        systemImage: "person",
-                        text: $viewModel.firstName,
-                        errorMessage: viewModel.firstNameError,
-                        textContentType: .givenName,
-                        autocapitalization: .words
+                        label: L10n.PatientSelection.Search.mrn,
+                        placeholder: L10n.PatientSelection.Search.mrn,
+                        systemImage: "number",
+                        text: $viewModel.mrn
                     )
-                    .focused($focused, equals: .firstName)
-                    .onChange(of: viewModel.firstName) { _, _ in viewModel.firstNameError = nil }
-                    .onSubmit { focused = .lastName }
+                    .id("mrn")
+                    .focused($focused, equals: .mrn)
+                    .submitLabel(.search)
+                    .onSubmit { focused = nil; viewModel.search() }
 
-                    ETextField(
-                        label: L10n.PatientSelection.Search.lastName,
-                        placeholder: L10n.PatientSelection.Search.lastName,
-                        systemImage: "person",
-                        text: $viewModel.lastName,
-                        textContentType: .familyName,
-                        autocapitalization: .words
-                    )
-                    .focused($focused, equals: .lastName)
+                    Spacer(minLength: AppMetrics.spacing20)
                 }
-
-                // OR Divider
-                HStack {
-                    Rectangle().fill(AppColors.borderSubtle).frame(height: 1)
-                    Text(L10n.PatientSelection.Search.or)
-                        .font(AppTypography.captionBold)
-                        .foregroundStyle(AppColors.textSecondary)
-                        .padding(.horizontal, AppMetrics.spacing12)
-                    Rectangle().fill(AppColors.borderSubtle).frame(height: 1)
-                }
-
-                // MRN-only search
-                ETextField(
-                    label: L10n.PatientSelection.Search.mrn,
-                    placeholder: L10n.PatientSelection.Search.mrn,
-                    systemImage: "number",
-                    text: $viewModel.mrn
-                )
-                .focused($focused, equals: .mrn)
-                .onSubmit { focused = nil; viewModel.search() }
-
-                Spacer(minLength: AppMetrics.spacing20)
+                .padding(.horizontal, AppMetrics.spacing28)
             }
-            .padding(.horizontal, AppMetrics.spacing28)
+            .scrollDismissesKeyboard(.interactively)
+            .onTapGesture { focused = nil }
+            .onChange(of: focused) { _, newValue in
+                let scrollId: String? = switch newValue {
+                case .lastName: "lastName"
+                case .mrn:      "mrn"
+                default:        nil
+                }
+                if let id = scrollId {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        withAnimation(.easeOut(duration: 0.25)) {
+                            proxy.scrollTo(id, anchor: .center)
+                        }
+                    }
+                }
+            }
         }
-        .scrollDismissesKeyboard(.interactively)
-        .onTapGesture { focused = nil }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             // Buttons pinned above keyboard at all times
             HStack(spacing: AppMetrics.spacing12) {
@@ -237,17 +259,12 @@ private struct DOBField: View {
                 }
             }
 
-            DatePicker(
-                "",
+            NumericDOBPicker(
                 selection: Binding(
                     get: { viewModel.dob ?? Date() },
                     set: { viewModel.dob = $0; viewModel.dobError = nil }
-                ),
-                in: ...Date(),
-                displayedComponents: .date
+                )
             )
-            .labelsHidden()
-            .datePickerStyle(.wheel)
             .frame(maxWidth: .infinity, maxHeight: 120)
             .clipped()
             .background(AppColors.surfaceCard)
@@ -267,6 +284,68 @@ private struct DOBField: View {
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.statusCritical)
             }
+        }
+    }
+}
+
+// MARK: - Numeric DOB Picker
+
+private struct NumericDOBPicker: View {
+
+    @Binding var selection: Date
+
+    @State private var day:   Int
+    @State private var month: Int
+    @State private var year:  Int
+
+    private static let calendar = Calendar.current
+    private static let currentYear = calendar.component(.year, from: Date())
+    private let years = Array((1920...NumericDOBPicker.currentYear).reversed())
+
+    init(selection: Binding<Date>) {
+        _selection = selection
+        let c = Self.calendar
+        let d = selection.wrappedValue
+        _day   = State(initialValue: c.component(.day,   from: d))
+        _month = State(initialValue: c.component(.month, from: d))
+        _year  = State(initialValue: c.component(.year,  from: d))
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            // Day
+            Picker("", selection: $day) {
+                ForEach(1...31, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(maxWidth: .infinity)
+            .onChange(of: day)   { _, _ in commit() }
+
+            // Month
+            Picker("", selection: $month) {
+                ForEach(1...12, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(maxWidth: .infinity)
+            .onChange(of: month) { _, _ in commit() }
+
+            // Year
+            Picker("", selection: $year) {
+                ForEach(years, id: \.self) { Text(String($0)).tag($0) }
+            }
+            .pickerStyle(.wheel)
+            .frame(maxWidth: .infinity)
+            .onChange(of: year)  { _, _ in commit() }
+        }
+    }
+
+    private func commit() {
+        var comps        = DateComponents()
+        comps.year       = year
+        comps.month      = month
+        comps.day        = day
+        if let date = Self.calendar.date(from: comps), date <= Date() {
+            selection = date
         }
     }
 }

@@ -35,7 +35,22 @@ struct RootView: View {
                     .transition(.opacity)
                     .zIndex(100)
             }
+
+            // Global error toast — floats above every screen including the lock overlay.
+            if let message = diContainer.errorToast.message {
+                VStack {
+                    ErrorToastView(message: message) {
+                        diContainer.errorToast.dismiss()
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    Spacer()
+                }
+                .zIndex(200)
+                .ignoresSafeArea(edges: .top)
+                .padding(.top, 24)
+            }
         }
+        .animation(.spring(duration: 0.35), value: diContainer.errorToast.message != nil)
         .animation(.easeInOut(duration: 0.25), value: diContainer.autoLockManager.isLocked)
     }
 

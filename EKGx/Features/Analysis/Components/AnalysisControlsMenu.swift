@@ -23,15 +23,26 @@ struct AnalysisControlsMenu: View {
                 Spacer()
 
                 VStack(spacing: 0) {
-                    menuItem(icon: "arrow.up.circle", title: "Send to EMR",  action: {
-                        viewModel.showControlsMenu = false
-                        viewModel.uploadEKG()
-                    })
+                    menuItem(
+                        icon: viewModel.isAlreadySynced ? "checkmark.circle" : "arrow.up.circle",
+                        title: "Send to EMR",
+                        subtitle: viewModel.isAlreadySynced ? "Sent" : nil,
+                        disabled: viewModel.isAlreadySynced,
+                        action: {
+                            viewModel.showControlsMenu = false
+                            viewModel.uploadEKG()
+                        }
+                    )
                     Divider()
-                    menuItem(icon: "book",            title: "Diagnosis",    action: {
-                        viewModel.showControlsMenu = false
-                        viewModel.showDiagnosisPanel = true
-                    })
+                    menuItem(
+                        icon: "book",
+                        title: "Diagnosis",
+                        disabled: viewModel.isAlreadySynced,
+                        action: {
+                            viewModel.showControlsMenu = false
+                            viewModel.showDiagnosisPanel = true
+                        }
+                    )
                     Divider()
                     menuItem(icon: "eye",             title: "Visualization", action: {
                         viewModel.showControlsMenu = false
@@ -58,21 +69,33 @@ struct AnalysisControlsMenu: View {
         }
     }
 
-    private func menuItem(icon: String, title: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
+    private func menuItem(
+        icon: String,
+        title: String,
+        subtitle: String? = nil,
+        disabled: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: disabled ? {} : action) {
+            VStack(spacing: 4) {
                 Image(systemName: icon)
                     .font(.system(size: 22))
-                    .foregroundStyle(AppColors.brandPrimary)
+                    .foregroundStyle(disabled ? Color.gray.opacity(0.5) : AppColors.brandPrimary)
                 Text(title)
                     .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(disabled ? Color.gray.opacity(0.5) : Color.primary)
                     .multilineTextAlignment(.center)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(AppColors.statusSuccess)
+                }
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
         }
         .buttonStyle(.plain)
+        .disabled(disabled)
     }
 }
 

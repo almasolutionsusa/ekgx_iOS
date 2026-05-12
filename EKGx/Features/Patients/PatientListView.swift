@@ -320,9 +320,9 @@ private struct OrderRow: View {
                 ZStack {
                     Circle()
                         .fill(avatarColor.opacity(0.15))
-                        .frame(width: 52, height: 52)
+                        .frame(width: 56, height: 56)
                     Text(initials)
-                        .font(AppTypography.title3)
+                        .font(.custom("Montserrat-SemiBold", size: 18))
                         .foregroundStyle(avatarColor)
                 }
 

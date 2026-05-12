@@ -24,6 +24,7 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
     var onBattery: ((Int) -> Void)?
     private(set) var currentState: DeviceConnectionState = .disconnected
     private(set) var sampleRate: Int = 660
+    private(set) var connectedDeviceName: String? = nil
 
     private let bleManager: vhiCVBleManager   // never replaced
     private var scanPending = false
@@ -130,11 +131,13 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
     }
 
     func icvBleManager(_ manager: vhiCVBleManager, foundDeviceName name: String) {
+        connectedDeviceName = name
         manager.connect(name, isAutoCollect: true)
     }
 
     func icvBleManager(_ manager: vhiCVBleManager, lostDeviceName name: String) {
         DispatchQueue.main.async {
+            self.connectedDeviceName = nil
             self.currentState = .disconnected
             self.onConnectionStateChanged?(.disconnected)
         }
@@ -153,6 +156,7 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
                     self.onBattery?(Int(manager.batVol))
                 }
             case .disconnectedError, .disconnected, .lostDevice:
+                self.connectedDeviceName = nil
                 self.currentState = .disconnected
                 self.onConnectionStateChanged?(.disconnected)
             default:

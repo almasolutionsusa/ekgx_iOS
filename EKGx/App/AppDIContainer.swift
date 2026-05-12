@@ -38,6 +38,7 @@ final class AppDIContainer {
     let ekgUploadService: EKGUploadService
     let autoLockManager: AutoLockManager
     let recordingStore: LocalRecordingStore
+    let errorToast: ErrorToastManager
 
     // MARK: - Device Service
 
@@ -57,6 +58,7 @@ final class AppDIContainer {
         self.ekgUploadService   = EKGUploadService()
         self.autoLockManager  = AutoLockManager()
         self.recordingStore   = LocalRecordingStore()
+        self.errorToast       = ErrorToastManager()
         self.autoLockManager.onWillLock = { [weak self] in
             self?.deviceService.disconnect()
         }

@@ -24,7 +24,11 @@ struct LoginView: View {
             HStack(spacing: 0) {
                 LoginBrandingPanel(
                     organizationName: viewModel.organizationName,
-                    facilityName: viewModel.facilityName
+                    facilityName: viewModel.facilityName,
+                    onLogoDoubleTap: {
+                        viewModel.uuidSendSuccess = nil
+                        viewModel.showUUIDAlert = true
+                    }
                 )
                 .frame(width: geometry.size.width * AppMetrics.sidebarWidthRatio)
 
@@ -56,6 +60,21 @@ struct LoginView: View {
         .sheet(isPresented: $viewModel.showForgotPassword) {
             ForgotPasswordSheet(viewModel: viewModel)
         }
+        .alert("App UUID", isPresented: $viewModel.showUUIDAlert) {
+            Button(viewModel.isSendingUUID ? "Sending…" : "Send by Email") {
+                viewModel.sendUUIDByEmail()
+            }
+            .disabled(viewModel.isSendingUUID)
+            Button("Close", role: .cancel) { }
+        } message: {
+            if let success = viewModel.uuidSendSuccess {
+                Text(success
+                     ? "Sent successfully."
+                     : "Failed to send. Please try again.\n\n\(viewModel.appUUID)")
+            } else {
+                Text(viewModel.appUUID)
+            }
+        }
     }
 }
 
@@ -65,6 +84,7 @@ private struct LoginBrandingPanel: View {
 
     let organizationName: String?
     let facilityName: String?
+    var onLogoDoubleTap: (() -> Void)? = nil
 
     @State private var pulseAnimation = false
 
@@ -105,6 +125,7 @@ private struct LoginBrandingPanel: View {
                             .resizable()
                             .scaledToFit()
                             .frame(height: 40)
+                            .onTapGesture(count: 2) { onLogoDoubleTap?() }
 
                         Text(L10n.Branding.tagline)
                             .font(AppTypography.callout)
@@ -519,7 +540,6 @@ private struct LoginFormPanel: View {
 private struct PinLoginSheet: View {
 
     @Bindable var viewModel: LoginViewModel
-    @FocusState private var pinFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
@@ -529,7 +549,7 @@ private struct PinLoginSheet: View {
                 .fill(AppColors.borderSubtle)
                 .frame(width: 40, height: 4)
                 .padding(.top, AppMetrics.spacing16)
-                .padding(.bottom, AppMetrics.spacing32)
+                .padding(.bottom, AppMetrics.spacing24)
 
             // Icon
             ZStack {
@@ -540,7 +560,7 @@ private struct PinLoginSheet: View {
                     .font(.system(size: 30, weight: .semibold))
                     .foregroundStyle(AppColors.brandPrimary)
             }
-            .padding(.bottom, AppMetrics.spacing20)
+            .padding(.bottom, AppMetrics.spacing16)
 
             // Title & subtitle
             VStack(spacing: AppMetrics.spacing8) {
@@ -554,7 +574,7 @@ private struct PinLoginSheet: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, AppMetrics.spacing32)
             }
-            .padding(.bottom, AppMetrics.spacing40)
+            .padding(.bottom, AppMetrics.spacing28)
 
             // PIN dot indicators
             HStack(spacing: AppMetrics.spacing20) {
@@ -580,46 +600,28 @@ private struct PinLoginSheet: View {
             }
             .padding(.bottom, AppMetrics.spacing12)
 
-            // Hidden secure input field
-            SecureField(L10n.Auth.Login.pinPlaceholder, text: $viewModel.pinInput)
-                .keyboardType(.numberPad)
-                .textContentType(.oneTimeCode)
-                .focused($pinFocused)
-                .frame(width: 1, height: 1)
-                .opacity(0.01)
-                .onChange(of: viewModel.pinInput) { _, newValue in
-                    // Clamp to 4 digits only
-                    let digits = newValue.filter(\.isNumber)
-                    if digits.count > 6 {
-                        viewModel.pinInput = String(digits.prefix(6))
-                    } else if digits != newValue {
-                        viewModel.pinInput = digits
-                    }
-                    viewModel.pinError = nil
-                    if viewModel.pinInput.count == 6 {
-                        viewModel.submitPinLogin()
-                    }
-                }
-
-            // Tap area to open keyboard
-            Button {
-                pinFocused = true
-            } label: {
-                Color.clear.frame(height: 44)
-            }
-            .padding(.bottom, AppMetrics.spacing8)
-
             // Error
             if let error = viewModel.pinError {
                 Text(error)
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.statusCritical)
-                    .padding(.bottom, AppMetrics.spacing16)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, AppMetrics.spacing32)
+                    .padding(.bottom, AppMetrics.spacing8)
                     .transition(.opacity)
                     .animation(.easeInOut(duration: 0.2), value: viewModel.pinError)
             } else {
-                Spacer(minLength: AppMetrics.spacing32)
+                Spacer(minLength: AppMetrics.spacing20)
             }
+
+            // Embedded numeric keypad
+            PinNumericKeypad(
+                onDigit:  { viewModel.keypadInput($0) },
+                onDelete: { viewModel.keypadDelete() }
+            )
+            .padding(.horizontal, AppMetrics.spacing32)
+            .padding(.bottom, AppMetrics.spacing20)
+            .disabled(viewModel.isLoading)
 
             // Back to email
             Button(L10n.Auth.Login.pinBackToEmail) {
@@ -627,11 +629,70 @@ private struct PinLoginSheet: View {
             }
             .font(AppTypography.subheadline)
             .foregroundStyle(AppColors.brandPrimary)
-            .padding(.bottom, AppMetrics.spacing48)
+            .padding(.bottom, AppMetrics.spacing32)
         }
         .frame(maxWidth: .infinity)
         .background(AppColors.surfaceBackground)
-        .onAppear { pinFocused = true }
+    }
+}
+
+// MARK: - Numeric Keypad
+
+private struct PinNumericKeypad: View {
+
+    let onDigit:  (String) -> Void
+    let onDelete: () -> Void
+
+    private let rows: [[String]] = [
+        ["1", "2", "3"],
+        ["4", "5", "6"],
+        ["7", "8", "9"],
+        ["",  "0", "⌫"],
+    ]
+
+    var body: some View {
+        VStack(spacing: 12) {
+            ForEach(rows, id: \.self) { row in
+                HStack(spacing: 12) {
+                    ForEach(row, id: \.self) { key in
+                        if key.isEmpty {
+                            Color.clear.frame(maxWidth: .infinity).frame(height: 72)
+                        } else if key == "⌫" {
+                            keyButton(key: key, isDelete: true)
+                        } else {
+                            keyButton(key: key, isDelete: false)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func keyButton(key: String, isDelete: Bool) -> some View {
+        Button {
+            if isDelete { onDelete() } else { onDigit(key) }
+        } label: {
+            ZStack {
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(isDelete
+                          ? AppColors.brandPrimary.opacity(0.08)
+                          : AppColors.surfaceCard)
+                    .shadow(color: .black.opacity(0.06), radius: 3, x: 0, y: 2)
+
+                if isDelete {
+                    Image(systemName: "delete.left")
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundStyle(AppColors.brandPrimary)
+                } else {
+                    Text(key)
+                        .font(.custom("Roboto-Medium", size: 28))
+                        .foregroundStyle(AppColors.textPrimary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 72)
+        }
+        .buttonStyle(.plain)
     }
 }
 

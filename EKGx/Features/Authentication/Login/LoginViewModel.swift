@@ -113,6 +113,32 @@ final class LoginViewModel {
     var emailError: String? = nil
     var passwordError: String? = nil
 
+    // MARK: - UUID Alert
+
+    var showUUIDAlert: Bool = false
+    var isSendingUUID: Bool = false
+    var uuidSendSuccess: Bool? = nil   // nil = not sent yet
+
+    var appUUID: String { diContainer.checkinService.appUuid }
+
+    func sendUUIDByEmail() {
+        guard !isSendingUUID else { return }
+        isSendingUUID = true
+        uuidSendSuccess = nil
+        Task {
+            do {
+                try await diContainer.appContentService.submitSupportTicket(
+                    subject: "App UUID Request",
+                    message: "App UUID: \(appUUID)"
+                )
+                uuidSendSuccess = true
+            } catch {
+                uuidSendSuccess = false
+            }
+            isSendingUUID = false
+        }
+    }
+
     // MARK: - Facility / Org info (tracked vars so SwiftUI re-renders when data arrives)
 
     var facilityName: String?     = nil
@@ -178,6 +204,19 @@ final class LoginViewModel {
             return
         }
         Task { await performPinLogin() }
+    }
+
+    func keypadInput(_ digit: String) {
+        guard pinInput.count < 6 else { return }
+        pinInput += digit
+        pinError = nil
+        if pinInput.count == 6 { Task { await performPinLogin() } }
+    }
+
+    func keypadDelete() {
+        guard !pinInput.isEmpty else { return }
+        pinInput.removeLast()
+        pinError = nil
     }
 
     func clearFieldError(for field: Field) {

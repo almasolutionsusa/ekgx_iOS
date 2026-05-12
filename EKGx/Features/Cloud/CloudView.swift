@@ -198,44 +198,50 @@ private struct PatientRow: View {
 
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: AppMetrics.spacing12) {
-                // Avatar
-                ZStack {
-                    Circle()
-                        .fill(avatarColor.opacity(isSelected ? 0.25 : 0.12))
-                        .frame(width: 40, height: 40)
-                    Text(patient.initials)
-                        .font(AppTypography.bodySemibold)
-                        .foregroundStyle(avatarColor)
-                }
+            HStack(spacing: 0) {
+                // Left accent bar
+                Rectangle()
+                    .fill(isSelected ? AppColors.brandPrimary : Color.clear)
+                    .frame(width: 4)
 
-                VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
-                    Text(patient.fullName)
-                        .font(AppTypography.bodyMedium)
-                        .foregroundStyle(isSelected ? AppColors.brandPrimary : AppColors.textPrimary)
-                        .lineLimit(1)
-                    Text("\(patient.genderDisplay) · \(patient.age)")
-                        .font(AppTypography.caption)
-                        .foregroundStyle(AppColors.textSecondary)
-                    if let mrn = patient.medicalRecordNumber {
-                        Text(mrn)
-                            .font(AppTypography.caption)
-                            .foregroundStyle(isSelected ? AppColors.brandPrimary.opacity(0.7) : AppColors.textSecondary.opacity(0.7))
-                            .lineLimit(1)
+                HStack(spacing: AppMetrics.spacing12) {
+                    // Avatar — filled when selected
+                    ZStack {
+                        Circle()
+                            .fill(isSelected ? avatarColor : avatarColor.opacity(0.12))
+                            .frame(width: 42, height: 42)
+                        Text(patient.initials)
+                            .font(.custom("Montserrat-SemiBold", size: 15))
+                            .foregroundStyle(isSelected ? .white : avatarColor)
                     }
-                }
 
-                Spacer()
+                    VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
+                        Text(patient.fullName)
+                            .font(isSelected ? AppTypography.bodySemibold : AppTypography.bodyMedium)
+                            .foregroundStyle(isSelected ? AppColors.brandPrimary : AppColors.textPrimary)
+                            .lineLimit(1)
+                        Text("\(patient.genderDisplay) · \(patient.age)")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.textSecondary)
+                        if let mrn = patient.medicalRecordNumber {
+                            Text("# \(mrn)")
+                                .font(AppTypography.caption)
+                                .foregroundStyle(isSelected ? AppColors.brandPrimary.opacity(0.8) : AppColors.textSecondary.opacity(0.7))
+                                .lineLimit(1)
+                        }
+                    }
 
-                if isSelected {
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(AppColors.brandPrimary)
+                    Spacer()
+
+                    // Selection indicator
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(isSelected ? AppColors.brandPrimary : AppColors.borderSubtle)
                 }
+                .padding(.horizontal, AppMetrics.spacing16)
+                .padding(.vertical, AppMetrics.spacing14)
             }
-            .padding(.horizontal, AppMetrics.spacing20)
-            .padding(.vertical, AppMetrics.spacing14)
-            .background(isSelected ? AppColors.brandPrimary.opacity(0.06) : Color.clear)
+            .background(isSelected ? AppColors.brandPrimary.opacity(0.08) : Color.clear)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -360,9 +366,10 @@ private struct RecordingsPanel: View {
     private var recordingsList: some View {
         ScrollView {
             LazyVStack(spacing: AppMetrics.spacing12) {
-                ForEach(viewModel.recordings) { recording in
+                ForEach(Array(viewModel.recordings.enumerated()), id: \.element.id) { index, recording in
                     RecordingRow(
                         recording: recording,
+                        examNumber: index + 1,
                         isUploading: viewModel.uploadingIds.contains(recording.id),
                         onTap: { viewModel.openRecording(recording) },
                         onUpload: recording.status != .synced
@@ -383,6 +390,7 @@ private struct RecordingsPanel: View {
 private struct RecordingRow: View {
 
     let recording: ECGRecording
+    let examNumber: Int
     let isUploading: Bool
     let onTap: () -> Void
     let onUpload: (() -> Void)?
@@ -415,7 +423,7 @@ private struct RecordingRow: View {
                 // Center: details
                 VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
                     HStack(spacing: AppMetrics.spacing10) {
-                        Text(recording.id)
+                        Text("Exam #\(examNumber)")
                             .font(AppTypography.bodySemibold)
                             .foregroundStyle(AppColors.textPrimary)
 
