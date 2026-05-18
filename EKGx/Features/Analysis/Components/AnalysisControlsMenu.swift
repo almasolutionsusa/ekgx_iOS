@@ -26,8 +26,8 @@ struct AnalysisControlsMenu: View {
                     menuItem(
                         icon: viewModel.isAlreadySynced ? "checkmark.circle" : "arrow.up.circle",
                         title: "Send to EMR",
-                        subtitle: viewModel.isAlreadySynced ? "Sent" : nil,
-                        disabled: viewModel.isAlreadySynced,
+                        subtitle: viewModel.isLocalMode ? "Offline" : (viewModel.isAlreadySynced ? "Sent" : nil),
+                        disabled: viewModel.isLocalMode || viewModel.isAlreadySynced,
                         action: {
                             viewModel.showControlsMenu = false
                             viewModel.uploadEKG()
@@ -37,7 +37,7 @@ struct AnalysisControlsMenu: View {
                     menuItem(
                         icon: "book",
                         title: "Diagnosis",
-                        disabled: viewModel.isAlreadySynced,
+                        disabled: viewModel.isLocalMode || viewModel.isAlreadySynced,
                         action: {
                             viewModel.showControlsMenu = false
                             viewModel.showDiagnosisPanel = true

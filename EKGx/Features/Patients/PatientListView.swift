@@ -736,51 +736,14 @@ private struct AddOrderDOBField: View {
     @Bindable var viewModel: PatientListViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-            HStack(spacing: AppMetrics.spacing8) {
-                Text(L10n.PatientSelection.Search.dob)
-                    .font(AppTypography.captionBold)
-                    .foregroundStyle(AppColors.textSecondary)
-                if let date = viewModel.searchDob {
-                    Text(date.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year()))
-                        .font(AppTypography.captionBold)
-                        .foregroundStyle(AppColors.brandPrimary)
-                        .padding(.horizontal, AppMetrics.spacing8)
-                        .padding(.vertical, AppMetrics.spacing4)
-                        .background(AppColors.brandPrimary.opacity(0.1))
-                        .cornerRadius(AppMetrics.radiusSmall)
-                }
-            }
-
-            DatePicker(
-                "",
-                selection: Binding(
-                    get: { viewModel.searchDob ?? Date() },
-                    set: { viewModel.searchDob = $0; viewModel.searchDobError = nil }
-                ),
-                in: ...Date(),
-                displayedComponents: .date
-            )
-            .labelsHidden()
-            .datePickerStyle(.wheel)
-            .frame(maxWidth: .infinity, maxHeight: 120)
-            .clipped()
-            .background(AppColors.surfaceCard)
-            .cornerRadius(AppMetrics.radiusMedium)
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                    .strokeBorder(
-                        viewModel.searchDobError != nil ? AppColors.statusCritical : AppColors.borderSubtle,
-                        lineWidth: AppMetrics.borderWidth
-                    )
-            )
-
-            if let err = viewModel.searchDobError {
-                Text(err)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.statusCritical)
-            }
-        }
+        DOBTextField(
+            label: L10n.PatientSelection.Search.dob,
+            date: Binding(
+                get: { viewModel.searchDob },
+                set: { viewModel.searchDob = $0; viewModel.searchDobError = nil }
+            ),
+            errorMessage: viewModel.searchDobError
+        )
     }
 }
 
@@ -946,50 +909,13 @@ private struct CreatePatientDOBField: View {
     @Bindable var viewModel: PatientListViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-            HStack(spacing: AppMetrics.spacing8) {
-                Text(L10n.PatientSelection.Create.dob)
-                    .font(AppTypography.captionBold)
-                    .foregroundStyle(AppColors.textSecondary)
-                if let date = viewModel.createDob {
-                    Text(date.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year()))
-                        .font(AppTypography.captionBold)
-                        .foregroundStyle(AppColors.brandPrimary)
-                        .padding(.horizontal, AppMetrics.spacing8)
-                        .padding(.vertical, AppMetrics.spacing4)
-                        .background(AppColors.brandPrimary.opacity(0.1))
-                        .cornerRadius(AppMetrics.radiusSmall)
-                }
-            }
-
-            DatePicker(
-                "",
-                selection: Binding(
-                    get: { viewModel.createDob ?? Date() },
-                    set: { viewModel.createDob = $0; viewModel.createDobError = nil }
-                ),
-                in: ...Date(),
-                displayedComponents: .date
-            )
-            .labelsHidden()
-            .datePickerStyle(.wheel)
-            .frame(maxWidth: .infinity, maxHeight: 120)
-            .clipped()
-            .background(AppColors.surfaceCard)
-            .cornerRadius(AppMetrics.radiusMedium)
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                    .strokeBorder(
-                        viewModel.createDobError != nil ? AppColors.statusCritical : AppColors.borderSubtle,
-                        lineWidth: AppMetrics.borderWidth
-                    )
-            )
-
-            if let err = viewModel.createDobError {
-                Text(err)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.statusCritical)
-            }
-        }
+        DOBTextField(
+            label: L10n.PatientSelection.Create.dob,
+            date: Binding(
+                get: { viewModel.createDob },
+                set: { viewModel.createDob = $0; viewModel.createDobError = nil }
+            ),
+            errorMessage: viewModel.createDobError
+        )
     }
 }

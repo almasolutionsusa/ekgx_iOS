@@ -607,8 +607,14 @@ struct EKGStaticView: View {
                                 ForEach(0..<numCols, id: \.self) { col in
                                     let leadIndex   = leadOrder[row][col]
                                     let samples     = fullData[leadIndex]
-                                    let samplesPerCell = Int(cellWidth / xPerPoint)
-                                    let startIdx    = min(col * samplesPerCell, max(0, samples.count - 1))
+                                    let samplesPerCell   = Int(cellWidth / xPerPoint)
+                                    // Calibration pulse (6 mm) in col 0 takes up space; offset
+                                    // subsequent columns backward so the data is continuous,
+                                    // matching the rhythm strip below. (Alma: getStartDrawFromIndex)
+                                    let calibrationSamples = Int(6 * lineModel.pixPermm / xPerPoint)
+                                    let startIdx    = col == 0
+                                        ? 0
+                                        : max(0, col * samplesPerCell - calibrationSamples + 1)
 
                                     ECGGridLine(
                                         leadName: leadNames[leadIndex],

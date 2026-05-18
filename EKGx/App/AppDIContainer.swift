@@ -38,6 +38,7 @@ final class AppDIContainer {
     let ekgUploadService: EKGUploadService
     let autoLockManager: AutoLockManager
     let recordingStore: LocalRecordingStore
+    let localPatientStore: LocalPatientStore
     let errorToast: ErrorToastManager
 
     // MARK: - Device Service
@@ -57,8 +58,9 @@ final class AppDIContainer {
         self.appContentService  = AppContentService(checkinService: checkin)
         self.ekgUploadService   = EKGUploadService()
         self.autoLockManager  = AutoLockManager()
-        self.recordingStore   = LocalRecordingStore()
-        self.errorToast       = ErrorToastManager()
+        self.recordingStore      = LocalRecordingStore()
+        self.localPatientStore   = LocalPatientStore()
+        self.errorToast          = ErrorToastManager()
         self.autoLockManager.onWillLock = { [weak self] in
             self?.deviceService.disconnect()
         }
@@ -69,7 +71,7 @@ final class AppDIContainer {
     /// Wire this up from EKGxApp with the router so any 302 forces logout + login redirect.
     func configureSessionExpiry(router: AppRouter) {
         APIClient.shared.onSessionExpired = { [weak self] in
-            guard let self else { return }
+            guard let self, !self.isLocalMode else { return }
             Task { @MainActor in
                 try? await self.authService.logout()
                 self.autoLockManager.stop()
@@ -141,6 +143,10 @@ final class AppDIContainer {
         )
     }
 
+    func makeOfflinePatientSelectionViewModel(router: AppRouter) -> OfflinePatientSelectionViewModel {
+        OfflinePatientSelectionViewModel(patientStore: localPatientStore, diContainer: self, router: router)
+    }
+
     private var _cloudViewModel: CloudViewModel?
     func makeCloudViewModel(router: AppRouter) -> CloudViewModel {
         if let existing = _cloudViewModel { return existing }
@@ -193,6 +199,7 @@ final class AppDIContainer {
             sampleRate: lastRecordingSampleRate,
             totalDuration: lastRecordingTotalDuration,
             existingRecordingId: lastRecordingExistingId,
+            isLocalMode: isLocalMode,
             router: router,
             uploadService: ekgUploadService,
             checkinService: checkinService,

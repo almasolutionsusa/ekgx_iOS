@@ -59,6 +59,9 @@ final class AnalysisViewModel {
         return recordingStore.status(for: id) == .synced
     }
 
+    /// True when the app is in offline mode — upload must be disabled regardless of sync state.
+    let isLocalMode: Bool
+
     // MARK: - Data
 
     let patient: Patient
@@ -98,6 +101,7 @@ final class AnalysisViewModel {
         sampleRate: Int = 660,
         totalDuration: Int? = nil,
         existingRecordingId: String? = nil,
+        isLocalMode: Bool = false,
         router: AppRouter,
         uploadService: EKGUploadService,
         checkinService: AppCheckinService,
@@ -109,6 +113,7 @@ final class AnalysisViewModel {
         self.sampleRate        = sampleRate
         self.totalDuration     = totalDuration
         self.localRecordingId  = existingRecordingId
+        self.isLocalMode       = isLocalMode
         self.router            = router
         self.uploadService     = uploadService
         self.checkinService    = checkinService
@@ -251,26 +256,13 @@ final class AnalysisViewModel {
     }
 
     private func renderECGImage() -> Data? {
-        let view = ECGPrintView(
-            patient: patient,
-            templateData: templateData,
+        ECGImageRenderer.render(
             ecgData: ecgData,
+            patient: patient,
             sampleRate: sampleRate,
             measurements: measurements,
             diagnosisLines: diagnosisLines
-        )
-        let renderer = ImageRenderer(content: view)
-        renderer.scale = 2.0
-        // Draw into an opaque context so CoreImage doesn't see an alpha channel —
-        // JPEG has no alpha; keeping it causes doubled memory and a CoreImage warning.
-        guard let uiImage = renderer.uiImage else { return nil }
-        let format = UIGraphicsImageRendererFormat()
-        format.opaque = true
-        format.scale = uiImage.scale
-        let opaque = UIGraphicsImageRenderer(size: uiImage.size, format: format).image { ctx in
-            uiImage.draw(at: .zero)
-        }
-        return opaque.jpegData(compressionQuality: 0.85)
+        )?.jpegData(compressionQuality: 0.85)
     }
 
     private func saveLocalRecording() {

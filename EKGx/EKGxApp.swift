@@ -51,6 +51,7 @@ struct EKGxApp: App {
                     // Session-expired errors are handled by configureSessionExpiry instead.
                     APIClient.shared.onError = { [weak diContainer] message in
                         guard message != L10n.Auth.Login.errorSessionExpired else { return }
+                        guard !(diContainer?.isLocalMode ?? false) else { return }
                         diContainer?.errorToast.show(message)
                     }
                     // Fire-and-forget: registers the app install with the server.

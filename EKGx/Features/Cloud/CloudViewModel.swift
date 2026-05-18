@@ -41,6 +41,8 @@ final class CloudViewModel {
 
     // MARK: - Computed
 
+    var isLocalMode: Bool { diContainer.isLocalMode }
+
     var filteredPatients: [Patient] {
         let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !query.isEmpty else { return patients }

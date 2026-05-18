@@ -93,9 +93,15 @@ struct RootView: View {
                     .transition(.push(from: .trailing))
 
             case .patientSelection:
-                PatientSelectionView(viewModel: diContainer.makePatientSelectionViewModel(router: router))
-                    .id(AppRoute.patientSelection)
-                    .transition(.push(from: .trailing))
+                if diContainer.isLocalMode {
+                    OfflinePatientSelectionView(viewModel: diContainer.makeOfflinePatientSelectionViewModel(router: router))
+                        .id("offlinePatientSelection")
+                        .transition(.push(from: .trailing))
+                } else {
+                    PatientSelectionView(viewModel: diContainer.makePatientSelectionViewModel(router: router))
+                        .id(AppRoute.patientSelection)
+                        .transition(.push(from: .trailing))
+                }
 
             case .ecgRecording:
                 let patient = diContainer.lastRecordingPatient ?? Patient.mockPatients[0]

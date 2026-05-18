@@ -243,112 +243,17 @@ private struct DOBField: View {
     @Bindable var viewModel: PatientSelectionViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-            HStack(spacing: AppMetrics.spacing8) {
-                Text(L10n.PatientSelection.Search.dob)
-                    .font(AppTypography.captionBold)
-                    .foregroundStyle(AppColors.textSecondary)
-                if let date = viewModel.dob {
-                    Text(date.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year()))
-                        .font(AppTypography.captionBold)
-                        .foregroundStyle(AppColors.brandPrimary)
-                        .padding(.horizontal, AppMetrics.spacing8)
-                        .padding(.vertical, AppMetrics.spacing4)
-                        .background(AppColors.brandPrimary.opacity(0.1))
-                        .cornerRadius(AppMetrics.radiusSmall)
-                }
-            }
-
-            NumericDOBPicker(
-                selection: Binding(
-                    get: { viewModel.dob ?? Date() },
-                    set: { viewModel.dob = $0; viewModel.dobError = nil }
-                )
-            )
-            .frame(maxWidth: .infinity, maxHeight: 120)
-            .clipped()
-            .background(AppColors.surfaceCard)
-            .cornerRadius(AppMetrics.radiusMedium)
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                    .strokeBorder(
-                        viewModel.dobError != nil
-                            ? AppColors.statusCritical
-                            : AppColors.borderSubtle,
-                        lineWidth: AppMetrics.borderWidth
-                    )
-            )
-
-            if let err = viewModel.dobError {
-                Text(err)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.statusCritical)
-            }
-        }
+        DOBTextField(
+            label: L10n.PatientSelection.Search.dob,
+            date: Binding(
+                get: { viewModel.dob },
+                set: { viewModel.dob = $0; viewModel.dobError = nil }
+            ),
+            errorMessage: viewModel.dobError
+        )
     }
 }
 
-// MARK: - Numeric DOB Picker
-
-private struct NumericDOBPicker: View {
-
-    @Binding var selection: Date
-
-    @State private var day:   Int
-    @State private var month: Int
-    @State private var year:  Int
-
-    private static let calendar = Calendar.current
-    private static let currentYear = calendar.component(.year, from: Date())
-    private let years = Array((1920...NumericDOBPicker.currentYear).reversed())
-
-    init(selection: Binding<Date>) {
-        _selection = selection
-        let c = Self.calendar
-        let d = selection.wrappedValue
-        _day   = State(initialValue: c.component(.day,   from: d))
-        _month = State(initialValue: c.component(.month, from: d))
-        _year  = State(initialValue: c.component(.year,  from: d))
-    }
-
-    var body: some View {
-        HStack(spacing: 0) {
-            // Day
-            Picker("", selection: $day) {
-                ForEach(1...31, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
-            }
-            .pickerStyle(.wheel)
-            .frame(maxWidth: .infinity)
-            .onChange(of: day)   { _, _ in commit() }
-
-            // Month
-            Picker("", selection: $month) {
-                ForEach(1...12, id: \.self) { Text(String(format: "%02d", $0)).tag($0) }
-            }
-            .pickerStyle(.wheel)
-            .frame(maxWidth: .infinity)
-            .onChange(of: month) { _, _ in commit() }
-
-            // Year
-            Picker("", selection: $year) {
-                ForEach(years, id: \.self) { Text(String($0)).tag($0) }
-            }
-            .pickerStyle(.wheel)
-            .frame(maxWidth: .infinity)
-            .onChange(of: year)  { _, _ in commit() }
-        }
-    }
-
-    private func commit() {
-        var comps        = DateComponents()
-        comps.year       = year
-        comps.month      = month
-        comps.day        = day
-        if let date = Self.calendar.date(from: comps), date <= Date() {
-            selection = date
-        }
-    }
-}
 
 // MARK: - Results Panel (Right)
 
@@ -782,52 +687,13 @@ private struct CreateDOBField: View {
     @Bindable var viewModel: PatientSelectionViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-            HStack(spacing: AppMetrics.spacing8) {
-                Text(L10n.PatientSelection.Create.dob)
-                    .font(AppTypography.captionBold)
-                    .foregroundStyle(AppColors.textSecondary)
-                if let date = viewModel.createDob {
-                    Text(date.formatted(.dateTime.day(.twoDigits).month(.twoDigits).year()))
-                        .font(AppTypography.captionBold)
-                        .foregroundStyle(AppColors.brandPrimary)
-                        .padding(.horizontal, AppMetrics.spacing8)
-                        .padding(.vertical, AppMetrics.spacing4)
-                        .background(AppColors.brandPrimary.opacity(0.1))
-                        .cornerRadius(AppMetrics.radiusSmall)
-                }
-            }
-
-            DatePicker(
-                "",
-                selection: Binding(
-                    get: { viewModel.createDob ?? Date() },
-                    set: { viewModel.createDob = $0; viewModel.createDobError = nil }
-                ),
-                in: ...Date(),
-                displayedComponents: .date
-            )
-            .labelsHidden()
-            .datePickerStyle(.wheel)
-            .frame(maxWidth: .infinity, maxHeight: 120)
-            .clipped()
-            .background(AppColors.surfaceCard)
-            .cornerRadius(AppMetrics.radiusMedium)
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                    .strokeBorder(
-                        viewModel.createDobError != nil
-                            ? AppColors.statusCritical
-                            : AppColors.borderSubtle,
-                        lineWidth: AppMetrics.borderWidth
-                    )
-            )
-
-            if let err = viewModel.createDobError {
-                Text(err)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.statusCritical)
-            }
-        }
+        DOBTextField(
+            label: L10n.PatientSelection.Create.dob,
+            date: Binding(
+                get: { viewModel.createDob },
+                set: { viewModel.createDob = $0; viewModel.createDobError = nil }
+            ),
+            errorMessage: viewModel.createDobError
+        )
     }
 }

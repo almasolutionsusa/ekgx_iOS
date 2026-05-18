@@ -89,23 +89,42 @@ private struct CloudNavBar: View {
 
             Spacer()
 
-            // Cloud sync status badge
-            HStack(spacing: AppMetrics.spacing8) {
-                Image(systemName: "checkmark.icloud.fill")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(AppColors.statusSuccess)
-                Text(L10n.Cloud.Nav.allSynced)
-                    .font(AppTypography.captionBold)
-                    .foregroundStyle(AppColors.statusSuccess)
+            // Cloud sync status / offline badge
+            if viewModel.isLocalMode {
+                HStack(spacing: AppMetrics.spacing8) {
+                    Image(systemName: "wifi.slash")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundStyle(AppColors.statusWarning)
+                    Text("Offline Mode")
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(AppColors.statusWarning)
+                }
+                .padding(.horizontal, AppMetrics.spacing14)
+                .padding(.vertical, AppMetrics.spacing8)
+                .background(AppColors.statusWarning.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                        .strokeBorder(AppColors.statusWarning.opacity(0.25), lineWidth: 1)
+                )
+            } else {
+                HStack(spacing: AppMetrics.spacing8) {
+                    Image(systemName: "checkmark.icloud.fill")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(AppColors.statusSuccess)
+                    Text(L10n.Cloud.Nav.allSynced)
+                        .font(AppTypography.captionBold)
+                        .foregroundStyle(AppColors.statusSuccess)
+                }
+                .padding(.horizontal, AppMetrics.spacing14)
+                .padding(.vertical, AppMetrics.spacing8)
+                .background(AppColors.statusSuccess.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                        .strokeBorder(AppColors.statusSuccess.opacity(0.25), lineWidth: 1)
+                )
             }
-            .padding(.horizontal, AppMetrics.spacing14)
-            .padding(.vertical, AppMetrics.spacing8)
-            .background(AppColors.statusSuccess.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                    .strokeBorder(AppColors.statusSuccess.opacity(0.25), lineWidth: 1)
-            )
         }
         .padding(.horizontal, AppMetrics.spacing32)
         .frame(height: AppMetrics.navBarHeight)
@@ -371,8 +390,9 @@ private struct RecordingsPanel: View {
                         recording: recording,
                         examNumber: index + 1,
                         isUploading: viewModel.uploadingIds.contains(recording.id),
+                        isLocalMode: viewModel.isLocalMode,
                         onTap: { viewModel.openRecording(recording) },
-                        onUpload: recording.status != .synced
+                        onUpload: (!viewModel.isLocalMode && recording.status != .synced)
                             ? { viewModel.uploadRecording(recording) }
                             : nil,
                         onDelete: { viewModel.deleteRecording(recording) }
@@ -387,23 +407,39 @@ private struct RecordingsPanel: View {
 
 // MARK: - Recording Row
 
+private struct RecordingRowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
+    }
+}
+
 private struct RecordingRow: View {
 
     let recording: ECGRecording
     let examNumber: Int
     let isUploading: Bool
+    let isLocalMode: Bool
     let onTap: () -> Void
     let onUpload: (() -> Void)?
     let onDelete: () -> Void
 
-    @State private var isPressed = false
-
     private var statusColor: Color {
+        guard !isLocalMode else { return AppColors.textSecondary }
         switch recording.status {
         case .synced:  return AppColors.statusSuccess
         case .pending: return AppColors.statusWarning
         case .failed:  return AppColors.statusCritical
         }
+    }
+
+    private var statusIcon: String {
+        isLocalMode ? "internaldrive" : recording.status.systemImage
+    }
+
+    private var statusLabel: String {
+        isLocalMode ? "Local" : recording.status.label
     }
 
     var body: some View {
@@ -429,9 +465,9 @@ private struct RecordingRow: View {
 
                         // Status badge
                         HStack(spacing: AppMetrics.spacing4) {
-                            Image(systemName: recording.status.systemImage)
+                            Image(systemName: statusIcon)
                                 .font(.system(size: 11, weight: .medium))
-                            Text(recording.status.label)
+                            Text(statusLabel)
                                 .font(AppTypography.caption)
                         }
                         .foregroundStyle(statusColor)
@@ -513,15 +549,8 @@ private struct RecordingRow: View {
                     .strokeBorder(AppColors.borderSubtle.opacity(0.6), lineWidth: AppMetrics.borderWidth)
             )
             .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
-            .scaleEffect(isPressed ? 0.98 : 1.0)
-            .animation(.easeInOut(duration: 0.1), value: isPressed)
         }
-        .buttonStyle(.plain)
-        .simultaneousGesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in isPressed = true }
-                .onEnded   { _ in isPressed = false }
-        )
+        .buttonStyle(RecordingRowButtonStyle())
         .contextMenu {
             Button(role: .destructive) {
                 onDelete()

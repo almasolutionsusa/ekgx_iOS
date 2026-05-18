@@ -82,7 +82,7 @@ struct ECGPrintView: View {
 
             Divider().frame(height: 36)
 
-            // Brand + date
+            // Brand + date + Unconfirmed
             VStack(alignment: .trailing, spacing: 3) {
                 AppImages.logo
                     .resizable()
@@ -91,10 +91,13 @@ struct ECGPrintView: View {
                 Text(printDate)
                     .font(.system(size: 10))
                     .foregroundStyle(Color(UIColor.darkGray))
+                Text("Unconfirmed")
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(.red)
             }
             .padding(.horizontal, 20)
         }
-        .frame(height: 56)
+        .frame(height: 68)
         .background(Color(UIColor.systemGray6))
     }
 
