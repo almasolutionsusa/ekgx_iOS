@@ -246,7 +246,7 @@ final class PatientSelectionViewModel {
     private static let dobFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone(identifier: "UTC")
+        f.timeZone = TimeZone.current
         return f
     }()
 }

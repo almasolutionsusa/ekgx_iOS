@@ -239,6 +239,7 @@ final class LoginViewModel {
 
         do {
             try await authService.pinLogin(pin: pinInput, appUuid: appUuid)
+            diContainer.enableOnlineMode()
             diContainer.clearRecordingSession()
             configureAutoLock()
             showPinLogin = false
@@ -260,6 +261,7 @@ final class LoginViewModel {
         do {
             let username = email.trimmingCharacters(in: .whitespacesAndNewlines)
             try await authService.login(email: username, password: password)
+            diContainer.enableOnlineMode()
             saveToHistory(username)
             diContainer.clearRecordingSession()
             configureAutoLock()

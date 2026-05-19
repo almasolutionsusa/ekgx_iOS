@@ -94,7 +94,7 @@ private struct LoginBrandingPanel: View {
             LinearGradient(
                 colors: [
                     AppColors.surfaceSidebar,
-                    Color(red: 0.04, green: 0.18, blue: 0.35)
+                    AppColors.surfaceBackground
                 ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
@@ -248,7 +248,7 @@ private struct ECGGridOverlay: View {
 
                 Canvas { context, size in
                     let spacing:   CGFloat = 28
-                    let glowColor = Color(red: 0.25, green: 0.65, blue: 1.0)
+                    let glowColor = AppColors.accentCyan
                     let baseColor = Color.white
 
                     let edgeSoftness: CGFloat = 0.12  // fade zone width (0=hard, higher=softer)

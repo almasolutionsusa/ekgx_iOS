@@ -11,7 +11,8 @@ struct PrimaryButton: View {
 
     let title: String
     var background: Color = AppColors.brandPrimary
-    var foreground: Color = .white
+    var foreground: Color = AppColors.onAccent
+    var useGradient: Bool = true
     var isLoading: Bool = false
     var isDisabled: Bool = false
     let action: () -> Void
@@ -19,8 +20,13 @@ struct PrimaryButton: View {
     var body: some View {
         Button(action: action) {
             ZStack {
-                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                    .fill(isDisabled || isLoading ? background.opacity(0.5) : background)
+                if useGradient {
+                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                        .fill(AppColors.ctaGradient.opacity(isDisabled || isLoading ? 0.5 : 1))
+                } else {
+                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                        .fill(isDisabled || isLoading ? background.opacity(0.5) : background)
+                }
                 if isLoading {
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle(tint: foreground))
@@ -28,7 +34,7 @@ struct PrimaryButton: View {
                 } else {
                     Text(title)
                         .font(AppTypography.bodyMedium)
-                        .foregroundStyle(foreground)
+                        .foregroundStyle(useGradient ? AppColors.onAccent : foreground)
                 }
             }
             .frame(maxWidth: .infinity)

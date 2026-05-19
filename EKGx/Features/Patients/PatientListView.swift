@@ -276,8 +276,8 @@ private struct OrderRow: View {
         let colors: [Color] = [
             AppColors.brandPrimary, AppColors.brandSecondary,
             AppColors.statusInfo, AppColors.statusSuccess,
-            Color(red: 0.45, green: 0.31, blue: 0.82),
-            Color(red: 0.90, green: 0.45, blue: 0.20),
+            AppColors.accentViolet,
+            AppColors.statusWarning,
         ]
         return colors[Int(order.id) % colors.count]
     }

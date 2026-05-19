@@ -84,12 +84,11 @@ struct RecordingDoneOverlay: View {
                 title: L10n.Recording.Done.redoButton,
                 background: AppColors.surfaceCard,
                 foreground: AppColors.textPrimary,
+                useGradient: false,
                 action: onRedo
             )
             PrimaryButton(
                 title: L10n.Recording.Done.analysisButton,
-                background: AppColors.brandPrimary,
-                foreground: .white,
                 action: onAnalysis
             )
         }

@@ -71,7 +71,7 @@ struct SideMenuView: View {
         ZStack {
             // Background
             LinearGradient(
-                colors: [AppColors.surfaceSidebar, Color(red: 0.04, green: 0.18, blue: 0.35)],
+                colors: [AppColors.surfaceSidebar, AppColors.surfaceBackground],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )

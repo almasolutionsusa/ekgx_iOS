@@ -32,12 +32,14 @@ struct ExitConfirmationOverlay: View {
                         title: L10n.Recording.Exit.keepButton,
                         background: AppColors.surfaceCard,
                         foreground: AppColors.textPrimary,
+                        useGradient: false,
                         action: onKeep
                     )
                     PrimaryButton(
                         title: L10n.Recording.Exit.discardButton,
                         background: AppColors.statusCritical,
                         foreground: .white,
+                        useGradient: false,
                         action: onDiscard
                     )
                 }

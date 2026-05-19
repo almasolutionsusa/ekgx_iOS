@@ -454,7 +454,7 @@ private struct DisplaySection: View {
             SettingsCard {
                 ToggleRow(
                     icon: "moon.fill",
-                    iconColor: Color(red: 0.45, green: 0.31, blue: 0.82),
+                    iconColor: AppColors.accentViolet,
                     title: L10n.Settings.Display.darkModeTitle,
                     subtitle: L10n.Settings.Display.darkModeSubtitle,
                     isOn: $viewModel.darkModeEnabled,
