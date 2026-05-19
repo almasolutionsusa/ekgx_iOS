@@ -25,7 +25,6 @@ struct LockOverlayView: View {
     @State private var pinInput: String = ""
     @State private var errorMessage: String? = nil
     @State private var isSubmitting: Bool = false
-    @FocusState private var pinFocused: Bool
 
     private var loginMethod: String? {
         diContainer.authService.loginData?.loginMethod
@@ -45,31 +44,29 @@ struct LockOverlayView: View {
             Rectangle()
                 .fill(.ultraThinMaterial)
                 .ignoresSafeArea()
-                .contentShape(Rectangle())
-                .onTapGesture { if isPinUser { pinFocused = true } }
 
             Color.black.opacity(0.4)
                 .ignoresSafeArea()
                 .allowsHitTesting(false)
 
             // Card
-            VStack(spacing: AppMetrics.spacing24) {
+            VStack(spacing: AppMetrics.spacing20) {
 
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(AppColors.brandPrimary.opacity(0.12))
-                        .frame(width: 80, height: 80)
-                    Image(systemName: "lock.fill")
-                        .font(.system(size: 36, weight: .semibold))
-                        .foregroundStyle(AppColors.brandPrimary)
-                }
+                // Icon + title
+                VStack(spacing: AppMetrics.spacing12) {
+                    ZStack {
+                        Circle()
+                            .fill(AppColors.brandPrimary.opacity(0.12))
+                            .frame(width: 64, height: 64)
+                        Image(systemName: "lock.fill")
+                            .font(.system(size: 28, weight: .semibold))
+                            .foregroundStyle(AppColors.brandPrimary)
+                    }
 
-                // Title + subtitle
-                VStack(spacing: AppMetrics.spacing8) {
                     Text(L10n.AutoLock.title)
                         .font(AppTypography.title2)
                         .foregroundStyle(AppColors.textPrimary)
+
                     Text(isPinUser ? L10n.AutoLock.subtitle : L10n.AutoLock.subtitleEmailUser)
                         .font(AppTypography.callout)
                         .foregroundStyle(AppColors.textSecondary)
@@ -98,40 +95,32 @@ struct LockOverlayView: View {
                             .animation(.easeInOut(duration: 0.15), value: pinInput.count)
                         }
                     }
-
-                    // Hidden input
-                    SecureField("", text: $pinInput)
-                        .keyboardType(.numberPad)
-                        .textContentType(.oneTimeCode)
-                        .focused($pinFocused)
-                        .frame(width: 1, height: 1)
-                        .opacity(0.01)
-                        .onChange(of: pinInput) { _, newValue in
-                            let digits = newValue.filter(\.isNumber)
-                            if digits.count > 6 {
-                                pinInput = String(digits.prefix(6))
-                            } else if digits != newValue {
-                                pinInput = digits
-                            }
-                            errorMessage = nil
-                            if pinInput.count == 6 {
-                                Task { await submit() }
-                            }
-                        }
+                    .padding(.top, AppMetrics.spacing4)
 
                     // Error / loading
-                    if let error = errorMessage {
-                        Text(error)
-                            .font(AppTypography.caption)
-                            .foregroundStyle(AppColors.statusCritical)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, AppMetrics.spacing20)
-                            .transition(.opacity)
-                            .animation(.easeInOut(duration: 0.2), value: errorMessage)
-                    } else if isSubmitting {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
+                    Group {
+                        if let error = errorMessage {
+                            Text(error)
+                                .font(AppTypography.caption)
+                                .foregroundStyle(AppColors.statusCritical)
+                                .multilineTextAlignment(.center)
+                                .transition(.opacity)
+                                .animation(.easeInOut(duration: 0.2), value: errorMessage)
+                        } else if isSubmitting {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
+                        } else {
+                            Color.clear.frame(height: 16)
+                        }
                     }
+                    .frame(height: 20)
+
+                    // Numeric keypad
+                    PinNumericKeypad(
+                        onDigit:  { keypadInput($0) },
+                        onDelete: { keypadDelete() }
+                    )
+                    .disabled(isSubmitting)
                 }
 
                 // Logout button
@@ -141,8 +130,10 @@ struct LockOverlayView: View {
                         .foregroundStyle(AppColors.brandPrimary)
                 }
                 .buttonStyle(.plain)
+                .padding(.top, AppMetrics.spacing4)
             }
-            .padding(AppMetrics.spacing32)
+            .padding(.horizontal, AppMetrics.spacing24)
+            .padding(.vertical, AppMetrics.spacing28)
             .frame(maxWidth: 420)
             .background(AppColors.surfaceCard)
             .cornerRadius(AppMetrics.radiusLarge)
@@ -151,9 +142,25 @@ struct LockOverlayView: View {
                 RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
                     .strokeBorder(AppColors.borderSubtle.opacity(0.6), lineWidth: AppMetrics.borderWidth)
             )
-            .padding(.horizontal, AppMetrics.spacing40)
+            .padding(.horizontal, AppMetrics.spacing32)
         }
-        .onAppear { if isPinUser { pinFocused = true } }
+    }
+
+    // MARK: - Keypad Actions
+
+    private func keypadInput(_ digit: String) {
+        guard pinInput.count < 6 else { return }
+        pinInput += digit
+        errorMessage = nil
+        if pinInput.count == 6 {
+            Task { await submit() }
+        }
+    }
+
+    private func keypadDelete() {
+        guard !pinInput.isEmpty else { return }
+        pinInput.removeLast()
+        errorMessage = nil
     }
 
     // MARK: - Actions

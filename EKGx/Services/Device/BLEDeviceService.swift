@@ -38,6 +38,14 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
 
     // MARK: - DeviceServiceProtocol
 
+    /// Re-applies filter configuration without reconnecting.
+    /// Call this whenever the recording screen opens with an already-connected device
+    /// so `filtersECGsData` callbacks fire even if the `.connected` event wasn't observed.
+    func reconfigureFilters() {
+        guard currentState == .connected else { return }
+        configureFilters()
+    }
+
     func connect() {
         switch currentState {
         case .disconnected:
@@ -169,6 +177,9 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
     func icvBleManager(_ manager: vhiCVBleManager, data ECGs: [[NSNumber]]!) {
         guard let ECGs else { return }
         DispatchQueue.main.async {
+            #if DEBUG
+            print("📡 [BLE] SDK data arrived — leads=\(ECGs.count) samples=\(ECGs.first?.count ?? 0) callbackSet=\(self.onECGData != nil)")
+            #endif
             self.onECGData?(ECGs)
         }
     }

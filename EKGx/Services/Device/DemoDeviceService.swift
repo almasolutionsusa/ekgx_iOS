@@ -48,6 +48,11 @@ final class DemoDeviceService: DeviceServiceProtocol {
         onConnectionStateChanged?(.disconnected)
     }
 
+    func reconfigureFilters() {
+        guard currentState == .connected else { return }
+        configureFilters()
+    }
+
     // MARK: - Private
 
     private func configureFilters() {

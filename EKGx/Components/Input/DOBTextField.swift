@@ -13,6 +13,8 @@ struct DOBTextField: View {
     let label: String
     @Binding var date: Date?
     var errorMessage: String?
+    var onComplete: (() -> Void)? = nil
+    var autoFocusOnAppear: Bool = false
 
     @State private var text: String = ""
     @FocusState private var isFocused: Bool
@@ -67,7 +69,14 @@ struct DOBTextField: View {
                     .foregroundStyle(AppColors.statusCritical)
             }
         }
-        .onAppear { syncFromDate() }
+        .onAppear {
+            syncFromDate()
+            if autoFocusOnAppear {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    isFocused = true
+                }
+            }
+        }
         .onChange(of: date) { _, newDate in
             if newDate == nil { text = "" }
         }
@@ -99,6 +108,7 @@ struct DOBTextField: View {
 
         if let parsed = Calendar.current.date(from: comps), parsed <= Date() {
             date = parsed
+            onComplete?()
         } else {
             date = nil
         }

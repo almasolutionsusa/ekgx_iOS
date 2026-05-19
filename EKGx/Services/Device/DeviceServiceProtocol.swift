@@ -21,4 +21,6 @@ protocol DeviceServiceProtocol: AnyObject {
 
     func connect()
     func disconnect()
+    /// Re-applies filter configuration when already connected (no reconnect needed).
+    func reconfigureFilters()
 }

@@ -21,8 +21,11 @@ struct EKGRealtimeView: View {
     var body: some View {
         ECGRealTimeRepresentable(ecgView: ecgView, layout: viewModel.selectedLayout)
             .background(Color.black)
-            .onChange(of: viewModel.frameCount) { _, _ in
+            .onChange(of: viewModel.frameCount) { _, newCount in
                 let frame = viewModel.latestECGFrame
+                #if DEBUG
+                print("🖥️ [RealtimeView] onChange frameCount=\(newCount) frame.isEmpty=\(frame.isEmpty)")
+                #endif
                 if frame.isEmpty {
                     ecgView.cleanViewCache()
                 } else {
@@ -50,10 +53,10 @@ private struct ECGRealTimeRepresentable: UIViewRepresentable {
         ecgView.ecg_line_color                = UIColor(named: "ECGWaveform") ?? .green
         ecgView.ecg_dot_color                 = UIColor(named: "ECGWaveform") ?? .green
         ecgView.lost_line_color               = .systemRed
-        ecgView.ecg_line_width                = 1.5
+        ecgView.ecg_line_width                = 1.62
         ecgView.longLead                      = .II
         ecgView.background_board_line_color   = UIColor.systemGray.withAlphaComponent(0.5)
-        ecgView.background_board_line_width   = 0.8
+        ecgView.background_board_line_width   = 0.9
         ecgView.background_line_width         = 0.5
         ecgView.background_line_color         = UIColor.systemGray.withAlphaComponent(0.35)
         ecgView.background_weak_line_width    = 0.5
@@ -61,7 +64,7 @@ private struct ECGRealTimeRepresentable: UIViewRepresentable {
         ecgView.paperSpeed                    = .normal
         ecgView.sensitivity                   = .normal
         ecgView.standard_text_color           = UIColor(named: "BrandPrimary") ?? .systemBlue
-        ecgView.pix_per_mm                    = 7.5
+        ecgView.pix_per_mm                    = 6.2
         ecgView.standard_style                = .hidden
         ecgView.leadDisplay                   = layout.sdkType
         ecgView.layer.cornerRadius            = 0

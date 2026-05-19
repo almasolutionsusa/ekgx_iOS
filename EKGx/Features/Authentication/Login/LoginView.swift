@@ -638,7 +638,7 @@ private struct PinLoginSheet: View {
 
 // MARK: - Numeric Keypad
 
-private struct PinNumericKeypad: View {
+struct PinNumericKeypad: View {
 
     let onDigit:  (String) -> Void
     let onDelete: () -> Void

@@ -108,10 +108,23 @@ final class RecordingViewModel {
 
     /// Call from RecordingView .onAppear — wires this VM as the sole onECGData receiver.
     func activate() {
+        #if DEBUG
+        print("🟢 [Recording] activate() — deviceState=\(deviceService.currentState)")
+        #endif
         setupDeviceCallbacks()
+        // If the device was already connected before this screen opened,
+        // the .connected event never fires, so configureFilters() was never called.
+        // Re-applying it ensures filtersECGsData callbacks work immediately.
+        deviceService.reconfigureFilters()
+        #if DEBUG
+        print("🟢 [Recording] reconfigureFilters() called — deviceState=\(deviceService.currentState)")
+        #endif
         deviceService.onConnectionStateChanged = { [weak self] state in
             guard let self else { return }
             DispatchQueue.main.async {
+                #if DEBUG
+                print("📡 [Recording] connectionStateChanged → \(state)")
+                #endif
                 switch state {
                 case .connected where self.isReconnecting:
                     self.handleReconnectSuccess()
@@ -297,6 +310,10 @@ final class RecordingViewModel {
     }
 
     private func setupDeviceCallbacks() {
+        #if DEBUG
+        print("🔧 [Recording] setupDeviceCallbacks()")
+        #endif
+
         deviceService.onBattery = { [weak self] level in
             guard let self else { return }
             Task { @MainActor in
@@ -314,14 +331,25 @@ final class RecordingViewModel {
 
         deviceService.onECGData = { [weak self] leads in
             guard let self else { return }
+            #if DEBUG
+            print("📦 [Recording] onECGData fired — leads=\(leads.count) samples=\(leads.first?.count ?? 0)")
+            #endif
             vhECGFiltersLib.shared().filtersECGsData(leads) { [weak self] filtered in
-                guard let self, let filtered else { return }
+                guard let self, let filtered else {
+                    #if DEBUG
+                    print("⚠️ [Recording] filtersECGsData callback — filtered is nil!")
+                    #endif
+                    return
+                }
+                #if DEBUG
+                print("✅ [Recording] filtersECGsData done — filtered leads=\(filtered.count) frameCount will be=\(self.frameCount + 1)")
+                #endif
                 let frame = filtered.map { $0.map { Int16(truncatingIfNeeded: $0.intValue) } }
                 Task { @MainActor in
                     self.latestECGFrame = frame
                     self.frameCount &+= 1
                     if self.recordingState == .recording {
-                        self.appendToBuffer(leads)
+                        self.appendToBuffer(filtered)
                         self.resetWatchdog()
                     }
                 }

@@ -105,7 +105,7 @@ private struct PatientSearchForm: View {
     @Bindable var viewModel: PatientSelectionViewModel
     @FocusState private var focused: FocusedField?
 
-    enum FocusedField { case firstName, lastName, mrn }
+    enum FocusedField { case dob, firstName, lastName, mrn }
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -119,7 +119,11 @@ private struct PatientSearchForm: View {
 
                     // DOB + Name group
                     VStack(spacing: AppMetrics.spacing14) {
-                        DOBField(viewModel: viewModel)
+                        DOBField(
+                            viewModel: viewModel,
+                            autoFocusOnAppear: true,
+                            onComplete: { focused = .firstName }
+                        )
 
                         ETextField(
                             label: L10n.PatientSelection.Search.firstName,
@@ -241,6 +245,8 @@ private struct PatientSearchForm: View {
 private struct DOBField: View {
 
     @Bindable var viewModel: PatientSelectionViewModel
+    var autoFocusOnAppear: Bool = false
+    var onComplete: (() -> Void)? = nil
 
     var body: some View {
         DOBTextField(
@@ -249,7 +255,9 @@ private struct DOBField: View {
                 get: { viewModel.dob },
                 set: { viewModel.dob = $0; viewModel.dobError = nil }
             ),
-            errorMessage: viewModel.dobError
+            errorMessage: viewModel.dobError,
+            onComplete: onComplete,
+            autoFocusOnAppear: autoFocusOnAppear
         )
     }
 }
