@@ -121,7 +121,7 @@
 
 // MARK: - Home · Feature Cards
 "home.card.deviceRequired"           = "Connect Device First";
-"home.card.recording.title"          = "ECG Recording";
+"home.card.recording.title"          = "EKG Recording";
 "home.card.recording.subtitle"       = "Capture and monitor live cardiac waveforms in real time";
 "home.card.patients.title"           = "Patients";
 "home.card.patients.subtitle"        = "Search, add, and manage patient records and history";
@@ -190,7 +190,7 @@
 "settings.nav.discardChanges"        = "Discard Changes";
 "settings.nav.saveChanges"           = "Save Changes";
 "settings.panel.categories"         = "Categories";
-"settings.ecg.sectionTitle"         = "ECG Signal";
+"settings.ecg.sectionTitle"         = "EKG Signal";
 "settings.ecg.sectionSubtitle"      = "Configure waveform processing and lead display settings.";
 "settings.ecg.minnesotaTitle"        = "Minnesota Code";
 "settings.ecg.minnesotaSubtitle"     = "Enable Minnesota Code classification for ECG interpretation.";
@@ -293,7 +293,7 @@
 
 // MARK: - Analysis Result
 "analysis.nav.backButton"            = "Recording";
-"analysis.nav.title"                 = "ECG Analysis";
+"analysis.nav.title"                 = "EKG Analysis";
 "analysis.nav.unconfirmed"           = "Unconfirmed — Review Required";
 "analysis.section.measurements"      = "Measurements";
 "analysis.section.interpretation"    = "Interpretation";

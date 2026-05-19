@@ -388,7 +388,7 @@ private struct RecordingsPanel: View {
                 ForEach(Array(viewModel.recordings.enumerated()), id: \.element.id) { index, recording in
                     RecordingRow(
                         recording: recording,
-                        examNumber: index + 1,
+                        examNumber: viewModel.recordings.count - index,
                         isUploading: viewModel.uploadingIds.contains(recording.id),
                         isLocalMode: viewModel.isLocalMode,
                         onTap: { viewModel.openRecording(recording) },

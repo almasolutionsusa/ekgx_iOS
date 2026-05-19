@@ -184,9 +184,9 @@ private struct InfoStrip: View {
             // Diagnosis
             VStack(alignment: .leading, spacing: 2) {
                 Text("INTERPRETATION")
-                    .font(.system(size: 8, weight: .semibold)).foregroundColor(.gray).tracking(0.5)
+                    .font(.system(size: 9, weight: .semibold)).foregroundColor(.gray).tracking(0.5)
                 Text(diagnosisLines.isEmpty ? "—" : diagnosisLines.joined(separator: " · "))
-                    .font(.system(size: 11)).foregroundColor(.black)
+                    .font(.system(size: 12)).foregroundColor(.black)
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -199,10 +199,10 @@ private struct InfoStrip: View {
 
     private func measureItem(_ label: String, _ value: String, _ unit: String) -> some View {
         VStack(alignment: .center, spacing: 1) {
-            Text(label).font(.system(size: 8, weight: .medium)).foregroundColor(.gray)
+            Text(label).font(.system(size: 10, weight: .medium)).foregroundColor(.gray)
             HStack(alignment: .lastTextBaseline, spacing: 1) {
                 Text(value.isEmpty ? "—" : value)
-                    .font(.system(size: 12, weight: .semibold)).foregroundColor(.black).monospacedDigit()
+                    .font(.system(size: 13, weight: .semibold)).foregroundColor(.black).monospacedDigit()
                 Text(unit).font(.system(size: 8)).foregroundColor(.gray)
             }
         }
@@ -369,7 +369,7 @@ private struct AnalysisNavBar: View {
         VStack(spacing: 3) {
             Text(L10n.Analysis.Nav.title).font(AppTypography.bodyMedium).foregroundStyle(.black)
             Text(L10n.Analysis.Nav.unconfirmed)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(AppColors.statusWarning)
                 .padding(.horizontal, 6).padding(.vertical, 2)
                 .background(AppColors.statusWarning.opacity(0.1))

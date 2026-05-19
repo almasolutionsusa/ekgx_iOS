@@ -68,9 +68,7 @@ struct ECGRecording: Identifiable, Codable, Hashable {
     }
 
     var formattedDuration: String {
-        let m = durationSeconds / 60
-        let s = durationSeconds % 60
-        return String(format: "%d:%02d min", m, s)
+        "\(durationSeconds) sec"
     }
 
     var formattedFileSize: String {

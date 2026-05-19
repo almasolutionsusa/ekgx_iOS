@@ -56,11 +56,21 @@ final class CloudViewModel {
     // MARK: - Actions
 
     func activate() {
-        // Build patient list from locally stored recordings
         let allRecordings = recordingStore.allRecordings()
-        if !allRecordings.isEmpty {
+
+        // In offline mode show only recordings that belong to locally created patients.
+        // In online mode show all recordings.
+        let relevantRecordings: [ECGRecording]
+        if isLocalMode {
+            let localIds = Set(diContainer.localPatientStore.patients.map { $0.id })
+            relevantRecordings = allRecordings.filter { localIds.contains($0.patientId) }
+        } else {
+            relevantRecordings = allRecordings
+        }
+
+        if !relevantRecordings.isEmpty {
             var seen = Set<String>()
-            patients = allRecordings.compactMap { rec -> Patient? in
+            patients = relevantRecordings.compactMap { rec -> Patient? in
                 guard seen.insert(rec.patientId).inserted else { return nil }
                 return Patient(
                     id: nil,
@@ -74,7 +84,10 @@ final class CloudViewModel {
                     hasPhoto: nil
                 )
             }
+        } else {
+            patients = []
         }
+
         // Re-fetch recordings so status changes (e.g. pending → synced) are reflected.
         if let patient = selectedPatient {
             loadRecordings(for: patient)

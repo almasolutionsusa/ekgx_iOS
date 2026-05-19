@@ -25,7 +25,7 @@ struct DashboardView: View {
                     Text(L10n.Branding.appName)
                         .font(AppTypography.title1)
                         .foregroundStyle(AppColors.textPrimary)
-                    Text("ECG Recording & Analysis Dashboard")
+                    Text("EKG Recording & Analysis Dashboard")
                         .font(AppTypography.callout)
                         .foregroundStyle(AppColors.textSecondary)
                 }

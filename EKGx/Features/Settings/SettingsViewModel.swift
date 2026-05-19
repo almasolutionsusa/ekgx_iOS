@@ -131,7 +131,7 @@ final class SettingsViewModel {
 
     enum Section: String, CaseIterable, Identifiable {
         var id: String { rawValue }
-        case ecgSignal   = "ECG Signal"
+        case ecgSignal   = "EKG Signal"
         case display     = "Display"
         case privacy     = "Privacy"
         case security    = "Security"

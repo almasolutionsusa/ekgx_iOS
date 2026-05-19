@@ -104,7 +104,7 @@ private struct FeatureCardButtonStyle: ButtonStyle {
     HStack(spacing: AppMetrics.spacing20) {
         FeatureCard(
             systemImage: "waveform.path.ecg",
-            title: "ECG Recording",
+            title: "EKG Recording",
             subtitle: "Capture and monitor live cardiac waveforms in real time",
             accentColor: AppColors.brandPrimary,
             action: {}

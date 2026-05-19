@@ -36,8 +36,61 @@ struct ECGImageRenderer {
 
     // MARK: - Public
 
-    /// Renders a 12-lead 3×4 ECG to UIImage.
-    /// - Parameter scale: pixel multiplier (2.0 → 1584 × 1224 physical px)
+    /// Renders a multi-page PDF — one page per 10 s of recording at 25 mm/s.
+    /// 10 s → 1 page, 20 s → 2 pages, 30 s → 3 pages.
+    static func renderPDF(
+        ecgData: [[NSNumber]],
+        patient: Patient,
+        sampleRate: Int,
+        measurements: vhMeasurements?,
+        diagnosisLines: [String]
+    ) -> Data? {
+        guard ecgData.count == 12, !ecgData[0].isEmpty, sampleRate > 0 else { return nil }
+
+        let totalSamples    = ecgData[0].count
+        let durationSeconds = Double(totalSamples) / Double(sampleRate)
+        // Round to nearest 10 s boundary — recordings are always 10/20/30 s nominally,
+        // but the device may deliver a few extra samples beyond the exact target.
+        let numPages        = max(1, Int((durationSeconds / 10.0).rounded()))
+        let samplesPerPage  = max(1, totalSamples / numPages)
+
+        let pageRect = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
+
+        return UIGraphicsPDFRenderer(bounds: pageRect).pdfData { ctx in
+            for page in 0..<numPages {
+                ctx.beginPage()
+                let cgCtx = ctx.cgContext
+
+                UIColor.white.setFill()
+                UIRectFill(pageRect)
+
+                // Slice each lead for this 10 s window
+                let start    = page * samplesPerPage
+                let end      = min(start + samplesPerPage, totalSamples)
+                let pageData: [[NSNumber]] = ecgData.map { Array($0[start..<end]) }
+
+                let headerBottom = drawHeader(
+                    patient: patient,
+                    measurements: measurements,
+                    in: pageRect,
+                    context: cgCtx,
+                    pageNum: numPages > 1 ? page + 1 : nil,
+                    totalPages: numPages > 1 ? numPages : nil
+                )
+
+                draw3x4(
+                    ecgData: pageData,
+                    sampleRate: sampleRate,
+                    diagnosisLines: page == numPages - 1 ? diagnosisLines : [],
+                    in: pageRect,
+                    topOffset: headerBottom,
+                    context: cgCtx
+                )
+            }
+        }
+    }
+
+    /// Single-page UIImage — used for EMR upload thumbnail.
     static func render(
         ecgData: [[NSNumber]],
         patient: Patient,
@@ -56,7 +109,6 @@ struct ECGImageRenderer {
         return UIGraphicsImageRenderer(size: size, format: format).image { ctx in
             let context = ctx.cgContext
 
-            // White background
             UIColor.white.setFill()
             UIRectFill(CGRect(origin: .zero, size: size))
 
@@ -69,6 +121,7 @@ struct ECGImageRenderer {
 
             draw3x4(
                 ecgData: ecgData,
+                sampleRate: sampleRate,
                 diagnosisLines: diagnosisLines,
                 in: CGRect(origin: .zero, size: size),
                 topOffset: headerBottom,
@@ -84,7 +137,9 @@ struct ECGImageRenderer {
         patient: Patient,
         measurements: vhMeasurements?,
         in rect: CGRect,
-        context: CGContext
+        context: CGContext,
+        pageNum: Int? = nil,
+        totalPages: Int? = nil
     ) -> CGFloat {
         var y = margin
 
@@ -106,7 +161,8 @@ struct ECGImageRenderer {
         let df = DateFormatter()
         df.dateStyle = .medium
         df.timeStyle = .short
-        let dateStr  = df.string(from: Date())
+        var dateStr = df.string(from: Date())
+        if let p = pageNum, let t = totalPages { dateStr += "  ·  Page \(p)/\(t)" }
         let dateSize = (dateStr as NSString).size(withAttributes: grayAttrs)
         (dateStr as NSString).draw(
             at: CGPoint(x: rect.width - margin - dateSize.width, y: y),
@@ -232,6 +288,7 @@ struct ECGImageRenderer {
 
     private static func draw3x4(
         ecgData: [[NSNumber]],
+        sampleRate: Int,
         diagnosisLines: [String],
         in pageRect: CGRect,
         topOffset: CGFloat,
@@ -258,8 +315,13 @@ struct ECGImageRenderer {
         )
 
         let gainPxPerMV = pixPerMm * 10.0   // standard ECG gain: 10 mm/mV
-        let sampleCount = ecgData[0].count
-        let samplesPerCol = sampleCount / 4  // divide recording into 4 equal time windows
+        let sampleCount   = ecgData[0].count
+        let samplesPerCol = max(1, sampleCount / 4)  // divide recording into 4 equal time windows
+
+        // Actual paper speed: mm of column / seconds of column
+        let effectiveSpeed: CGFloat = sampleRate > 0
+            ? (colWidth / pixPerMm) / (CGFloat(samplesPerCol) / CGFloat(sampleRate))
+            : 25.0
 
         // Compute uniform Y-scale so the tallest waveform fits within its row
         let halfRow       = rowHeight * 0.45
@@ -370,7 +432,8 @@ struct ECGImageRenderer {
         let footerAttrs: [NSAttributedString.Key: Any] = [
             .font: footerFont, .foregroundColor: UIColor.gray,
         ]
-        ("25 mm/s  ·  10 mm/mV" as NSString).draw(
+        let speedLabel = String(format: "%.0f mm/s  ·  10 mm/mV", effectiveSpeed)
+        (speedLabel as NSString).draw(
             at: CGPoint(x: margin, y: footerY),
             withAttributes: footerAttrs
         )

@@ -33,17 +33,28 @@ struct ECGDrawLinePath: Shape {
     let model: ECGLineModel
     var showStandard: Bool = false
     var startIndex: Int = 0
+    var endIndex: Int? = nil       // when set, stretch [startIndex..<endIndex] to fill rect
     var widthLimit: CGFloat? = nil
     var fullScreen: Bool = false   // stretch beat to fill full width (layers mode)
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        let yMiddle   = rect.height / 2
-        let xPerPoint = fullScreen
-            ? rect.width / CGFloat(ecgArray.count)
-            : model.pixPermm * model.xSpeed / model.rate
-        var currentX: CGFloat = 0
+        let yMiddle = rect.height / 2
 
+        let calPulseWidth: CGFloat = (showStandard && !fullScreen) ? 6 * model.pixPermm : 0
+        let segEnd   = endIndex.map { min($0, ecgArray.count) } ?? ecgArray.count
+        let segCount = max(1, segEnd - startIndex)
+
+        let xPerPoint: CGFloat
+        if fullScreen {
+            xPerPoint = rect.width / CGFloat(ecgArray.count)
+        } else if endIndex != nil {
+            xPerPoint = (rect.width - calPulseWidth) / CGFloat(segCount)
+        } else {
+            xPerPoint = model.pixPermm * model.xSpeed / model.rate
+        }
+
+        var currentX: CGFloat = 0
         path.move(to: CGPoint(x: currentX, y: yMiddle))
 
         // 1 mV calibration pulse (only in non-fullScreen mode)
@@ -58,13 +69,14 @@ struct ECGDrawLinePath: Shape {
             path.addLine(to: CGPoint(x: currentX, y: yMiddle))
         }
 
-        for i in startIndex..<ecgArray.count {
+        for i in startIndex..<segEnd {
+            guard i < ecgArray.count else { break }
             let sample = CGFloat(ecgArray[i].floatValue)
             let yRate  = fullScreen ? CGFloat(15) : model.yRate
             let ySeek  = model.pixPermm * sample * yRate / 1000.0
             path.addLine(to: CGPoint(x: currentX, y: yMiddle - ySeek))
             currentX += xPerPoint
-            if let limit = widthLimit, currentX >= limit { break }
+            if let limit = widthLimit, endIndex == nil, currentX >= limit { break }
         }
 
         return path
@@ -94,6 +106,7 @@ struct EcgBackgroundView: UIViewRepresentable {
         v.standard_text_color        = .clear
         v.pix_per_mm                 = Double(pixPerMm)
         v.standard_style             = .hidden
+        v.isUserInteractionEnabled   = false   // let touches pass through to SwiftUI
         return v
     }
 
@@ -110,6 +123,7 @@ struct ECGGridLine: View {
     var width: CGFloat? = nil
     var showStandard: Bool = false
     var startIndex: Int = 0
+    var endIndex: Int? = nil       // when set, stretch segment to fill width
     var lineModel: ECGLineModel
 
     var body: some View {
@@ -119,12 +133,13 @@ struct ECGGridLine: View {
                 model: lineModel,
                 showStandard: showStandard,
                 startIndex: startIndex,
-                widthLimit: width
+                endIndex: endIndex,
+                widthLimit: endIndex == nil ? width : nil
             )
             .stroke(Color.black, lineWidth: 1)
 
             Text(leadName)
-                .font(.system(size: 10, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.black)
                 .padding(.leading, 4)
                 .padding(.bottom, 4)
@@ -589,82 +604,91 @@ struct EKGStaticView: View {
 
     var body: some View {
         GeometryReader { geo in
+            let totalSamples     = fullData.first?.count ?? 0
+            // Always 4 columns — each shows totalSamples/4 samples.
+            // Column width is driven by natural paper speed so longer recordings scroll further.
+            let samplesPerColumn = max(1, totalSamples / numCols)
+            let xPerPoint        = lineModel.pixPermm * lineModel.xSpeed / lineModel.rate
+            // At minimum fill the screen; for longer recordings each column grows wider
+            let cellWidth        = max(geo.size.width / CGFloat(numCols),
+                                       CGFloat(samplesPerColumn) * xPerPoint)
+            let totalGridWidth   = cellWidth * CGFloat(numCols)
+
             let longLeadHeight = geo.size.height * 0.20
             let gridHeight     = geo.size.height - longLeadHeight
-            let cellWidth      = geo.size.width  / CGFloat(numCols)
             let cellHeight     = gridHeight / CGFloat(numRows)
-            let xPerPoint      = lineModel.pixPermm * lineModel.xSpeed / lineModel.rate
-            let longLeadWidth  = max(CGFloat(fullData.first?.count ?? 0) * xPerPoint, geo.size.width)
 
             ZStack(alignment: .topLeading) {
-                EcgBackgroundView(showSmallLines: true, pixPerMm: Float(lineModel.pixPermm))
-
                 if templateData.count >= 12 && fullData.count >= 12 {
-                    VStack(spacing: 0) {
-                        // 3×4 grid — use full recording data, offset per column
-                        ForEach(0..<numRows, id: \.self) { row in
-                            HStack(spacing: 0) {
-                                ForEach(0..<numCols, id: \.self) { col in
-                                    let leadIndex   = leadOrder[row][col]
-                                    let samples     = fullData[leadIndex]
-                                    let samplesPerCell   = Int(cellWidth / xPerPoint)
-                                    // Calibration pulse (6 mm) in col 0 takes up space; offset
-                                    // subsequent columns backward so the data is continuous,
-                                    // matching the rhythm strip below. (Alma: getStartDrawFromIndex)
-                                    let calibrationSamples = Int(6 * lineModel.pixPermm / xPerPoint)
-                                    let startIdx    = col == 0
-                                        ? 0
-                                        : max(0, col * samplesPerCell - calibrationSamples + 1)
+                    // Single ScrollView for grid + rhythm strip — they scroll together
+                    ScrollView(.horizontal, showsIndicators: true) {
+                        ZStack(alignment: .topLeading) {
+                            // One background spanning full height
+                            EcgBackgroundView(showSmallLines: true, pixPerMm: Float(lineModel.pixPermm))
+                                .frame(width: totalGridWidth, height: geo.size.height)
 
-                                    ECGGridLine(
-                                        leadName: leadNames[leadIndex],
-                                        samples: samples,
-                                        height: cellHeight,
-                                        width: cellWidth,
-                                        showStandard: col == 0,
-                                        startIndex: startIdx,
-                                        lineModel: lineModel
-                                    )
+                            VStack(spacing: 0) {
+                                // 3 × 4 lead grid
+                                VStack(spacing: 0) {
+                                    ForEach(0..<numRows, id: \.self) { row in
+                                        HStack(spacing: 0) {
+                                            ForEach(0..<numCols, id: \.self) { col in
+                                                let leadIndex = leadOrder[row][col]
+                                                let samples   = fullData[leadIndex]
+                                                let startIdx  = col * samplesPerColumn
+                                                let endIdx    = min((col + 1) * samplesPerColumn, totalSamples)
+
+                                                ECGGridLine(
+                                                    leadName: leadNames[leadIndex],
+                                                    samples: samples,
+                                                    height: cellHeight,
+                                                    width: cellWidth,
+                                                    showStandard: col == 0,
+                                                    startIndex: startIdx,
+                                                    endIndex: endIdx,
+                                                    lineModel: lineModel
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
+                                .frame(width: totalGridWidth, height: gridHeight)
+
+                                // Rhythm strip — Lead II split into the same 4 column segments
+                                // as the grid so each segment's xPerPoint is identical to the
+                                // column directly above, keeping beats vertically aligned.
+                                ZStack(alignment: .bottomLeading) {
+                                    HStack(spacing: 0) {
+                                        ForEach(0..<numCols, id: \.self) { col in
+                                            let startIdx = col * samplesPerColumn
+                                            let endIdx   = min((col + 1) * samplesPerColumn, totalSamples)
+                                            ECGGridLine(
+                                                leadName: col == 0 ? "II" : "",
+                                                samples: fullData[longLeadIndex],
+                                                height: longLeadHeight,
+                                                width: cellWidth,
+                                                showStandard: col == 0,
+                                                startIndex: startIdx,
+                                                endIndex: endIdx,
+                                                lineModel: lineModel
+                                            )
+                                        }
+                                    }
+                                    Text("25 mm/s  ·  \(Int(yRate)) mm/mV")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.black.opacity(0.7))
+                                        .padding(.leading, 50)
+                                        .padding(.bottom, 4)
+                                }
+                                .frame(width: totalGridWidth, height: longLeadHeight)
                             }
                         }
-
-                        // Long lead row — full Lead II, horizontally scrollable
-                        ScrollView(.horizontal, showsIndicators: true) {
-                            ZStack(alignment: .topLeading) {
-                                EcgBackgroundView(showSmallLines: true, pixPerMm: Float(lineModel.pixPermm))
-                                    .frame(width: longLeadWidth, height: longLeadHeight)
-
-                                ECGGridLine(
-                                    leadName: "II",
-                                    samples: fullData[longLeadIndex],
-                                    height: longLeadHeight,
-                                    width: longLeadWidth,
-                                    showStandard: true,
-                                    startIndex: 0,
-                                    lineModel: lineModel
-                                )
-                            }
-                            .frame(width: longLeadWidth, height: longLeadHeight)
-                        }
-                        .frame(height: longLeadHeight)
-                    }
-                }
-
-                // Scale label
-                VStack {
-                    Spacer()
-                    HStack {
-                        Text("25 mm/s  ·  \(Int(yRate)) mm/mV")
-                            .font(.system(size: 9))
-                            .foregroundColor(.black.opacity(0.6))
-                            .padding(6)
-                        Spacer()
+                        .contentShape(Rectangle())
+                        .onTapGesture { cycleYRate() }
+                        .frame(width: totalGridWidth, height: geo.size.height)
                     }
                 }
             }
-            .contentShape(Rectangle())
-            .onTapGesture { cycleYRate() }
         }
         .onChange(of: yRate) { _, v in lineModel.yRate = v }
     }

@@ -165,29 +165,23 @@ func printECG(
     measurements: vhMeasurements?,
     diagnosisLines: [String]
 ) {
-    let printView = ECGPrintView(
-        patient: patient,
-        templateData: templateData,
+    // Render as multi-page PDF (1 page / 10 s at 25 mm/s — 30 s → 3 pages).
+    guard let pdfData = ECGImageRenderer.renderPDF(
         ecgData: ecgData,
+        patient: patient,
         sampleRate: sampleRate,
         measurements: measurements,
         diagnosisLines: diagnosisLines
-    )
-
-    let renderer = ImageRenderer(content: printView)
-    renderer.scale = 2.0
-    renderer.proposedSize = .init(width: 1024, height: 768)
-
-    guard let uiImage = renderer.uiImage else { return }
+    ) else { return }
 
     let printInfo = UIPrintInfo(dictionary: nil)
-    printInfo.jobName = "ECG – \(patient.fullName)"
-    printInfo.outputType = .grayscale
+    printInfo.jobName = "EKG – \(patient.fullName)"
+    printInfo.outputType = .general
     printInfo.orientation = .landscape
 
     let controller = UIPrintInteractionController.shared
     controller.printInfo = printInfo
-    controller.printingItem = uiImage
+    controller.printingItem = pdfData
 
     controller.present(animated: true)
 }

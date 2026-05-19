@@ -65,7 +65,7 @@ struct AnalysisDiagnosisPanel: View {
                     }
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
-                    .background(Color.white)
+                    .background(Color(UIColor.secondarySystemGroupedBackground))
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
                             .stroke(Color(UIColor.systemGray4), lineWidth: 1)
