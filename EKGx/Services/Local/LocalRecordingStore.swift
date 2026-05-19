@@ -4,7 +4,7 @@
 //
 //  Persists ECG recordings locally via CoreData.
 //  Each recording stores patient info, measurements, status, and optionally
-//  the raw ECG binary + rendered JPEG image.
+//  the raw ECG binary + rendered multi-page PDF.
 //
 //  Status lifecycle:
 //    .pending  → saved immediately when user proceeds to analysis
@@ -29,7 +29,7 @@ final class LocalRecordingStore {
     /// Inserts a new recording with `.pending` status.
     /// Call this when the user proceeds from recording → analysis.
     @discardableResult
-    func save(recording: ECGRecording, ecgFileData: Data?, imageData: Data?) -> ECGRecordingEntity? {
+    func save(recording: ECGRecording, ecgFileData: Data?, pdfData: Data?) -> ECGRecordingEntity? {
         let entity = ECGRecordingEntity(context: context)
         entity.id              = recording.id
         entity.patientId       = recording.patientId
@@ -50,7 +50,7 @@ final class LocalRecordingStore {
         entity.qtInterval      = recording.qtInterval
         entity.qtCorrected     = recording.qtCorrected
         entity.ecgFileData     = ecgFileData
-        entity.imageData       = imageData
+        entity.imageData       = pdfData
         entity.appVersion      = recording.appVersion
         entity.username        = recording.username
         persist()
@@ -127,6 +127,14 @@ final class LocalRecordingStore {
         request.predicate = NSPredicate(format: "id == %@", id)
         request.fetchLimit = 1
         return (try? context.fetch(request).first)?.ecgFileData
+    }
+
+    /// Stored PDF for a given recording ID (may be nil if not stored).
+    func pdfData(for id: String) -> Data? {
+        let request: NSFetchRequest<ECGRecordingEntity> = ECGRecordingEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        return (try? context.fetch(request).first)?.imageData
     }
 
     // MARK: - Private

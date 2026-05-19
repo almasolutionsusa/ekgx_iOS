@@ -162,8 +162,8 @@ final class AnalysisViewModel {
         uploadError = nil
         showUploadResult = false
 
-        // Render the ECG image on @MainActor before entering the async Task
-        let imageData = renderECGImage()
+        // Render the PDF on @MainActor before entering the async Task
+        let pdfData = renderECGPDF()
 
         Task {
             do {
@@ -197,7 +197,7 @@ final class AnalysisViewModel {
                 payload.recordedAt  = Date()
                 payload.appVersion  = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
                 payload.fileData    = fileData
-                payload.imageData   = imageData
+                payload.pdfData     = pdfData
 
                 print("── EKG Upload Payload ──────────────────")
                 print("  patientUuid : \(payload.patientUuid)")
@@ -224,7 +224,7 @@ final class AnalysisViewModel {
                 print("  appVersion  : \(payload.appVersion ?? "nil")")
                 print("  recordedAt  : \(payload.recordedAt?.description ?? "nil")")
                 print("  fileData    : \(payload.fileData?.count ?? 0) bytes")
-                print("  imageData   : \(payload.imageData?.count ?? 0) bytes")
+                print("  pdfData     : \(payload.pdfData?.count ?? 0) bytes")
                 print("────────────────────────────────────────")
 
                 try await uploadService.upload(payload: payload)
@@ -255,21 +255,21 @@ final class AnalysisViewModel {
         }
     }
 
-    private func renderECGImage() -> Data? {
-        ECGImageRenderer.render(
+    private func renderECGPDF() -> Data? {
+        ECGImageRenderer.renderPDF(
             ecgData: ecgData,
             patient: patient,
             sampleRate: sampleRate,
             measurements: measurements,
             diagnosisLines: diagnosisLines
-        )?.jpegData(compressionQuality: 0.85)
+        )
     }
 
     private func saveLocalRecording() {
         guard localRecordingId == nil else { return }
         let m = measurements?.merge
         let fileData = EKGUploadService.serialise(ecgData: ecgData)
-        let image = renderECGImage()
+        let pdf = renderECGPDF()
         let recording = ECGRecording.makePending(
             patient:        patient,
             durationSeconds: (ecgData.first?.count ?? 0) / max(sampleRate, 1),
@@ -284,7 +284,7 @@ final class AnalysisViewModel {
             appVersion:     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
             username:       authService.currentUser?.username
         )
-        recordingStore.save(recording: recording, ecgFileData: fileData, imageData: image)
+        recordingStore.save(recording: recording, ecgFileData: fileData, pdfData: pdf)
         localRecordingId = recording.id
     }
 

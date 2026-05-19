@@ -64,7 +64,6 @@ struct ECGImageRenderer {
                 UIColor.white.setFill()
                 UIRectFill(pageRect)
 
-                // Slice each lead for this 10 s window
                 let start    = page * samplesPerPage
                 let end      = min(start + samplesPerPage, totalSamples)
                 let pageData: [[NSNumber]] = ecgData.map { Array($0[start..<end]) }
@@ -81,12 +80,24 @@ struct ECGImageRenderer {
                 draw3x4(
                     ecgData: pageData,
                     sampleRate: sampleRate,
-                    diagnosisLines: page == numPages - 1 ? diagnosisLines : [],
+                    diagnosisLines: [],
                     in: pageRect,
                     topOffset: headerBottom,
                     context: cgCtx
                 )
             }
+
+            // Final page: measurements + interpretation at large size
+            ctx.beginPage()
+            UIColor.white.setFill()
+            UIRectFill(pageRect)
+            drawReportPage(
+                patient: patient,
+                measurements: measurements,
+                diagnosisLines: diagnosisLines,
+                in: pageRect,
+                context: ctx.cgContext
+            )
         }
     }
 
@@ -450,6 +461,165 @@ struct ECGImageRenderer {
                 height: footerHeight
             )
             (diagText as NSString).draw(in: diagRect, withAttributes: diagAttrs)
+        }
+    }
+
+    // MARK: - Report Page (measurements + interpretation)
+
+    private static func drawReportPage(
+        patient: Patient,
+        measurements: vhMeasurements?,
+        diagnosisLines: [String],
+        in pageRect: CGRect,
+        context: CGContext
+    ) {
+        // ── Watermark (drawn first so it sits behind all text) ────────────────
+        context.saveGState()
+        context.translateBy(x: pageRect.midX, y: pageRect.midY)
+        context.rotate(by: -CGFloat.pi / 6)
+        let wmFont  = UIFont.boldSystemFont(ofSize: 80)
+        let wmAttrs: [NSAttributedString.Key: Any] = [
+            .font: wmFont,
+            .foregroundColor: UIColor.red.withAlphaComponent(0.07),
+        ]
+        let wmStr  = "UNCONFIRMED" as NSString
+        let wmSize = wmStr.size(withAttributes: wmAttrs)
+        wmStr.draw(at: CGPoint(x: -wmSize.width / 2, y: -wmSize.height / 2), withAttributes: wmAttrs)
+        context.restoreGState()
+
+        // ── Fonts & attributes ────────────────────────────────────────────────
+        let sectionTitleFont = UIFont.boldSystemFont(ofSize: 13)
+        let nameFont         = UIFont.boldSystemFont(ofSize: 12)
+        let detailFont       = UIFont.systemFont(ofSize: 10)
+        let valueFont        = UIFont.boldSystemFont(ofSize: 24)
+        let metricLabelFont  = UIFont.boldSystemFont(ofSize: 9)
+        let unitFont         = UIFont.systemFont(ofSize: 9)
+        let interpretFont    = UIFont.systemFont(ofSize: 13)
+        let redFont          = UIFont.boldSystemFont(ofSize: 9)
+
+        let nameAttrs:         [NSAttributedString.Key: Any] = [.font: nameFont]
+        let detailAttrs:       [NSAttributedString.Key: Any] = [.font: detailFont,        .foregroundColor: UIColor.darkGray]
+        let redAttrs:          [NSAttributedString.Key: Any] = [.font: redFont,           .foregroundColor: UIColor.red]
+        let sectionTitleAttrs: [NSAttributedString.Key: Any] = [.font: sectionTitleFont]
+        let valueAttrs:        [NSAttributedString.Key: Any] = [.font: valueFont]
+        let metricLabelAttrs:  [NSAttributedString.Key: Any] = [.font: metricLabelFont,   .foregroundColor: UIColor.darkGray]
+        let unitAttrs:         [NSAttributedString.Key: Any] = [.font: unitFont,          .foregroundColor: UIColor.gray]
+        let interpretAttrs:    [NSAttributedString.Key: Any] = [.font: interpretFont]
+        let interpretGrayAttrs:[NSAttributedString.Key: Any] = [.font: interpretFont,     .foregroundColor: UIColor.darkGray]
+
+        var y = margin
+
+        // ── Patient header ─────────────────────────────────────────────────────
+        (patient.fullName as NSString).draw(at: CGPoint(x: margin, y: y), withAttributes: nameAttrs)
+
+        let df = DateFormatter()
+        df.dateStyle = .long
+        df.timeStyle = .short
+        let dateStr  = df.string(from: Date())
+        let dateSize = (dateStr as NSString).size(withAttributes: detailAttrs)
+        (dateStr as NSString).draw(
+            at: CGPoint(x: pageRect.width - margin - dateSize.width, y: y + 1),
+            withAttributes: detailAttrs
+        )
+        y += 16
+
+        var details = patient.genderDisplay
+        if !patient.age.isEmpty       { details += "  ·  Age: \(patient.age)" }
+        if !patient.birthDate.isEmpty { details += "  ·  DOB: \(patient.birthDate)" }
+        if let mrn = patient.medicalRecordNumber, !mrn.isEmpty { details += "  ·  MRN: \(mrn)" }
+        (details as NSString).draw(at: CGPoint(x: margin, y: y), withAttributes: detailAttrs)
+
+        let unconfStr  = "Unconfirmed"
+        let unconfSize = (unconfStr as NSString).size(withAttributes: redAttrs)
+        (unconfStr as NSString).draw(
+            at: CGPoint(x: pageRect.width - margin - unconfSize.width, y: y),
+            withAttributes: redAttrs
+        )
+        y += 14
+
+        func drawSeparator() {
+            context.setStrokeColor(UIColor.lightGray.cgColor)
+            context.setLineWidth(0.5)
+            context.move(to:    CGPoint(x: margin,              y: y))
+            context.addLine(to: CGPoint(x: pageRect.width - margin, y: y))
+            context.strokePath()
+            y += 14
+        }
+
+        drawSeparator()
+
+        // ── MEASUREMENTS section ───────────────────────────────────────────────
+        ("MEASUREMENTS" as NSString).draw(at: CGPoint(x: margin, y: y), withAttributes: sectionTitleAttrs)
+        y += 22
+
+        let pairs: [(label: String, value: String, unit: String)] = {
+            guard let m = measurements?.merge else { return [] }
+            return [
+                ("HR",   m.hr,      "bpm"),
+                ("PR",   m.pr,      "ms"),
+                ("QRS",  m.qrs,     "ms"),
+                ("QT",   m.qt,      "ms"),
+                ("QTc",  m.qTc,     "ms"),
+                ("P°",   m.paxis,   "°"),
+                ("QRS°", m.qrSaxis, "°"),
+            ]
+        }()
+
+        if pairs.isEmpty {
+            ("No measurement data available" as NSString)
+                .draw(at: CGPoint(x: margin, y: y), withAttributes: detailAttrs)
+            y += 18
+        } else {
+            let usableWidth = pageRect.width - 2 * margin
+            let colW        = usableWidth / CGFloat(pairs.count)
+
+            for (i, pair) in pairs.enumerated() {
+                let x            = margin + CGFloat(i) * colW
+                let displayValue = pair.value.isEmpty || pair.value == "—" ? "—" : pair.value
+
+                // Value
+                let valStr  = displayValue as NSString
+                let valSize = valStr.size(withAttributes: valueAttrs)
+                valStr.draw(
+                    at: CGPoint(x: x + (colW - valSize.width) / 2, y: y),
+                    withAttributes: valueAttrs
+                )
+
+                // Unit (only when value is real)
+                let unitY = y + valSize.height + 1
+                if displayValue != "—" {
+                    let uStr  = pair.unit as NSString
+                    let uSize = uStr.size(withAttributes: unitAttrs)
+                    uStr.draw(at: CGPoint(x: x + (colW - uSize.width) / 2, y: unitY), withAttributes: unitAttrs)
+                }
+
+                // Metric label
+                let labelY  = unitY + 13
+                let lStr    = pair.label as NSString
+                let lSize   = lStr.size(withAttributes: metricLabelAttrs)
+                lStr.draw(at: CGPoint(x: x + (colW - lSize.width) / 2, y: labelY), withAttributes: metricLabelAttrs)
+            }
+
+            // Advance y past the tallest card: value (≈28) + gap (1) + unit (≈12) + gap (13) + label (≈11) + bottom padding
+            y += 28 + 1 + 12 + 13 + 11 + 14
+        }
+
+        drawSeparator()
+
+        // ── INTERPRETATION section ────────────────────────────────────────────
+        ("INTERPRETATION" as NSString).draw(at: CGPoint(x: margin, y: y), withAttributes: sectionTitleAttrs)
+        y += 22
+
+        if diagnosisLines.isEmpty {
+            ("No interpretation available" as NSString)
+                .draw(at: CGPoint(x: margin, y: y), withAttributes: interpretGrayAttrs)
+        } else {
+            let lineW = pageRect.width - 2 * margin
+            for line in diagnosisLines {
+                let lineRect = CGRect(x: margin, y: y, width: lineW, height: 20)
+                (line as NSString).draw(in: lineRect, withAttributes: interpretAttrs)
+                y += 18
+            }
         }
     }
 }

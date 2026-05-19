@@ -46,8 +46,8 @@ struct EKGUploadPayload {
 
     // Raw EKG file bytes (.plist signal data)
     var fileData: Data?
-    // Rendered 12-lead JPEG (optional — required for IN_HOUSE EMR)
-    var imageData: Data?
+    // Rendered multi-page PDF (optional — required for IN_HOUSE EMR)
+    var pdfData: Data?
 }
 
 // MARK: - EKGUploadService
@@ -74,12 +74,12 @@ final class EKGUploadService {
                 data: data
             ))
         }
-        if let image = payload.imageData {
+        if let pdf = payload.pdfData {
             files.append(MultipartFile(
                 fieldName: "imageFile",
-                fileName: "ecg_\(Int(Date().timeIntervalSince1970)).jpg",
-                mimeType: "image/jpeg",
-                data: image
+                fileName: "ecg_\(Int(Date().timeIntervalSince1970)).pdf",
+                mimeType: "application/pdf",
+                data: pdf
             ))
         }
 

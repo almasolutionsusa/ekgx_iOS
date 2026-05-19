@@ -148,6 +148,7 @@ final class CloudViewModel {
         Task {
             do {
                 let rawData  = recordingStore.ecgFileData(for: recording.id)
+                let pdfData  = recordingStore.pdfData(for: recording.id)
                 let appUuid  = diContainer.checkinService.appUuid
 
                 var payload  = EKGUploadPayload(
@@ -164,6 +165,7 @@ final class CloudViewModel {
                 payload.appVersion   = recording.appVersion
                 payload.recordedAt   = recording.recordedAt
                 payload.fileData     = rawData
+                payload.pdfData      = pdfData
 
                 try await diContainer.ekgUploadService.upload(payload: payload)
 
