@@ -47,7 +47,7 @@ final class PatientSelectionViewModel {
     var createDobError: String?       = nil
     var createMRNError: String?       = nil
 
-    let genderOptions: [String] = ["Male", "Female", "Other"]
+    let genderOptions: [String] = ["Male", "Female"]
 
     // MARK: - Dependencies
 

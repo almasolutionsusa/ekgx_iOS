@@ -28,7 +28,7 @@ final class OfflinePatientSelectionViewModel {
     var createLastNameError: String?  = nil
     var createDobError: String?       = nil
 
-    let genderOptions: [String] = ["Male", "Female", "Other"]
+    let genderOptions: [String] = ["Male", "Female"]
 
     // MARK: - Dependencies
 
