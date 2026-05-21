@@ -250,9 +250,12 @@ private struct RecordingControlsPanel: View {
             leadLayoutSection
             durationSection
             Spacer()
-            if viewModel.recordingState == .recording,
-               viewModel.selectedDuration != .continuous {
-                progressRing
+            if viewModel.recordingState == .recording {
+                if viewModel.selectedDuration == .continuous {
+                    continuousTimer
+                } else {
+                    progressRing
+                }
             }
             Spacer()
             actionButtons
@@ -276,7 +279,7 @@ private struct RecordingControlsPanel: View {
     private var durationSection: some View {
         controlSection(title: L10n.Recording.Controls.duration) {
             VStack(spacing: AppMetrics.spacing8) {
-                ForEach(RecordingDuration.allCases.filter { $0 != .continuous }, id: \.self) { duration in
+                ForEach(RecordingDuration.allCases, id: \.self) { duration in
                     controlChip(title: duration.rawValue, isSelected: viewModel.selectedDuration == duration) {
                         viewModel.selectedDuration = duration
                     }
@@ -367,6 +370,19 @@ private struct RecordingControlsPanel: View {
         case .recording: return AppColors.statusCritical
         case .done:      return AppColors.statusSuccess
         }
+    }
+
+    private var continuousTimer: some View {
+        VStack(spacing: AppMetrics.spacing2) {
+            Text(viewModel.elapsedFormatted)
+                .font(AppTypography.title2)
+                .foregroundStyle(AppColors.textPrimary)
+                .monospacedDigit()
+            Text(L10n.Recording.Controls.elapsed)
+                .font(AppTypography.caption)
+                .foregroundStyle(AppColors.textSecondary)
+        }
+        .frame(width: 80, height: 80)
     }
 
     private var progressRing: some View {

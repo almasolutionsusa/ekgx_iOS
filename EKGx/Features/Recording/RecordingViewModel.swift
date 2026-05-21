@@ -21,14 +21,12 @@ enum ECGLeadLayout: String, CaseIterable {
 
 enum RecordingDuration: String, CaseIterable {
     case ten        = "10 s"
-    case twenty     = "20 s"
     case thirty     = "30 s"
     case continuous = "Continuous"
 
     var seconds: Int {
         switch self {
         case .ten:        return 10
-        case .twenty:     return 20
         case .thirty:     return 30
         case .continuous: return Int.max
         }
@@ -364,7 +362,7 @@ final class RecordingViewModel {
 
     private func appendToBuffer(_ leads: ECGLeads) {
         let maxSamples = selectedDuration.seconds == Int.max
-            ? 660 * 30   // cap continuous at 30s
+            ? 660 * 60
             : 660 * selectedDuration.seconds + 660
 
         if ecgDataBuffer.isEmpty {
