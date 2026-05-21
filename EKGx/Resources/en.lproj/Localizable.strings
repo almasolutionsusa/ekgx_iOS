@@ -117,6 +117,7 @@
 "home.device.connected"              = "Device Connected";
 "home.device.disconnected"           = "No Device";
 "home.device.searching"             = "Searching...";
+"home.device.connecting"            = "Connecting...";
 "home.device.tapToConnect"           = "Tap to connect ECG device";
 
 // MARK: - Home · Feature Cards

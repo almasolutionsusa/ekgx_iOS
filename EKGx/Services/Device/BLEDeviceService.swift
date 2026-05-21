@@ -67,8 +67,7 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
                 }
             }
 
-        case .searching:
-            // Already scanning — nothing to do.
+        case .searching, .connecting:
             break
         }
     }
@@ -140,6 +139,10 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
 
     func icvBleManager(_ manager: vhiCVBleManager, foundDeviceName name: String) {
         connectedDeviceName = name
+        DispatchQueue.main.async {
+            self.currentState = .connecting
+            self.onConnectionStateChanged?(.connecting)
+        }
         manager.connect(name, isAutoCollect: true)
     }
 
@@ -153,6 +156,9 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
 
     func icvBleManager(_ manager: vhiCVBleManager, connecting status: vhiCVBleConnectStatus) {
         DispatchQueue.main.async {
+            #if DEBUG
+            print("📡 [BLE] connecting status: \(status.rawValue) → currentState: \(self.currentState)")
+            #endif
             switch status {
             case .connected:
                 manager.stopScan()
@@ -168,8 +174,8 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
                 self.currentState = .disconnected
                 self.onConnectionStateChanged?(.disconnected)
             default:
-                self.currentState = .searching
-                self.onConnectionStateChanged?(.searching)
+                self.currentState = .connecting
+                self.onConnectionStateChanged?(.connecting)
             }
         }
     }

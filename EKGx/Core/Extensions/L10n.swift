@@ -156,6 +156,7 @@ enum L10n {
         enum Device {
             static let connect      = "home.device.connect".localized
             static let connected    = "home.device.connected".localized
+            static let connecting   = "home.device.connecting".localized
             static let disconnected = "home.device.disconnected".localized
             static let searching    = "home.device.searching".localized
             static let tapToConnect = "home.device.tapToConnect".localized

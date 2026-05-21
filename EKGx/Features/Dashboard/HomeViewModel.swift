@@ -13,12 +13,14 @@ import SwiftUI
 enum DeviceConnectionState {
     case disconnected
     case searching
+    case connecting
     case connected
 
     var label: String {
         switch self {
         case .disconnected: return L10n.Home.Device.disconnected
         case .searching:    return L10n.Home.Device.searching
+        case .connecting:   return L10n.Home.Device.connecting
         case .connected:    return L10n.Home.Device.connected
         }
     }
@@ -27,6 +29,7 @@ enum DeviceConnectionState {
         switch self {
         case .disconnected: return AppColors.textSecondary
         case .searching:    return AppColors.statusWarning
+        case .connecting:   return AppColors.brandPrimary
         case .connected:    return AppColors.statusSuccess
         }
     }
@@ -35,6 +38,7 @@ enum DeviceConnectionState {
         switch self {
         case .disconnected: return "wifi.slash"
         case .searching:    return "antenna.radiowaves.left.and.right"
+        case .connecting:   return "cable.connector"
         case .connected:    return "checkmark.circle.fill"
         }
     }
@@ -104,7 +108,7 @@ final class HomeViewModel {
     // MARK: - Device
 
     func connectDevice() {
-        guard deviceState != .searching else { return }
+        guard deviceState == .disconnected else { return }
         diContainer.switchToRealDevice()
         deviceService = diContainer.deviceService
         deviceService.onConnectionStateChanged = { [weak self] state in
@@ -114,7 +118,7 @@ final class HomeViewModel {
     }
 
     func connectDemo() {
-        guard deviceState != .searching else { return }
+        guard deviceState == .disconnected else { return }
         diContainer.switchToDemo()
         deviceService = diContainer.deviceService
         deviceService.onConnectionStateChanged = { [weak self] state in

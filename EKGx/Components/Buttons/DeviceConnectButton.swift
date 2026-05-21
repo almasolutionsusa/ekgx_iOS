@@ -20,7 +20,7 @@ struct DeviceConnectButton: View {
             HStack(spacing: AppMetrics.spacing8) {
                 // State icon
                 ZStack {
-                    if state == .searching {
+                    if state == .searching || state == .connecting {
                         Circle()
                             .fill(state.color.opacity(0.2))
                             .frame(width: 28, height: 28)
@@ -72,10 +72,10 @@ struct DeviceConnectButton: View {
         .buttonStyle(.plain)
         .animation(.easeInOut(duration: 0.3), value: state)
         .onAppear {
-            if state == .searching { searchPulse = true }
+            if state == .searching || state == .connecting { searchPulse = true }
         }
         .onChange(of: state) { _, newState in
-            searchPulse = (newState == .searching)
+            searchPulse = (newState == .searching || newState == .connecting)
         }
     }
 }
