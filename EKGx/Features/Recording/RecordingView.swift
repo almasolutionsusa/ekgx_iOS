@@ -39,7 +39,7 @@ struct RecordingView: View {
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     RecordingControlsPanel(viewModel: viewModel)
-                        .frame(width: 220)
+                        .frame(width: 160)
                 }
             }
 
@@ -76,6 +76,10 @@ struct RecordingView: View {
                         viewModel.confirmExit()
                     }
                 )
+            }
+
+            if viewModel.showConnectSheet {
+                RecordingConnectOverlay(viewModel: viewModel)
             }
         }
         .navigationBarHidden(true)
@@ -246,27 +250,60 @@ private struct RecordingControlsPanel: View {
     let viewModel: RecordingViewModel
 
     var body: some View {
-        VStack(spacing: AppMetrics.spacing20) {
-            leadLayoutSection
-            durationSection
+        VStack(spacing: 0) {
+            // Pickers
+            VStack(spacing: AppMetrics.spacing12) {
+                leadLayoutSection
+                panelDivider
+                durationSection
+            }
+            .padding(.horizontal, AppMetrics.spacing12)
+            .padding(.top, AppMetrics.spacing14)
+
             Spacer()
+
+            // Progress indicator
             if viewModel.recordingState == .recording {
-                if viewModel.selectedDuration == .continuous {
-                    continuousTimer
-                } else {
-                    progressRing
+                Group {
+                    if viewModel.selectedDuration == .continuous {
+                        continuousTimer
+                    } else {
+                        progressRing
+                    }
+                }
+                .padding(.bottom, AppMetrics.spacing8)
+            }
+
+            Spacer()
+
+            // Action buttons
+            VStack(spacing: AppMetrics.spacing8) {
+                resetButton
+                recordButton
+                if let name = viewModel.connectedDeviceName {
+                    Text(name)
+                        .font(.system(size: 9))
+                        .foregroundStyle(AppColors.textSecondary)
+                        .lineLimit(1)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-            Spacer()
-            actionButtons
+            .padding(.horizontal, AppMetrics.spacing12)
+            .padding(.bottom, AppMetrics.spacing14)
         }
-        .padding(AppMetrics.spacing16)
         .background(AppColors.surfaceCard)
+        .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(width: 1), alignment: .leading)
+    }
+
+    private var panelDivider: some View {
+        Rectangle()
+            .fill(AppColors.borderSubtle.opacity(0.6))
+            .frame(height: 1)
     }
 
     private var leadLayoutSection: some View {
         controlSection(title: L10n.Recording.Controls.leadLayout) {
-            VStack(spacing: AppMetrics.spacing8) {
+            VStack(spacing: AppMetrics.spacing6) {
                 ForEach(ECGLeadLayout.allCases, id: \.self) { layout in
                     controlChip(title: layout.rawValue, isSelected: viewModel.selectedLayout == layout) {
                         viewModel.selectedLayout = layout
@@ -278,7 +315,7 @@ private struct RecordingControlsPanel: View {
 
     private var durationSection: some View {
         controlSection(title: L10n.Recording.Controls.duration) {
-            VStack(spacing: AppMetrics.spacing8) {
+            VStack(spacing: AppMetrics.spacing6) {
                 ForEach(RecordingDuration.allCases, id: \.self) { duration in
                     controlChip(title: duration.rawValue, isSelected: viewModel.selectedDuration == duration) {
                         viewModel.selectedDuration = duration
@@ -288,39 +325,31 @@ private struct RecordingControlsPanel: View {
         }
     }
 
-    private var actionButtons: some View {
-        VStack(spacing: AppMetrics.spacing12) {
-            resetButton
-            recordButton
-            if let name = viewModel.connectedDeviceName {
-                Label(name, systemImage: "antenna.radiowaves.left.and.right")
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.textSecondary)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-        }
-    }
-
     private var resetButton: some View {
         Button {
             viewModel.resetRecording()
             viewModel.startRecording()
         } label: {
-            Label(L10n.Recording.Controls.reset, systemImage: "arrow.counterclockwise")
-                .font(AppTypography.captionBold)
-                .foregroundStyle(AppColors.textSecondary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 44)
-                .background(AppColors.surfaceCard)
-                .cornerRadius(AppMetrics.radiusMedium)
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                        .strokeBorder(AppColors.borderSubtle, lineWidth: 1)
-                )
-                .contentShape(Rectangle())
+            HStack(spacing: AppMetrics.spacing6) {
+                Image(systemName: "arrow.counterclockwise")
+                    .font(.system(size: 11, weight: .semibold))
+                Text(L10n.Recording.Controls.reset)
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(AppColors.textSecondary)
+            .frame(maxWidth: .infinity)
+            .frame(height: 38)
+            .background(AppColors.surfaceBackground)
+            .cornerRadius(AppMetrics.radiusSmall)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppMetrics.radiusSmall)
+                    .strokeBorder(AppColors.borderSubtle, lineWidth: 1)
+            )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .disabled(viewModel.recordingState == .idle)
+        .opacity(viewModel.recordingState == .idle ? 0.4 : 1)
     }
 
     private var recordButton: some View {
@@ -331,17 +360,17 @@ private struct RecordingControlsPanel: View {
             case .done:      viewModel.showPreviewSheet = true
             }
         } label: {
-            HStack(spacing: AppMetrics.spacing8) {
+            HStack(spacing: AppMetrics.spacing6) {
                 Image(systemName: recordButtonIcon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                 Text(recordButtonLabel)
-                    .font(AppTypography.captionBold)
+                    .font(.system(size: 12, weight: .semibold))
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
-            .frame(height: 44)
+            .frame(height: 38)
             .background(recordButtonColor)
-            .cornerRadius(AppMetrics.radiusMedium)
+            .cornerRadius(AppMetrics.radiusSmall)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
@@ -375,43 +404,44 @@ private struct RecordingControlsPanel: View {
     private var continuousTimer: some View {
         VStack(spacing: AppMetrics.spacing2) {
             Text(viewModel.elapsedFormatted)
-                .font(AppTypography.title2)
+                .font(AppTypography.title3)
                 .foregroundStyle(AppColors.textPrimary)
                 .monospacedDigit()
             Text(L10n.Recording.Controls.elapsed)
-                .font(AppTypography.caption)
+                .font(.system(size: 10))
                 .foregroundStyle(AppColors.textSecondary)
         }
-        .frame(width: 80, height: 80)
+        .frame(width: 64, height: 64)
     }
 
     private var progressRing: some View {
         ZStack {
             Circle()
-                .stroke(AppColors.borderSubtle, lineWidth: 4)
+                .stroke(AppColors.borderSubtle, lineWidth: 3)
             Circle()
                 .trim(from: 0, to: viewModel.progressFraction)
-                .stroke(AppColors.brandPrimary, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .stroke(AppColors.brandPrimary, style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.linear(duration: 1), value: viewModel.progressFraction)
-            VStack(spacing: AppMetrics.spacing2) {
+            VStack(spacing: 1) {
                 Text(viewModel.elapsedFormatted)
-                    .font(AppTypography.bodySemibold)
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(AppColors.textPrimary)
                     .monospacedDigit()
                 Text(L10n.Recording.Controls.elapsed)
-                    .font(AppTypography.caption)
+                    .font(.system(size: 9))
                     .foregroundStyle(AppColors.textSecondary)
             }
         }
-        .frame(width: 80, height: 80)
+        .frame(width: 64, height: 64)
     }
 
     private func controlSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
+        VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
             Text(title)
-                .font(AppTypography.captionBold)
+                .font(.system(size: 9, weight: .semibold))
                 .foregroundStyle(AppColors.textSecondary)
+                .tracking(0.5)
                 .textCase(.uppercase)
             content()
         }
@@ -420,15 +450,23 @@ private struct RecordingControlsPanel: View {
     private func controlChip(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title)
-                .font(AppTypography.captionBold)
-                .foregroundStyle(isSelected ? .white : AppColors.textSecondary)
+                .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
+                .foregroundStyle(isSelected ? AppColors.brandPrimary : AppColors.textSecondary)
                 .frame(maxWidth: .infinity)
-                .frame(height: 36)
-                .background(isSelected ? AppColors.brandPrimary : AppColors.surfaceBackground)
-                .cornerRadius(AppMetrics.radiusSmall)
+                .frame(height: 28)
+                .background(isSelected ? AppColors.brandPrimary.opacity(0.1) : Color.clear)
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .strokeBorder(
+                            isSelected ? AppColors.brandPrimary.opacity(0.4) : AppColors.borderSubtle.opacity(0.6),
+                            lineWidth: 1
+                        )
+                )
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
 }
 
@@ -523,6 +561,72 @@ private struct DeviceDisconnectedOverlay: View {
             .cornerRadius(16)
             .shadow(color: .black.opacity(0.2), radius: 20)
             .padding(.horizontal, 40)
+        }
+    }
+}
+
+// MARK: - Device Connect Overlay
+
+private struct RecordingConnectOverlay: View {
+
+    let viewModel: RecordingViewModel
+
+    private var state: DeviceConnectionState { viewModel.connectSheetState }
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.65).ignoresSafeArea()
+
+            VStack(spacing: AppMetrics.spacing32) {
+                header
+                statusBlock
+            }
+            .padding(AppMetrics.spacing32)
+            .frame(width: 400)
+            .background(AppColors.surfaceCard)
+            .cornerRadius(20)
+            .shadow(color: .black.opacity(0.25), radius: 24)
+        }
+    }
+
+    private var header: some View {
+        HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Connect Device")
+                    .font(AppTypography.title2)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text("Connect an EKG device to start recording.")
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            Spacer()
+            Button(action: viewModel.cancelConnect) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 28))
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var statusBlock: some View {
+        VStack(spacing: AppMetrics.spacing16) {
+            DeviceConnectButton(state: state) {
+                if state == .disconnected { viewModel.connectDevice() }
+            }
+            .frame(maxWidth: .infinity)
+
+            if let name = viewModel.connectSheetDeviceName {
+                Label(name, systemImage: "checkmark.seal.fill")
+                    .font(AppTypography.callout)
+                    .foregroundStyle(AppColors.statusSuccess)
+            }
+
+            Button(L10n.Common.cancel, action: viewModel.cancelConnect)
+                .font(AppTypography.callout)
+                .foregroundStyle(AppColors.textSecondary)
+                .buttonStyle(.plain)
+                .padding(.top, AppMetrics.spacing4)
         }
     }
 }

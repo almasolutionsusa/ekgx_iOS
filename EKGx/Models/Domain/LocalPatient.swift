@@ -2,8 +2,8 @@
 //  LocalPatient.swift
 //  EKGx
 //
-//  Lightweight patient record stored locally on-device (UserDefaults).
-//  Used in offline mode — no API interaction needed.
+//  Device-local patient record backed by Core Data (PatientEntity).
+//  All patient management is local — no API required.
 //
 
 import Foundation
@@ -16,6 +16,26 @@ struct LocalPatient: Identifiable, Codable, Hashable {
     var birthDate: String   // "yyyy-MM-dd"
     var gender: String
     var mrn: String
+    var createdAt: Date
+    var createdBy: String   // logged-in username; empty when no login context
+
+    init(id: String = UUID().uuidString,
+         firstName: String,
+         lastName: String,
+         birthDate: String,
+         gender: String,
+         mrn: String,
+         createdAt: Date = Date(),
+         createdBy: String = "") {
+        self.id        = id
+        self.firstName = firstName
+        self.lastName  = lastName
+        self.birthDate = birthDate
+        self.gender    = gender
+        self.mrn       = mrn
+        self.createdAt = createdAt
+        self.createdBy = createdBy
+    }
 
     var fullName: String { "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces) }
 
@@ -53,7 +73,7 @@ struct LocalPatient: Identifiable, Codable, Hashable {
         )
     }
 
-    private static let dateFormatter: DateFormatter = {
+    static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         return f

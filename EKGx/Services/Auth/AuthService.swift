@@ -71,16 +71,12 @@ final class AuthService: AuthServiceProtocol {
 
     func register(details: SignupDetails) async throws {
         let body = AppRegistrationRequest(
-            username:  details.email,                  // server expects unique username — we use email
+            username:  details.email,
             email:     details.email,
             firstName: details.firstName,
             lastName:  details.lastName,
-            phone:     details.phone.isEmpty ? nil : details.phone,
-            title:     details.title,
             password:  details.password,
-            appUuid:   UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? "",
-            npi:       details.npi.isEmpty ? nil : details.npi,
-            degree:    details.degree.isEmpty ? nil : details.degree
+            appUuid:   UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? ""
         )
         do {
             try await client.postVoid(path: APIEndpoints.Auth.register, body: body)
@@ -120,6 +116,19 @@ final class AuthService: AuthServiceProtocol {
         }
     }
 
+    // MARK: - Change Password
+
+    func changePassword(oldPassword: String, newPassword: String) async throws {
+        try await ensureValidToken()
+        let appUuid = UserDefaults.standard.string(forKey: AppCheckinService.Keys.appUuid) ?? ""
+        let body = ChangePasswordRequest(oldPassword: oldPassword, newPassword: newPassword, appUuid: appUuid)
+        do {
+            try await client.postVoid(path: APIEndpoints.Auth.changePassword, body: body)
+        } catch let error as APIError {
+            throw mapAPIError(error)
+        }
+    }
+
     // MARK: - Forgot Password
 
     func forgotPassword(email: String) async throws {
@@ -141,6 +150,85 @@ final class AuthService: AuthServiceProtocol {
         isAuthenticated = false
     }
 
+    func clearAccessToken() {
+        TokenStore.shared.accessToken = nil
+    }
+
+    // MARK: - Token Ensure
+
+    func ensureValidToken() async throws {
+        let token = TokenStore.shared.accessToken ?? ""
+        print("┌─── ensureValidToken ───────────────────────")
+        print("│ accessToken present: \(!token.isEmpty)")
+
+        guard token.isEmpty else {
+            print("│ ✅ Token already valid — skipping re-auth")
+            print("└────────────────────────────────────────────")
+            return
+        }
+
+        let store          = LocalUserStore.shared
+        let storedEmail    = store.email
+        let storedUsername = store.username
+        // Try email key first, then username key as fallback (handles key-mismatch from older logins)
+        let storedPassword = storedEmail.flatMap { store.storedPassword(for: $0) }
+                          ?? storedUsername.flatMap { store.storedPassword(for: $0) }
+        print("│ storedEmail   : \(storedEmail ?? "nil")")
+        print("│ storedUsername: \(storedUsername ?? "nil")")
+        print("│ storedPassword: \(storedPassword != nil ? "✅ found" : "❌ nil")")
+
+        let loginId = storedEmail ?? storedUsername
+        guard let email = loginId, let password = storedPassword else {
+            print("│ ❌ No credentials — throwing sessionExpired")
+            print("└────────────────────────────────────────────")
+            throw AuthError.sessionExpired
+        }
+
+        print("│ 🔄 Silent re-auth for: \(email)")
+        print("└────────────────────────────────────────────")
+
+        do {
+            try await login(email: email, password: password)
+            print("✅ ensureValidToken: silent re-auth succeeded")
+        } catch {
+            print("❌ ensureValidToken: silent re-auth failed — \(error)")
+            throw AuthError.sessionExpired
+        }
+    }
+
+    // MARK: - Local Session Restore
+
+    /// Rebuilds a minimal in-memory session from cached local user data.
+    /// The access token already stored in TokenStore is reused for API calls.
+    func restoreLocalSession(username: String, email: String?, facilityId: Int64?, facilityName: String?, firstName: String? = nil, lastName: String? = nil) {
+        let user = SessionUser(
+            id: 0,
+            username: username,
+            email: email,
+            firstName: firstName,
+            lastName: lastName,
+            role: nil,
+            title: nil,
+            organizationId: facilityId,
+            createdAt: nil,
+            updatedAt: nil
+        )
+        loginData = LoginData(
+            user: user,
+            facilities: [],
+            messages: [],
+            appSettings: nil,
+            accessToken: nil,
+            refreshToken: nil,
+            facilityId: facilityId,
+            facilityName: facilityName,
+            loginMethod: "local_pin",
+            pinExpiryWarning: nil
+        )
+        currentUser     = user
+        isAuthenticated = true
+    }
+
     // MARK: - Private
 
     private func mapAPIError(_ error: APIError) -> AuthError {
@@ -151,7 +239,9 @@ final class AuthService: AuthServiceProtocol {
         case .networkUnavailable:   return .networkUnavailable
         case .forbidden:            return .sessionExpired
         case .serverError(let c):   return .serverError(statusCode: c)
-        case .backend(let message): return .backend(message: message)
+        case .backend(let message):
+            if message.lowercased().contains("disabled") { return .accountNotVerified }
+            return .backend(message: message)
         default:                    return .unknown
         }
     }

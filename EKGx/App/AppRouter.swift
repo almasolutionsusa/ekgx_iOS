@@ -18,6 +18,7 @@ enum AppRoute: Hashable, Equatable {
     case patientList
     case cloudReports
     case patientSelection
+    case vitals
     case ecgRecording(patientId: String)
     case ecgAnalysis(recordingId: String)
     case patientDetail(patientId: String)
@@ -26,6 +27,7 @@ enum AppRoute: Hashable, Equatable {
     case support
     case faq
     case indicationsForUse
+    case patientExams
 }
 
 // MARK: - AppRouter
@@ -38,10 +40,12 @@ final class AppRouter {
     var navigationPath: NavigationPath = NavigationPath()
     /// Set to true by screens opened from the side menu so Back re-opens it.
     var reopenMenuOnBack: Bool = false
-    /// Route to return to when the user presses Back from Analysis. Defaults to .dashboard.
-    var analysisReturnRoute: AppRoute = .dashboard
-    /// Route to return to when the user exits the Recording screen. Defaults to .dashboard.
-    var recordingReturnRoute: AppRoute = .dashboard
+    /// Route to return to when the user presses Back from Analysis. Defaults to .vitals.
+    var analysisReturnRoute: AppRoute = .vitals
+    /// Route to return to when the user exits the Recording screen. Defaults to .vitals.
+    var recordingReturnRoute: AppRoute = .vitals
+    /// Route to return to when the user presses Back from PatientExams. Defaults to .vitals.
+    var patientExamsReturnRoute: AppRoute = .vitals
 
     // MARK: - Navigation
 

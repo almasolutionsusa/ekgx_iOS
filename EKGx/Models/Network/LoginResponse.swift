@@ -26,13 +26,18 @@ struct SessionUser: Decodable {
     let id: Int64
     let username: String
     let email: String?
+    let firstName: String?
+    let lastName: String?
     let role: String?
     let title: String?
     let organizationId: Int64?
     let createdAt: String?
     let updatedAt: String?
 
-    var displayName: String { username }
+    var displayName: String {
+        let full = [firstName, lastName].compactMap { $0 }.joined(separator: " ")
+        return full.isEmpty ? username : full
+    }
 }
 
 // MARK: - Facility

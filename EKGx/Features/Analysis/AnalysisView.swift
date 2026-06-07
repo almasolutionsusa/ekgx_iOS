@@ -64,15 +64,26 @@ struct AnalysisView: View {
                     .transition(.opacity)
                     .zIndex(20)
             }
+            // Emergency PIN gate — shown above everything when unauthenticated user taps upload
+            if viewModel.showEmergencyPinSheet {
+                EmergencyPinOverlay(viewModel: viewModel)
+                    .transition(.opacity)
+                    .zIndex(30)
+            }
         }
         .animation(.easeInOut(duration: 0.2), value: viewModel.showControlsMenu)
         .animation(.easeInOut(duration: 0.2), value: viewModel.showVisualizationMenu)
         .animation(.easeInOut(duration: 0.2), value: viewModel.showRejectConfirm)
         .animation(.easeInOut(duration: 0.2), value: viewModel.isUploading)
         .animation(.easeInOut(duration: 0.2), value: viewModel.showUploadResult)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.showEmergencyPinSheet)
         .navigationBarHidden(true)
         .preferredColorScheme(.light)
         .onAppear { viewModel.runAnalysis() }
+        .sheet(isPresented: $viewModel.showAssignPatientSheet) {
+            EmergencyAssignPatientSheet(viewModel: viewModel)
+                .interactiveDismissDisabled()
+        }
     }
 
     // MARK: - Analyzing
@@ -311,7 +322,15 @@ private struct AnalysisNavBar: View {
             Spacer()
             titleBlock
             Spacer()
-            LiveClockView()
+            VStack(spacing: 4) {
+                LiveClockView()
+                if viewModel.showEmergencyBanner {
+                    EmergencyChip(
+                        assignedPatient: viewModel.assignedPatient,
+                        isPinVerified: viewModel.isPinVerified
+                    )
+                }
+            }
 
             // Controls toggle
             Button {
@@ -471,6 +490,301 @@ private struct UploadStatusOverlay: View {
             .shadow(color: .black.opacity(0.2), radius: 24)
             .padding(.horizontal, AppMetrics.spacing48)
         }
+    }
+}
+
+// MARK: - Emergency Chip (compact, sits inside the nav bar below the clock)
+
+private struct EmergencyChip: View {
+    let assignedPatient: Patient?
+    let isPinVerified: Bool
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: assignedPatient != nil ? "checkmark.circle.fill" : "cross.case.fill")
+                .font(.system(size: 9, weight: .semibold))
+            Text(label)
+                .font(.system(size: 10, weight: .semibold))
+                .lineLimit(1)
+        }
+        .foregroundStyle(.white)
+        .padding(.horizontal, 7)
+        .padding(.vertical, 3)
+        .background(assignedPatient != nil ? AppColors.statusSuccess : AppColors.statusCritical)
+        .cornerRadius(20)
+    }
+
+    private var label: String {
+        if let p = assignedPatient { return p.firstName + " " + p.lastName }
+        return "Emergency"
+    }
+}
+
+// MARK: - Emergency PIN Overlay
+
+private struct EmergencyPinOverlay: View {
+
+    @Bindable var viewModel: AnalysisViewModel
+
+    var body: some View {
+        ZStack {
+            Color.black.opacity(0.6).ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Header row
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
+                        Text(L10n.Emergency.pinTitle)
+                            .font(AppTypography.title2)
+                            .foregroundStyle(AppColors.textPrimary)
+                        Text(L10n.Emergency.pinSubtitle)
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+                    Spacer()
+                    Button {
+                        viewModel.showEmergencyPinSheet = false
+                        viewModel.emergencyPinInput = ""
+                        viewModel.emergencyPinError = nil
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.bottom, AppMetrics.spacing24)
+
+                // PIN dots
+                HStack(spacing: AppMetrics.spacing20) {
+                    ForEach(0..<6, id: \.self) { idx in
+                        ZStack {
+                            Circle()
+                                .stroke(
+                                    idx < viewModel.emergencyPinInput.count
+                                        ? AppColors.brandPrimary : AppColors.borderSubtle,
+                                    lineWidth: 2
+                                )
+                                .frame(width: 20, height: 20)
+                            if idx < viewModel.emergencyPinInput.count {
+                                Circle()
+                                    .fill(AppColors.brandPrimary)
+                                    .frame(width: 12, height: 12)
+                            }
+                        }
+                        .animation(.easeInOut(duration: 0.15), value: viewModel.emergencyPinInput.count)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, AppMetrics.spacing8)
+
+                // Error line
+                Group {
+                    if let err = viewModel.emergencyPinError {
+                        Text(err)
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.statusCritical)
+                            .multilineTextAlignment(.center)
+                            .transition(.opacity)
+                    } else {
+                        Color.clear
+                    }
+                }
+                .frame(height: 18)
+                .padding(.bottom, AppMetrics.spacing16)
+
+                PinNumericKeypad(
+                    onDigit:  { viewModel.emergencyKeypadInput($0) },
+                    onDelete: { viewModel.emergencyKeypadDelete() }
+                )
+            }
+            .padding(AppMetrics.spacing28)
+            .frame(width: 420)
+            .background(AppColors.surfaceCard)
+            .cornerRadius(AppMetrics.radiusLarge)
+            .shadow(color: .black.opacity(0.25), radius: 28)
+        }
+    }
+}
+
+// MARK: - Emergency Assign Patient Sheet
+
+private struct EmergencyAssignPatientSheet: View {
+
+    @Bindable var viewModel: AnalysisViewModel
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                Text(L10n.Emergency.assignSubtitle)
+                    .font(AppTypography.callout)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, AppMetrics.spacing24)
+                    .padding(.vertical, AppMetrics.spacing16)
+
+                // Search bar
+                HStack(spacing: AppMetrics.spacing8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(AppColors.textSecondary)
+                    TextField(L10n.Emergency.assignSearch, text: $viewModel.assignSearchQuery)
+                        .font(AppTypography.body)
+                        .autocorrectionDisabled()
+                }
+                .padding(AppMetrics.spacing12)
+                .background(AppColors.surfaceCard)
+                .cornerRadius(AppMetrics.radiusMedium)
+                .overlay(
+                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                        .strokeBorder(AppColors.borderSubtle, lineWidth: 1)
+                )
+                .padding(.horizontal, AppMetrics.spacing16)
+                .padding(.bottom, AppMetrics.spacing8)
+
+                Divider()
+
+                if viewModel.isLoadingAssignPatients {
+                    Spacer()
+                    ProgressView().tint(AppColors.brandPrimary)
+                    Spacer()
+                } else if viewModel.filteredAssignPatients.isEmpty {
+                    Spacer()
+                    Text(L10n.Emergency.assignNoPatients)
+                        .font(AppTypography.callout)
+                        .foregroundStyle(AppColors.textSecondary)
+                    Spacer()
+                } else {
+                    List {
+                        ForEach(viewModel.filteredAssignPatients) { patient in
+                            Button {
+                                viewModel.confirmPatientAssignment(patient)
+                            } label: {
+                                HStack(spacing: AppMetrics.spacing12) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(AppColors.brandPrimary.opacity(0.12))
+                                            .frame(width: 40, height: 40)
+                                        Text(patient.initials)
+                                            .font(AppTypography.bodyMedium)
+                                            .foregroundStyle(AppColors.brandPrimary)
+                                    }
+                                    VStack(alignment: .leading, spacing: 3) {
+                                        Text(patient.fullName)
+                                            .font(AppTypography.bodyMedium)
+                                            .foregroundStyle(AppColors.textPrimary)
+                                        HStack(spacing: 6) {
+                                            if !patient.mrn.isEmpty {
+                                                Text("MRN: \(patient.mrn)")
+                                            }
+                                            Text("·")
+                                            Text(patient.age)
+                                            Text("·")
+                                            Text(patient.genderDisplay)
+                                        }
+                                        .font(AppTypography.caption)
+                                        .foregroundStyle(AppColors.textSecondary)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundStyle(AppColors.borderSubtle)
+                                }
+                                .padding(.vertical, 4)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .listStyle(.plain)
+                }
+            }
+            .navigationTitle(L10n.Emergency.assignTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.Common.cancel) {
+                        viewModel.showAssignPatientSheet = false
+                    }
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button(L10n.Emergency.createNew) {
+                        viewModel.ecFirstName = ""
+                        viewModel.ecLastName  = ""
+                        viewModel.ecDob       = nil
+                        viewModel.ecGender    = "Male"
+                        viewModel.ecMRN       = ""
+                        viewModel.emergencyCreateError = nil
+                        viewModel.showEmergencyCreatePatient = true
+                    }
+                    .foregroundStyle(AppColors.brandPrimary)
+                }
+            }
+        }
+        .onAppear { viewModel.loadPatientsForAssignment() }
+        .sheet(isPresented: $viewModel.showEmergencyCreatePatient) {
+            EmergencyCreatePatientSheet(viewModel: viewModel)
+        }
+        .preferredColorScheme(.light)
+    }
+}
+
+// MARK: - Emergency Create Patient Sheet
+
+private struct EmergencyCreatePatientSheet: View {
+
+    @Bindable var viewModel: AnalysisViewModel
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section(L10n.PatientSelection.Create.title) {
+                    TextField(L10n.PatientSelection.Create.firstName, text: $viewModel.ecFirstName)
+                    TextField(L10n.PatientSelection.Create.lastName,  text: $viewModel.ecLastName)
+                }
+
+                Section {
+                    DatePicker(
+                        L10n.PatientSelection.Create.dob,
+                        selection: Binding(
+                            get: { viewModel.ecDob ?? Date() },
+                            set: { viewModel.ecDob = $0 }
+                        ),
+                        in: ...Date(),
+                        displayedComponents: .date
+                    )
+
+                    Picker(L10n.PatientSelection.Create.gender, selection: $viewModel.ecGender) {
+                        ForEach(["Male", "Female"], id: \.self) { Text($0).tag($0) }
+                    }
+
+                    TextField(L10n.PatientSelection.Create.mrn, text: $viewModel.ecMRN)
+                        .keyboardType(.numberPad)
+                }
+
+                if let err = viewModel.emergencyCreateError {
+                    Section {
+                        Text(err)
+                            .foregroundStyle(AppColors.statusCritical)
+                            .font(AppTypography.caption)
+                    }
+                }
+            }
+            .navigationTitle(L10n.Emergency.createTitle)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(L10n.Common.cancel) { viewModel.cancelEmergencyCreate() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    if viewModel.isEmergencyCreating {
+                        ProgressView().tint(AppColors.brandPrimary)
+                    } else {
+                        Button(L10n.Common.ok) { viewModel.submitEmergencyCreatePatient() }
+                            .fontWeight(.semibold)
+                    }
+                }
+            }
+        }
+        .preferredColorScheme(.light)
     }
 }
 

@@ -93,15 +93,14 @@ struct RootView: View {
                     .transition(.push(from: .trailing))
 
             case .patientSelection:
-                if diContainer.isLocalMode {
-                    OfflinePatientSelectionView(viewModel: diContainer.makeOfflinePatientSelectionViewModel(router: router))
-                        .id("offlinePatientSelection")
-                        .transition(.push(from: .trailing))
-                } else {
-                    PatientSelectionView(viewModel: diContainer.makePatientSelectionViewModel(router: router))
-                        .id(AppRoute.patientSelection)
-                        .transition(.push(from: .trailing))
-                }
+                PatientSelectionView(viewModel: diContainer.makePatientSelectionViewModel(router: router))
+                    .id(AppRoute.patientSelection)
+                    .transition(.push(from: .trailing))
+
+            case .vitals:
+                VitalsView(viewModel: diContainer.makeVitalsViewModel(router: router))
+                    .id(AppRoute.vitals)
+                    .transition(.push(from: .trailing))
 
             case .ecgRecording:
                 let patient = diContainer.lastRecordingPatient ?? Patient.mockPatients[0]
@@ -127,6 +126,11 @@ struct RootView: View {
             case .indicationsForUse:
                 IndicationsForUseView(viewModel: diContainer.makeAppContentViewModel(router: router))
                     .id(AppRoute.indicationsForUse)
+                    .transition(.push(from: .trailing))
+
+            case .patientExams:
+                PatientExamsView(viewModel: diContainer.makePatientExamsViewModel(router: router))
+                    .id(AppRoute.patientExams)
                     .transition(.push(from: .trailing))
 
             case .patientDetail:
@@ -164,7 +168,7 @@ private struct PlaceholderView: View {
                 }
 
                 Button(L10n.Common.back) {
-                    router.navigate(to: .dashboard)
+                    router.navigate(to: .patientSelection)
                 }
                 .font(AppTypography.bodyMedium)
                 .foregroundStyle(.white)

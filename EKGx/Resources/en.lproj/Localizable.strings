@@ -18,6 +18,7 @@
 "auth.login.errorNetwork"            = "Network unavailable. Check your connection and retry.";
 "auth.login.errorGeneric"            = "An unexpected error occurred. Please contact IT support.";
 "auth.login.errorSessionExpired"     = "Your session has expired. Please log in again.";
+"auth.login.errorAccountNotVerified" = "Your account is not yet verified. Please check your email and click the verification link.";
 "auth.login.forgotPasswordTitle"     = "Reset Password";
 "auth.login.forgotPasswordSubtitle"  = "Enter your email address and we'll send you a link to reset your password.";
 "auth.login.forgotPasswordEmailLabel" = "Email Address";
@@ -29,6 +30,7 @@
 "auth.login.pinPlaceholder"          = "● ● ● ●";
 "auth.login.pinErrorEmpty"           = "Please enter your PIN code.";
 "auth.login.pinErrorInvalid"         = "Incorrect PIN. Please try again.";
+"auth.login.pinNotSetup"             = "No PIN set up. Please sign in with your email.";
 "auth.login.pinBackToEmail"          = "Sign in with Email instead";
 
 // MARK: - Authentication · Register
@@ -71,6 +73,9 @@
 "auth.register.sectionProfessional"          = "Professional Details";
 "auth.register.sectionCredentials"           = "Account Credentials";
 "auth.register.optionalBadge"                = "Optional";
+"auth.register.successTitle"                 = "Check your email";
+"auth.register.successMessage"               = "We've sent a verification link to %@. Please verify your account before signing in.";
+"auth.register.successBackToLogin"           = "Back to Login";
 
 // MARK: - Validation
 "validation.email.empty"             = "Email address is required";
@@ -86,6 +91,7 @@
 "validation.password.mismatch"       = "Passwords do not match";
 "validation.name.empty"              = "This field is required";
 "validation.required"                = "Please select an option";
+"validation.mrn.duplicate"           = "A patient with this MRN already exists";
 
 // MARK: - Branding
 "branding.appName"                   = "EKGx Pro";
@@ -230,7 +236,7 @@
 // MARK: - Auto Lock
 "autoLock.title"                     = "Session Locked";
 "autoLock.subtitle"                  = "Enter your PIN to resume";
-"autoLock.subtitleEmailUser"         = "This session was started with email login. Please sign out and use your PIN to unlock.";
+"autoLock.subtitleEmailUser"         = "No PIN is set for this account. Please sign out and log in again.";
 "autoLock.errorWrongUser"            = "Incorrect PIN for this session. Please sign out.";
 "autoLock.logoutButton"              = "Sign out";
 
@@ -245,16 +251,20 @@
 "patientSelection.search.firstName"  = "First Name";
 "patientSelection.search.lastName"   = "Last Name (Optional)";
 "patientSelection.search.dob"        = "Date of Birth";
-"patientSelection.search.mrn"        = "MRN";
-"patientSelection.search.or"         = "OR";
-"patientSelection.search.button"     = "Search";
-"patientSelection.search.clearButton" = "Clear";
+"patientSelection.search.mrn"            = "MRN";
+"patientSelection.search.mrnPlaceholder" = "Enter MRN";
+"patientSelection.search.nameSegment"    = "Name";
+"patientSelection.search.mrnSegment"     = "MRN";
+"patientSelection.search.or"             = "OR";
+"patientSelection.search.button"         = "Search";
+"patientSelection.search.clearButton"    = "Clear Search";
 "patientSelection.results.title"     = "Search Results";
 "patientSelection.results.empty"     = "No patients found";
 "patientSelection.results.emptySubtitle" = "Try different search criteria or check the spelling";
 "patientSelection.prompt.title"      = "Ready to search";
 "patientSelection.prompt.subtitle"   = "Enter first name or MRN to find a patient";
-"patientSelection.confirm"           = "Continue to Recording";
+"patientSelection.prompt.selectHint" = "Tap a patient to select";
+"patientSelection.confirm"           = "Continue";
 "patientSelection.createNew"         = "Create New Patient";
 "patientSelection.create.title"      = "New Patient";
 "patientSelection.create.subtitle"   = "Enter the patient's details below.";
@@ -266,6 +276,30 @@
 "patientSelection.create.mrnPlaceholder" = "e.g. MRN-12345";
 "patientSelection.create.cancel"     = "Cancel";
 "patientSelection.create.submit"     = "Create Patient";
+"patientSelection.createCell.hint"   = "Tap to create this patient";
+"patientSelection.edit.title"        = "Edit Patient";
+"patientSelection.edit.subtitle"     = "Update the patient's details below.";
+"patientSelection.edit.button"       = "Edit Patient";
+"patientSelection.edit.submit"       = "Save Changes";
+"patientSelection.delete.alertTitle" = "Delete Patient";
+"patientSelection.delete.message"    = "This patient will be permanently deleted from this device.";
+"patientSelection.delete.confirm"    = "Delete";
+"patientSelection.delete.contextMenu"= "Delete Patient";
+
+// MARK: - Patient Exams (History)
+"patientExams.nav.title"             = "History";
+"patientExams.filter.all"            = "All";
+"patientExams.exam.singular"         = "Exam";
+"patientExams.exam.plural"           = "Exams";
+"patientExams.card.ekgTitle"         = "EKG Recording";
+"patientExams.card.examNumber"       = "Exam #%d";
+"patientExams.status.local"          = "Local";
+"patientExams.empty.title"           = "No Exams Yet";
+"patientExams.empty.subtitle"        = "Completed recordings for this patient will appear here.";
+"patientExams.delete.alertTitle"     = "Delete Exam";
+"patientExams.delete.confirm"        = "Delete";
+"patientExams.delete.message"        = "This exam will be permanently deleted from this device and cannot be recovered.";
+"patientExams.delete.contextMenu"    = "Delete Recording";
 
 // MARK: - Recording
 "recording.nav.backButton"           = "Back";
@@ -422,7 +456,7 @@
 "account.pin.sheetTitle"             = "Set PIN Code";
 "account.pin.sheetSubtitle"          = "Create a 6-digit PIN for quick, secure app access.";
 "account.pin.changeSheetTitle"       = "Change PIN Code";
-"account.pin.changeSheetSubtitle"    = "Enter your current PIN, then set a new one.";
+"account.pin.changeSheetSubtitle"    = "Enter a new 6-digit PIN to replace your current one.";
 "account.pin.fieldCurrent"           = "Current PIN";
 "account.pin.fieldCurrentPH"         = "Enter current 6-digit PIN";
 "account.pin.fieldNew"               = "New PIN";
@@ -433,10 +467,16 @@
 "account.pin.changeSubmitButton"     = "Change PIN";
 "account.pin.errorDigits"            = "PIN must be exactly 6 digits.";
 "account.pin.errorMismatch"          = "PINs do not match. Please try again.";
+"account.pin.errorOldPinInvalid"     = "Current PIN is incorrect.";
+"account.pin.errorSamePin"           = "New PIN must be different from your current PIN.";
 
 // MARK: - My Account · Change Password Sheet
 "account.password.sheetTitle"        = "Change Password";
 "account.password.sheetSubtitle"     = "Enter your current password to set a new one.";
+"account.password.verifyTitle"       = "Confirm Your Identity";
+"account.password.verifySubtitle"    = "Enter your email and current password to continue.";
+"account.password.verifyButton"      = "Continue";
+"account.password.errorWrongCurrent" = "Incorrect password. Please try again.";
 "account.password.fieldCurrent"      = "Current Password";
 "account.password.fieldCurrentPH"    = "Enter current password";
 "account.password.fieldNew"          = "New Password";
@@ -492,3 +532,27 @@
 // MARK: - Common · Content
 "common.retry"                       = "Retry";
 "common.noContent"                   = "No content available.";
+
+// MARK: - Vitals
+"vitals.nav.title"                   = "Select Vital";
+"vitals.selectVital"                 = "Select Vital";
+"vitals.comingSoon"                  = "Coming Soon";
+"vitals.ekg.title"                   = "EKG";
+"vitals.ekg.subtitle"                = "12-Lead Electrocardiogram";
+"vitals.spo2.title"                  = "SpO₂";
+"vitals.spo2.subtitle"               = "Pulse Oximetry";
+"vitals.bp.title"                    = "Blood Pressure";
+"vitals.bp.subtitle"                 = "Systolic / Diastolic";
+"vitals.temp.title"                  = "Temperature";
+"vitals.temp.subtitle"               = "Body Temperature";
+
+// MARK: - Emergency Mode
+"emergency.buttonTitle"      = "EKG Emergency";
+"emergency.pinTitle"         = "Verify Identity";
+"emergency.pinSubtitle"      = "Enter your 6-digit PIN to upload this ECG to EMR";
+"emergency.assignTitle"      = "Assign to Patient";
+"emergency.assignSubtitle"   = "This ECG was recorded anonymously. Select a patient to upload it to EMR.";
+"emergency.assignSearch"     = "Search by name or MRN";
+"emergency.assignNoPatients" = "No patients found";
+"emergency.createNew"        = "+ New Patient";
+"emergency.createTitle"      = "New Patient";

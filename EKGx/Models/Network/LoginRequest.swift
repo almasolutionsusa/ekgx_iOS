@@ -33,6 +33,12 @@ struct ForgotPasswordRequest: Encodable {
     let email: String
 }
 
+struct ChangePasswordRequest: Encodable {
+    let oldPassword: String
+    let newPassword: String
+    let appUuid: String
+}
+
 // MARK: - Registration
 
 struct AppRegistrationRequest: Encodable {
@@ -40,12 +46,8 @@ struct AppRegistrationRequest: Encodable {
     let email: String
     let firstName: String?
     let lastName: String?
-    let phone: String?
-    let title: String        // PHYSICIAN | RN | TECHNICIAN | OTHER
-    let password: String     // HIPAA-compliant password
+    let password: String
     let appUuid: String
-    let npi: String?
-    let degree: String?      // MD | DO | NP | PA | RN | ...
 }
 
 // MARK: - App Requests

@@ -9,6 +9,9 @@ import Foundation
 
 extension String {
 
+    /// Returns nil when the string is empty, otherwise returns self.
+    var nilIfEmpty: String? { isEmpty ? nil : self }
+
     /// Returns the localized string for this key from Localizable.strings.
     var localized: String {
         NSLocalizedString(self, comment: "")

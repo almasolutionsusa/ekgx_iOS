@@ -27,6 +27,13 @@ final class AppDIContainer {
     /// false = real API, session cookie auth required.
     private(set) var isLocalMode: Bool
 
+    /// Set when the user enters via EKG Emergency — gates the upload flow in AnalysisView.
+    /// Consumed (reset to false) once makeAnalysisViewModel reads it.
+    var isEmergencySession: Bool = false
+    /// Return route captured when the emergency session starts, stored so RecordingViewModel
+    /// overwriting router.analysisReturnRoute doesn't lose our destination.
+    private var emergencyReturnRoute: AppRoute = AppRoute.login
+
     // MARK: - Services
 
     private(set) var authService: AuthServiceProtocol
@@ -39,6 +46,7 @@ final class AppDIContainer {
     let autoLockManager: AutoLockManager
     let recordingStore: LocalRecordingStore
     let localPatientStore: LocalPatientStore
+    let patientRepository: PatientRepositoryProtocol
     let errorToast: ErrorToastManager
 
     // MARK: - Device Service
@@ -60,6 +68,7 @@ final class AppDIContainer {
         self.autoLockManager  = AutoLockManager()
         self.recordingStore      = LocalRecordingStore()
         self.localPatientStore   = LocalPatientStore()
+        self.patientRepository   = CoreDataPatientRepository()
         self.errorToast          = ErrorToastManager()
         self.autoLockManager.onWillLock = { [weak self] in
             self?.deviceService.disconnect()
@@ -85,12 +94,53 @@ final class AppDIContainer {
 
     func enableOnlineMode() {
         isLocalMode = false
+        isEmergencySession = false
     }
 
-    /// Switches to local mode and navigates directly to dashboard — no login needed.
+    // MARK: - Emergency Session
+
+    /// Creates or reuses the anonymous patient (MRN 000000) and navigates directly to RecordingView.
+    /// No login required. The AnalysisView will gate upload with a PIN check.
+    func startEmergencySession(router: AppRouter) {
+        isEmergencySession = true
+        let returnRoute = authService.isAuthenticated ? AppRoute.patientSelection : AppRoute.login
+        emergencyReturnRoute = returnRoute
+        clearRecordingSession()
+        Task {
+            let anon = await getOrCreateAnonymousPatient()
+            lastRecordingPatient = anon.toPatient()
+            recordingSessionStartedAt = Date()
+            router.recordingReturnRoute = returnRoute
+            router.navigate(to: .ecgRecording(patientId: ""))
+        }
+    }
+
+    private func getOrCreateAnonymousPatient() async -> LocalPatient {
+        let all = (try? await patientRepository.fetchAll()) ?? []
+        if let existing = all.first(where: { $0.mrn == "000000" }) {
+            return existing
+        }
+        var comps = DateComponents(); comps.year = -35
+        let dob = Calendar.current.date(byAdding: comps, to: Date()) ?? Date()
+        let dobStr = LocalPatient.dateFormatter.string(from: dob)
+        let input = NewPatientInput(
+            firstName: "Anonymous",
+            lastName: "Anonymous",
+            birthDate: dobStr,
+            gender: "Male",
+            mrn: "000000",
+            createdBy: "system"
+        )
+        return (try? await patientRepository.add(input)) ?? LocalPatient(
+            firstName: "Anonymous", lastName: "Anonymous",
+            birthDate: dobStr, gender: "Male", mrn: "000000"
+        )
+    }
+
+    /// Switches to local mode and navigates directly to patient selection — no login needed.
     func enableLocalMode(router: AppRouter) {
         isLocalMode = true
-        router.navigate(to: .dashboard)
+        router.navigate(to: .patientSelection)
     }
 
     // MARK: - Device Switching
@@ -113,7 +163,7 @@ final class AppDIContainer {
     }
 
     func makeRegisterViewModel(router: AppRouter) -> RegisterViewModel {
-        RegisterViewModel(authService: authService, appInfoService: appInfoService, router: router)
+        RegisterViewModel(authService: authService, router: router)
     }
 
     func makeHomeViewModel(router: AppRouter) -> HomeViewModel {
@@ -135,16 +185,7 @@ final class AppDIContainer {
     }
 
     func makePatientSelectionViewModel(router: AppRouter) -> PatientSelectionViewModel {
-        PatientSelectionViewModel(
-            patientsService: patientsService,
-            appInfoService: appInfoService,
-            diContainer: self,
-            router: router
-        )
-    }
-
-    func makeOfflinePatientSelectionViewModel(router: AppRouter) -> OfflinePatientSelectionViewModel {
-        OfflinePatientSelectionViewModel(patientStore: localPatientStore, diContainer: self, router: router)
+        PatientSelectionViewModel(repository: patientRepository, router: router, diContainer: self)
     }
 
     private var _cloudViewModel: CloudViewModel?
@@ -165,6 +206,19 @@ final class AppDIContainer {
 
     func makeAppContentViewModel(router: AppRouter) -> AppContentViewModel {
         AppContentViewModel(contentService: appContentService, router: router)
+    }
+
+    func makeVitalsViewModel(router: AppRouter) -> VitalsViewModel {
+        VitalsViewModel(patient: lastRecordingPatient ?? Patient.mockPatients[0], router: router, diContainer: self, appInfoService: appInfoService)
+    }
+
+    func makePatientExamsViewModel(router: AppRouter) -> PatientExamsViewModel {
+        PatientExamsViewModel(
+            patient: lastRecordingPatient ?? Patient.mockPatients[0],
+            recordingStore: recordingStore,
+            router: router,
+            diContainer: self
+        )
     }
 
     func makeRecordingViewModel(patient: Patient, router: AppRouter) -> RecordingViewModel {
@@ -193,13 +247,25 @@ final class AppDIContainer {
     }
 
     func makeAnalysisViewModel(router: AppRouter) -> AnalysisViewModel {
-        AnalysisViewModel(
+        // Consume the emergency flag: once the AnalysisViewModel is created, reset it so
+        // subsequent normal recordings don't inherit the emergency gate.
+        let em = isEmergencySession
+        let emReturn = emergencyReturnRoute
+        isEmergencySession = false
+        // Also check the stored recording's isEmergency flag so the banner shows
+        // when reopening a historical emergency exam (live session flag is already reset).
+        let storedIsEmergency = lastRecordingExistingId.map { recordingStore.isEmergency(for: $0) } ?? false
+        return AnalysisViewModel(
             patient: lastRecordingPatient ?? Patient.mockPatients[0],
             ecgData: lastRecordingData,
             sampleRate: lastRecordingSampleRate,
             totalDuration: lastRecordingTotalDuration,
             existingRecordingId: lastRecordingExistingId,
             isLocalMode: isLocalMode,
+            isEmergencySession: em,
+            emergencyReturnRoute: emReturn,
+            recordingIsEmergency: storedIsEmergency,
+            patientRepository: patientRepository,
             router: router,
             uploadService: ekgUploadService,
             checkinService: checkinService,

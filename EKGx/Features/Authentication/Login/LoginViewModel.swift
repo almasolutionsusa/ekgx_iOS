@@ -102,7 +102,6 @@ final class LoginViewModel {
 
     // MARK: - PIN Login State
 
-    var showPinLogin: Bool = false
     var pinInput: String = ""
     var pinError: String? = nil
 
@@ -178,32 +177,17 @@ final class LoginViewModel {
         diContainer.enableLocalMode(router: router)
     }
 
+    func startEmergency() {
+        diContainer.startEmergencySession(router: router)
+    }
+
     func navigateToRegister() {
         router.navigate(to: .register)
     }
 
-    func enterWithPin() {
-        pinInput = ""
-        pinError = nil
-        showPinLogin = true
-    }
-
     func cancelPinLogin() {
-        showPinLogin = false
         pinInput = ""
         pinError = nil
-    }
-
-    func submitPinLogin() {
-        guard !pinInput.isEmpty else {
-            pinError = L10n.Auth.Login.pinErrorEmpty
-            return
-        }
-        guard pinInput.count == 6, pinInput.allSatisfy(\.isNumber) else {
-            pinError = L10n.Auth.Login.pinErrorInvalid
-            return
-        }
-        Task { await performPinLogin() }
     }
 
     func keypadInput(_ digit: String) {
@@ -235,22 +219,39 @@ final class LoginViewModel {
         pinError  = nil
         defer { isLoading = false }
 
-        let appUuid = diContainer.checkinService.appUuid
-
-        do {
-            try await authService.pinLogin(pin: pinInput, appUuid: appUuid)
-            diContainer.enableOnlineMode()
-            diContainer.clearRecordingSession()
-            configureAutoLock()
-            showPinLogin = false
-            router.navigate(to: .dashboard)
-        } catch let authError as AuthError {
-            pinError = authError.errorDescription
-            pinInput = ""
-        } catch {
-            pinError = L10n.Auth.Login.errorGeneric
-            pinInput = ""
+        // Try the PIN against every registered user — whoever matches gets logged in.
+        // This is necessary because the single keypad has no user-selection step.
+        let matchedUser = LocalUserRegistry.shared.all.first { user in
+            LocalUserStore.shared.validatePin(pinInput, forUser: user.username)
         }
+
+        guard let user = matchedUser else {
+            pinError = L10n.Auth.Login.pinErrorInvalid
+            pinInput = ""
+            return
+        }
+
+        LocalUserStore.shared.saveUser(
+            username:     user.username,
+            email:        user.email,
+            facilityId:   user.facilityId,
+            facilityName: user.facilityName,
+            firstName:    user.firstName,
+            lastName:     user.lastName
+        )
+        authService.restoreLocalSession(
+            username:     user.username,
+            email:        user.email,
+            facilityId:   user.facilityId,
+            facilityName: user.facilityName,
+            firstName:    user.firstName,
+            lastName:     user.lastName
+        )
+        diContainer.enableOnlineMode()
+        diContainer.clearRecordingSession()
+        configureAutoLock()
+        pinInput = ""
+        router.navigate(to: .patientSelection)
     }
 
     private func performLogin() async {
@@ -258,19 +259,96 @@ final class LoginViewModel {
         errorMessage = nil
         defer { isLoading = false }
 
-        do {
-            let username = email.trimmingCharacters(in: .whitespacesAndNewlines)
-            try await authService.login(email: username, password: password)
+        let trimmedEmail = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        // Try local login first — only for the user whose profile is stored on this device.
+        // A different user's password hash may exist from a prior login, but their profile
+        // data (facilityId, facilityName, PIN key) belongs to the last API-logged-in user.
+        let store        = LocalUserStore.shared
+        let storedEmail    = store.email?.lowercased()
+        let storedUsername = store.username?.lowercased()
+        let isStoredUser   = storedEmail == trimmedEmail.lowercased() ||
+                             storedUsername == trimmedEmail.lowercased()
+
+        if isStoredUser && store.canLoginLocally(email: trimmedEmail, password: password) {
+            let infoSvc    = diContainer.appInfoService
+            let facilityId   = store.facilityId   ?? infoSvc.facilityId
+            let facilityName = store.facilityName ?? infoSvc.cached?.facilityName
+            printStoredUserData(method: "LOCAL LOGIN (email+password)")
+            // Clear any stale token — ensureValidToken will re-auth fresh when needed.
+            authService.clearAccessToken()
+            // Save under all possible lookup keys so ensureValidToken always finds it.
+            store.savePasswordUnderAllKeys(password, typedInput: trimmedEmail)
+            authService.restoreLocalSession(
+                username:     store.username ?? trimmedEmail,
+                email:        trimmedEmail,
+                facilityId:   facilityId,
+                facilityName: facilityName
+            )
             diContainer.enableOnlineMode()
-            saveToHistory(username)
+            saveToHistory(trimmedEmail)
             diContainer.clearRecordingSession()
             configureAutoLock()
-            router.navigate(to: .dashboard)
+            router.navigate(to: .patientSelection)
+            return
+        }
+
+        // Fall back to API.
+        do {
+            try await authService.login(email: trimmedEmail, password: password)
+            let data = authService.loginData
+            // Save full profile and mark as verified so future logins work locally.
+            let infoSvc = diContainer.appInfoService
+            LocalUserStore.shared.saveUser(
+                username:     data?.user.username ?? trimmedEmail,
+                email:        data?.user.email,
+                facilityId:   data?.facilityId   ?? infoSvc.facilityId,
+                facilityName: data?.facilityName ?? infoSvc.cached?.facilityName,
+                firstName:    data?.user.firstName,
+                lastName:     data?.user.lastName
+            )
+            LocalUserStore.shared.savePasswordHash(password, for: trimmedEmail)
+            // Save under all possible lookup keys so ensureValidToken always finds it.
+            LocalUserStore.shared.savePasswordUnderAllKeys(password, typedInput: trimmedEmail)
+            // Register user so PIN login can look them up by username.
+            let infoFacilityId   = data?.facilityId   ?? infoSvc.facilityId
+            let infoFacilityName = data?.facilityName ?? infoSvc.cached?.facilityName
+            LocalUserRegistry.shared.upsert(LocalUserRecord(
+                username:     data?.user.username ?? trimmedEmail,
+                email:        data?.user.email,
+                firstName:    data?.user.firstName,
+                lastName:     data?.user.lastName,
+                facilityId:   infoFacilityId,
+                facilityName: infoFacilityName
+            ))
+            printStoredUserData(method: "API LOGIN")
+            diContainer.enableOnlineMode()
+            saveToHistory(trimmedEmail)
+            diContainer.clearRecordingSession()
+            configureAutoLock()
+            router.navigate(to: .patientSelection)
         } catch let authError as AuthError {
             errorMessage = authError.errorDescription
         } catch {
             errorMessage = L10n.Auth.Login.errorGeneric
         }
+    }
+
+    private func printStoredUserData(method: String) {
+        let store = LocalUserStore.shared
+        let emailKey  = store.email
+        let userKey   = store.username
+        let pwByEmail = emailKey.flatMap  { store.storedPassword(for: $0) }
+        let pwByUser  = userKey.flatMap   { store.storedPassword(for: $0) }
+        print("┌─── \(method) ──────────────────────────────")
+        print("│ username      : \(userKey    ?? "nil")")
+        print("│ email         : \(emailKey   ?? "nil")")
+        print("│ facilityId    : \(store.facilityId.map { String($0) } ?? "nil")")
+        print("│ facilityName  : \(store.facilityName ?? "nil")")
+        print("│ hasPin        : \(store.hasPin)")
+        print("│ pw(byEmail)   : \(pwByEmail  != nil ? "✅ found" : "❌ nil")")
+        print("│ pw(byUsername): \(pwByUser   != nil ? "✅ found" : "❌ nil")")
+        print("└────────────────────────────────────────────")
     }
 
     private func configureAutoLock() {

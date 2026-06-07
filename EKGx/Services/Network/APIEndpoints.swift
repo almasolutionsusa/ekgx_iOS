@@ -17,9 +17,10 @@ enum APIEndpoints {
         static let register       = "/api/auth/register"
         static let pinLogin       = "/api/auth/pin-login"
         static let forgotPassword = "/api/auth/forgot-password"
-        static let pinSetup       = "/api/auth/pin/setup"
-        static let pinChange      = "/api/auth/pin/change"
-        static let pinStatus      = "/api/auth/pin/status"
+        static let pinSetup        = "/api/auth/pin/setup"
+        static let pinChange       = "/api/auth/pin/change"
+        static let pinStatus       = "/api/auth/pin/status"
+        static let changePassword  = "/api/auth/change-password"
     }
 
     // MARK: - App

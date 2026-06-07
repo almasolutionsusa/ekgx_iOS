@@ -57,11 +57,11 @@ final class OfflinePatientSelectionViewModel {
         guard let patient = selected else { return }
         diContainer.lastRecordingPatient = patient.toPatient()
         diContainer.recordingSessionStartedAt = Date()
-        router.navigate(to: .ecgRecording(patientId: patient.id))
+        router.navigate(to: .vitals)
     }
 
     func navigateBack() {
-        router.navigate(to: .dashboard)
+        router.navigate(to: .patientSelection)
     }
 
     // MARK: - Create Patient

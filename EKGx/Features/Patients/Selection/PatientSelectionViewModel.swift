@@ -2,119 +2,260 @@
 //  PatientSelectionViewModel.swift
 //  EKGx
 //
-//  Drives the patient selection flow that precedes an ECG recording.
-//  User must search and confirm a patient before navigating to the recording screen.
+//  Unified patient selection — always reads from local Core Data.
+//  API-based search is supported in the future via PatientRepositoryProtocol.
 //
 
 import Foundation
+import SwiftUI
 
 @Observable
 @MainActor
 final class PatientSelectionViewModel {
 
-    // MARK: - Search Inputs
+    // MARK: - Search
 
-    var firstName: String = ""
-    var lastName: String  = ""
-    var dob: Date?        = nil
-    var mrn: String       = ""
+    var searchFirstName: String = "" { didSet { applyFilter() } }
+    var searchLastName:  String = "" { didSet { applyFilter() } }
+    var searchMRN:       String = "" { didSet { applyFilter() } }
+    var searchDob:       Date?  = nil { didSet { applyFilter() } }
 
-    // MARK: - State
+    // MARK: - Patient List
 
-    var isSearching: Bool = false
-    var hasSearched: Bool = false
-    var results: [SearchedPatient] = []
-    var selected: SearchedPatient? = nil
-    var errorMessage: String? = nil
+    private var allPatients: [LocalPatient] = []
+    var filteredPatients: [LocalPatient] = []
+    var selected: LocalPatient? = nil
 
-    // Per-field errors
-    var firstNameError: String? = nil
-    var dobError: String?       = nil
+    // MARK: - Delete Patient
+
+    var showDeleteConfirm:    Bool         = false
+    private var deletingPatient: LocalPatient? = nil
+
+    func examCount(for patient: LocalPatient) -> Int {
+        diContainer.recordingStore.recordings(for: patient.id).count
+    }
+
+    func confirmDelete(_ patient: LocalPatient) {
+        deletingPatient   = patient
+        showDeleteConfirm = true
+    }
+
+    func cancelDelete() {
+        showDeleteConfirm = false
+        deletingPatient   = nil
+    }
+
+    func deleteConfirmed() {
+        guard let patient = deletingPatient else { return }
+        showDeleteConfirm = false
+        Task {
+            do {
+                try await repository.delete(patient.id)
+                allPatients.removeAll { $0.id == patient.id }
+                if selected?.id == patient.id { selected = nil }
+                applyFilter()
+            } catch {
+                // Non-fatal — patient stays in list
+            }
+            deletingPatient = nil
+        }
+    }
+
+    // MARK: - Edit Patient Form
+
+    var showEditPatient:      Bool    = false
+    private(set) var editingPatient:  LocalPatient? = nil
+    var editFirstName:        String  = ""
+    var editLastName:         String  = ""
+    var editDob:              Date?   = nil
+    var editGender:           String  = "Male"
+    var editMRN:              String  = ""
+    var editFirstNameError:   String? = nil
+    var editLastNameError:    String? = nil
+    var editDobError:         String? = nil
+    var editMRNError:         String? = nil
+    var isUpdating:           Bool    = false
+    var editErrorMessage:     String? = nil
 
     // MARK: - Create Patient Form
 
-    var showCreatePatient: Bool = false
-    var createFirstName: String = ""
-    var createLastName: String  = ""
-    var createDob: Date?        = nil
-    var createGender: String    = "Male"
-    var createMRN: String       = ""
-
-    var isCreating: Bool             = false
-    var createErrorMessage: String?  = nil
+    var showCreatePatient:    Bool    = false
+    var createFirstName:      String  = ""
+    var createLastName:       String  = ""
+    var createDob:            Date?   = nil
+    var createGender:         String  = "Male"
+    var createMRN:            String  = ""
     var createFirstNameError: String? = nil
-    var createLastNameError: String?  = nil
-    var createDobError: String?       = nil
-    var createMRNError: String?       = nil
+    var createLastNameError:  String? = nil
+    var createDobError:       String? = nil
+    var createMRNError:       String? = nil
+    var isCreating:           Bool    = false
+    var createErrorMessage:   String? = nil
 
     let genderOptions: [String] = ["Male", "Female"]
+    var canConfirm: Bool { selected != nil }
+    var isSearchActive: Bool {
+        !searchFirstName.isEmpty || !searchLastName.isEmpty || !searchMRN.isEmpty || searchDob != nil
+    }
+
+    // MARK: - Menu / Logout
+
+    var isMenuVisible: Bool = false
+
+    func openMenu() {
+        withAnimation(.easeInOut(duration: 0.28)) { isMenuVisible = true }
+    }
+
+    func closeMenu() {
+        withAnimation(.easeInOut(duration: 0.24)) { isMenuVisible = false }
+    }
+
+    func logout() {
+        closeMenu()
+        diContainer.autoLockManager.stop()
+        Task { try? await diContainer.authService.logout() }
+        router.navigate(to: .login)
+    }
+
+    // User info for the side menu header
+    private var sessionUser: SessionUser? { diContainer.authService.loginData?.user }
+    var menuUserFullName: String  { sessionUser?.username ?? LocalUserStore.shared.username ?? "" }
+    var menuUserEmail: String     { sessionUser?.email ?? LocalUserStore.shared.email ?? "" }
+    var menuUserInitials: String  {
+        let name = menuUserFullName
+        return name.isEmpty ? "?" : String(name.prefix(2)).uppercased()
+    }
+    var menuUserRole: String      { sessionUser?.title?.capitalized ?? sessionUser?.role?.capitalized ?? "" }
+
+    // Side menu navigation
+    func navigateToMyAccount()         { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .myAccount) }
+    func navigateToSettings()          { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .settings) }
+    func navigateToSupport()           { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .support) }
+    func navigateToFAQ()               { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .faq) }
+    func navigateToIndicationsForUse() { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .indicationsForUse) }
 
     // MARK: - Dependencies
 
-    private let patientsService: PatientsService
-    private let appInfoService: AppInfoService
-    private let diContainer: AppDIContainer
+    private let repository: PatientRepositoryProtocol
     private let router: AppRouter
+    private let diContainer: AppDIContainer
 
-    init(patientsService: PatientsService, appInfoService: AppInfoService, diContainer: AppDIContainer, router: AppRouter) {
-        self.patientsService = patientsService
-        self.appInfoService  = appInfoService
-        self.diContainer     = diContainer
-        self.router          = router
+    init(repository: PatientRepositoryProtocol, router: AppRouter, diContainer: AppDIContainer) {
+        self.repository  = repository
+        self.router      = router
+        self.diContainer = diContainer
     }
 
-    // MARK: - Computed
+    // MARK: - Load
 
-    /// Facility ID comes from the app info (resolved on launch).
-    var facilityId: Int64? { appInfoService.facilityId }
+    func activate() {
+        if router.reopenMenuOnBack {
+            router.reopenMenuOnBack = false
+            openMenu()
+        }
+        Task { await loadAll() }
+    }
 
-    var canConfirm: Bool { selected != nil }
+    private func loadAll() async {
+        do {
+            allPatients = try await repository.fetchAll()
+            applyFilter()
+        } catch {
+            // Non-fatal — list stays empty
+        }
+    }
 
-    // MARK: - Actions
+    private func applyFilter() {
+        let firstName = searchFirstName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let lastName  = searchLastName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let mrn       = searchMRN.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let dob       = searchDob.map { LocalPatient.dateFormatter.string(from: $0) }
 
-    func search() {
-        let firstTrim = firstName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let mrnTrim   = mrn.trimmingCharacters(in: .whitespacesAndNewlines)
+        var results = allPatients
 
-        // Either MRN-only OR (firstName + dob required)
-        if mrnTrim.isEmpty {
-            firstNameError = firstTrim.isEmpty ? L10n.Validation.nameEmpty : nil
-            dobError       = dob == nil        ? L10n.Validation.required  : nil
-            guard firstNameError == nil && dobError == nil else { return }
-        } else {
-            firstNameError = nil
-            dobError = nil
+        if !firstName.isEmpty { results = results.filter { $0.firstName.lowercased().contains(firstName) } }
+        if !lastName.isEmpty  { results = results.filter { $0.lastName.lowercased().contains(lastName) } }
+        if !mrn.isEmpty       { results = results.filter { $0.mrn.lowercased().contains(mrn) } }
+        if let dob            { results = results.filter { $0.birthDate == dob } }
+
+        // Sort by most recent exam — patients with a recording bubble to the top,
+        // ordered by the recording's recordedAt date descending.
+        let latestDate: [String: Date] = diContainer.recordingStore.allRecordings()
+            .reduce(into: [:]) { map, rec in
+                if map[rec.patientId] == nil { map[rec.patientId] = rec.recordedAt }
+            }
+        results.sort {
+            switch (latestDate[$0.id], latestDate[$1.id]) {
+            case (let a?, let b?): return a > b
+            case (_?, nil):        return true
+            case (nil, _?):        return false
+            default:               return false
+            }
         }
 
-        Task { await performSearch() }
+        filteredPatients = results
+
+        if !mrn.isEmpty && results.count == 1 {
+            selected = results.first
+        }
     }
 
-    func clearSearch() {
-        firstName = ""
-        lastName  = ""
-        dob       = nil
-        mrn       = ""
-        results.removeAll()
-        selected = nil
-        hasSearched = false
-        errorMessage = nil
-        firstNameError = nil
-        dobError = nil
-    }
+    // MARK: - Selection
 
-    func select(_ patient: SearchedPatient) {
+    func select(_ patient: LocalPatient) {
         selected = patient
     }
 
-    // MARK: - Create Patient Actions
+    func clearSearch() {
+        searchFirstName = ""
+        searchLastName  = ""
+        searchMRN       = ""
+        searchDob       = nil
+        selected        = nil
+    }
+
+    // MARK: - Navigation
+
+    func navigateToVitals(_ patient: LocalPatient) {
+        selected = patient
+        diContainer.lastRecordingPatient = patient.toPatient()
+        diContainer.recordingSessionStartedAt = Date()
+        router.navigate(to: .vitals)
+    }
+
+    func navigateToHistory(_ patient: LocalPatient) {
+        diContainer.lastRecordingPatient = patient.toPatient()
+        router.patientExamsReturnRoute = .patientSelection
+        router.navigate(to: .patientExams)
+    }
+
+    func navigateBack() {
+        router.navigate(to: .login)
+    }
+
+    // MARK: - Create Patient
 
     func openCreatePatient() {
-        // Pre-fill from the last search to reduce typing
-        createFirstName = firstName
-        createLastName  = lastName
-        createDob       = dob
-        createMRN       = mrn
-        createGender    = "Male"
+        createFirstName      = ""
+        createLastName       = ""
+        createDob            = nil
+        createGender         = "Male"
+        createMRN            = ""
+        createFirstNameError = nil
+        createLastNameError  = nil
+        createDobError       = nil
+        createMRNError       = nil
+        createErrorMessage   = nil
+        showCreatePatient    = true
+    }
+
+    /// Opens the create sheet pre-filled with whatever the user typed in the search fields.
+    func openCreatePatientWithSearchData() {
+        createFirstName      = searchFirstName
+        createLastName       = searchLastName
+        createDob            = searchDob
+        createGender         = "Male"
+        createMRN            = searchMRN
         createFirstNameError = nil
         createLastNameError  = nil
         createDobError       = nil
@@ -127,167 +268,109 @@ final class PatientSelectionViewModel {
         showCreatePatient = false
     }
 
-    func submitCreatePatient() {
-        guard validateCreateInputs() else { return }
-        Task { await performCreatePatient() }
+    // MARK: - Edit Patient
+
+    func openEditPatient(_ patient: LocalPatient) {
+        editingPatient    = patient
+        editFirstName     = patient.firstName
+        editLastName      = patient.lastName
+        editDob           = LocalPatient.dateFormatter.date(from: patient.birthDate)
+        editGender        = patient.gender.isEmpty ? "Male" : patient.gender
+        editMRN           = patient.mrn
+        editFirstNameError = nil
+        editLastNameError  = nil
+        editDobError       = nil
+        editMRNError       = nil
+        editErrorMessage   = nil
+        showEditPatient   = true
     }
 
-    private func validateCreateInputs() -> Bool {
-        let f = createFirstName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let l = createLastName.trimmingCharacters(in: .whitespacesAndNewlines)
-        let m = createMRN.trimmingCharacters(in: .whitespacesAndNewlines)
+    func cancelEditPatient() {
+        showEditPatient = false
+        editingPatient  = nil
+    }
+
+    func submitEditPatient() {
+        guard validateEdit() else { return }
+        guard var patient = editingPatient else { return }
+
+        patient.firstName = editFirstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        patient.lastName  = editLastName.trimmingCharacters(in: .whitespacesAndNewlines)
+        patient.birthDate = editDob.map { LocalPatient.dateFormatter.string(from: $0) } ?? ""
+        patient.gender    = editGender
+        patient.mrn       = editMRN.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        isUpdating = true
+        Task {
+            defer { isUpdating = false }
+            do {
+                try await repository.update(patient)
+                if let idx = allPatients.firstIndex(where: { $0.id == patient.id }) {
+                    allPatients[idx] = patient
+                }
+                applyFilter()
+                if selected?.id == patient.id { selected = patient }
+                showEditPatient = false
+                editingPatient  = nil
+            } catch {
+                editErrorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func validateEdit() -> Bool {
+        let f   = editFirstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let l   = editLastName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let mrn = editMRN.trimmingCharacters(in: .whitespacesAndNewlines)
+        editFirstNameError = f.isEmpty ? L10n.Validation.nameEmpty : nil
+        editLastNameError  = l.isEmpty ? L10n.Validation.nameEmpty : nil
+        editDobError       = editDob == nil ? L10n.Validation.required : nil
+        // Duplicate check excludes the patient being edited (same id is allowed to keep its own MRN)
+        editMRNError       = !mrn.isEmpty && allPatients.contains(where: {
+                               $0.id != editingPatient?.id && $0.mrn.lowercased() == mrn.lowercased()
+                             }) ? L10n.Validation.mrnDuplicate : nil
+        return editFirstNameError == nil && editLastNameError == nil
+            && editDobError == nil && editMRNError == nil
+    }
+
+    func submitCreatePatient() {
+        guard validateCreate() else { return }
+
+        let dobStr = createDob.map { LocalPatient.dateFormatter.string(from: $0) } ?? ""
+        let input  = NewPatientInput(
+            firstName: createFirstName.trimmingCharacters(in: .whitespacesAndNewlines),
+            lastName:  createLastName.trimmingCharacters(in: .whitespacesAndNewlines),
+            birthDate: dobStr,
+            gender:    createGender,
+            mrn:       createMRN.trimmingCharacters(in: .whitespacesAndNewlines),
+            createdBy: diContainer.authService.loginData?.user.username ?? ""
+        )
+
+        isCreating = true
+        Task {
+            defer { isCreating = false }
+            do {
+                let patient = try await repository.add(input)
+                allPatients.insert(patient, at: 0)
+                applyFilter()
+                selected = patient
+                showCreatePatient = false
+            } catch {
+                createErrorMessage = error.localizedDescription
+            }
+        }
+    }
+
+    private func validateCreate() -> Bool {
+        let f   = createFirstName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let l   = createLastName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let mrn = createMRN.trimmingCharacters(in: .whitespacesAndNewlines)
         createFirstNameError = f.isEmpty ? L10n.Validation.nameEmpty : nil
         createLastNameError  = l.isEmpty ? L10n.Validation.nameEmpty : nil
         createDobError       = createDob == nil ? L10n.Validation.required : nil
-        createMRNError       = m.isEmpty ? L10n.Validation.required : nil
-        return [createFirstNameError, createLastNameError, createDobError, createMRNError]
-            .allSatisfy { $0 == nil }
-    }
-
-    private func performCreatePatient() async {
-        isCreating = true
-        createErrorMessage = nil
-        defer { isCreating = false }
-
-        guard let facId = facilityId else {
-            createErrorMessage = L10n.Auth.Register.errorFacilityNotAssigned
-            return
-        }
-
-        let dobStr = createDob.map { Self.dobFormatter.string(from: $0) } ?? ""
-
-        do {
-            let patient = try await patientsService.create(
-                firstName: createFirstName.trimmingCharacters(in: .whitespacesAndNewlines),
-                lastName:  createLastName.trimmingCharacters(in: .whitespacesAndNewlines),
-                dob:       dobStr,
-                gender:    createGender,
-                mrn:       createMRN.trimmingCharacters(in: .whitespacesAndNewlines),
-                facilityId: facId
-            )
-
-            guard let patient else {
-                createErrorMessage = L10n.Auth.Login.errorGeneric
-                return
-            }
-
-            // Inject the new patient into results + auto-select
-            let created = SearchedPatient.from(patient)
-            if !results.contains(created) {
-                results.insert(created, at: 0)
-            }
-            selected = created
-            hasSearched = true
-            showCreatePatient = false
-        } catch let error as APIError {
-            createErrorMessage = error.errorDescription
-        } catch {
-            createErrorMessage = L10n.Auth.Login.errorGeneric
-        }
-    }
-
-    func confirm() {
-        guard let patient = selected else { return }
-        diContainer.lastRecordingPatient = patient.toPatient()
-        diContainer.recordingSessionStartedAt = Date()
-        router.navigate(to: .ecgRecording(patientId: patient.id))
-    }
-
-    func navigateBack() {
-        router.navigate(to: .dashboard)
-    }
-
-    // MARK: - Private
-
-    private func performSearch() async {
-        isSearching = true
-        errorMessage = nil
-        selected = nil
-        defer { isSearching = false; hasSearched = true }
-
-        guard let facId = facilityId else {
-            // Try to fetch it once more — the prefetch on launch may have failed.
-            await appInfoService.getInfo()
-            guard let retryId = facilityId else {
-                errorMessage = L10n.Auth.Register.errorFacilityNotAssigned
-                results = []
-                return
-            }
-            await runSearch(facilityId: retryId)
-            return
-        }
-
-        await runSearch(facilityId: facId)
-    }
-
-    private func runSearch(facilityId: Int64) async {
-        let dobString: String? = dob.map { Self.dobFormatter.string(from: $0) }
-
-        do {
-            let remote = try await patientsService.search(
-                firstName: firstName,
-                lastName:  lastName,
-                dob:       dobString,
-                mrn:       mrn,
-                facilityId: facilityId
-            )
-            results = remote.map { SearchedPatient.from($0) }
-            // Auto-select if there's exactly one result
-            if results.count == 1 { selected = results.first }
-        } catch let error as APIError {
-            errorMessage = error.errorDescription
-            results = []
-        } catch {
-            errorMessage = L10n.Auth.Login.errorGeneric
-            results = []
-        }
-    }
-
-    private static let dobFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.dateFormat = "yyyy-MM-dd"
-        f.timeZone = TimeZone.current
-        return f
-    }()
-}
-
-// MARK: - SearchedPatient (minimal DTO)
-
-/// Minimal patient shape used by the selection flow. The spec returns a
-/// generic `{string: string}` map so we parse defensively.
-struct SearchedPatient: Identifiable, Hashable {
-    let id: String
-    let firstName: String
-    let lastName: String
-    let dob: String
-    let gender: String
-    let mrn: String
-
-    var fullName: String { "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces) }
-
-    func toPatient() -> Patient {
-        Patient(
-            id: Int(id),
-            patientId: id,
-            uniqueId: id,
-            firstName: firstName,
-            lastName: lastName,
-            birthDate: dob,
-            gender: gender,
-            medicalRecordNumber: mrn,
-            hasPhoto: false
-        )
-    }
-
-    /// Maps a server-side `RemotePatient` into the selection-screen DTO.
-    static func from(_ remote: RemotePatient) -> SearchedPatient {
-        SearchedPatient(
-            id: remote.uuid ?? remote.emrPatientId ?? String(remote.id ?? 0),
-            firstName: remote.firstName ?? "",
-            lastName:  remote.lastName ?? "",
-            dob:       remote.dob ?? "",
-            gender:    remote.gender ?? "",
-            mrn:       remote.medicalRecordNumber ?? ""
-        )
+        createMRNError       = !mrn.isEmpty && allPatients.contains(where: { $0.mrn.lowercased() == mrn.lowercased() })
+                               ? L10n.Validation.mrnDuplicate : nil
+        return createFirstNameError == nil && createLastNameError == nil
+            && createDobError == nil && createMRNError == nil
     }
 }

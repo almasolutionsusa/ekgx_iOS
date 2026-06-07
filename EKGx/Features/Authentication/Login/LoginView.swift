@@ -40,7 +40,6 @@ struct LoginView: View {
         .background(AppColors.surfaceBackground)
         .onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
         .task {
-            // Poll until appInfoService has data (checkin + getInfo run at app launch)
             for _ in 0..<20 {
                 viewModel.refreshFacilityInfo()
                 if viewModel.facilityName != nil { break }
@@ -53,9 +52,6 @@ struct LoginView: View {
                     .transition(.opacity)
                     .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
             }
-        }
-        .sheet(isPresented: $viewModel.showPinLogin) {
-            PinLoginSheet(viewModel: viewModel)
         }
         .sheet(isPresented: $viewModel.showForgotPassword) {
             ForgotPasswordSheet(viewModel: viewModel)
@@ -110,21 +106,11 @@ private struct LoginBrandingPanel: View {
                 // Logo area
                 VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
                     // App icon placeholder
-                    ZStack {
-                        RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
-                            .fill(AppColors.brandPrimary)
-                            .frame(width: 72, height: 72)
-
-                        Image(systemName: "waveform.path.ecg")
-                            .font(.system(size: 36, weight: .semibold))
-                            .foregroundStyle(.white)
-                    }
-
                     VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
                         AppImages.logo
                             .resizable()
                             .scaledToFit()
-                            .frame(height: 40)
+                            .frame(height: 60)
                             .onTapGesture(count: 2) { onLogoDoubleTap?() }
 
                         Text(L10n.Branding.tagline)
@@ -136,16 +122,19 @@ private struct LoginBrandingPanel: View {
 
                 Spacer()
 
-                // Facility / org badge — between badge and powered-by
-                if organizationName != nil || facilityName != nil {
-                    FacilityBadge(
-                        organizationName: organizationName,
-                        facilityName: facilityName
-                    )
-                    .padding(.bottom, AppMetrics.spacing20)
-                    .transition(.opacity.combined(with: .move(edge: .bottom)))
-                    .animation(.easeOut(duration: 0.4), value: facilityName)
+                // Facility / org badge — always reserves its height so the logo above never jumps
+                ZStack(alignment: .bottomLeading) {
+                    Color.clear.frame(height: 64)   // constant placeholder — both spacers stay stable
+                    if organizationName != nil || facilityName != nil {
+                        FacilityBadge(
+                            organizationName: organizationName,
+                            facilityName: facilityName
+                        )
+                        .transition(.opacity)
+                        .animation(.easeOut(duration: 0.4), value: facilityName)
+                    }
                 }
+                .padding(.bottom, AppMetrics.spacing20)
 
                 // Animated ECG pulse indicator
                 HStack(spacing: AppMetrics.spacing8) {
@@ -303,219 +292,92 @@ private struct LoginFormPanel: View {
     @Bindable var viewModel: LoginViewModel
     @FocusState private var focusedField: LoginViewModel.Field?
     @AppStorage("isDarkMode") private var isDarkMode = true
+    @State private var isEmailMode: Bool
+
+    init(viewModel: LoginViewModel) {
+        self.viewModel = viewModel
+        let anyPinSet = LocalUserRegistry.shared.all.contains { $0.hasPin }
+        _isEmailMode = State(initialValue: !anyPinSet)
+    }
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
             ScrollViewReader { proxy in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    Spacer(minLength: AppMetrics.spacing64)
+                ScrollView {
+                    VStack(spacing: 0) {
+                        Spacer(minLength: AppMetrics.spacing48)
 
-                    // Header
-                    VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-                        Text(L10n.Auth.Login.title)
-                            .font(AppTypography.title1)
-                            .foregroundStyle(AppColors.textPrimary)
-
-                        Text(L10n.Auth.Login.subtitle)
-                            .font(AppTypography.callout)
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-
-                    Spacer(minLength: AppMetrics.spacing40)
-
-                    // Error banner
-                    if let error = viewModel.errorMessage {
-                        ErrorBanner(message: error) {
-                            withAnimation { viewModel.errorMessage = nil }
-                        }
-                        .padding(.bottom, AppMetrics.spacing24)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                        .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage)
-                    }
-
-                    // Form fields
-                    VStack(spacing: AppMetrics.spacing20) {
-                        // Username field + suggestions dropdown
-                        ZStack(alignment: .topLeading) {
-                            ETextField(
-                                label: L10n.Auth.Login.emailLabel,
-                                placeholder: L10n.Auth.Login.emailPlaceholder,
-                                systemImage: "person",
-                                text: $viewModel.email,
-                                errorMessage: viewModel.emailError,
-                                keyboardType: .default,
-                                textContentType: .username
-                            )
-                            .focused($focusedField, equals: .email)
-                            .id(LoginViewModel.Field.email)
-                            .onChange(of: viewModel.email) { _, _ in
-                                viewModel.clearFieldError(for: .email)
-                                viewModel.updateSuggestions()
-                            }
-                            .onSubmit { focusedField = .password; viewModel.dismissSuggestions() }
-
-                            if viewModel.showSuggestions {
-                                VStack(spacing: 0) {
-                                    ForEach(viewModel.suggestions, id: \.self) { suggestion in
-                                        Button {
-                                            viewModel.selectSuggestion(suggestion)
-                                            focusedField = .password
-                                        } label: {
-                                            HStack(spacing: AppMetrics.spacing12) {
-                                                Image(systemName: "clock.arrow.circlepath")
-                                                    .font(.system(size: 14))
-                                                    .foregroundStyle(AppColors.textSecondary)
-                                                Text(suggestion)
-                                                    .font(AppTypography.callout)
-                                                    .foregroundStyle(AppColors.textPrimary)
-                                                Spacer()
-                                            }
-                                            .padding(.horizontal, AppMetrics.spacing16)
-                                            .padding(.vertical, AppMetrics.spacing12)
-                                            .frame(maxWidth: .infinity)
-                                            .contentShape(Rectangle())
-                                        }
-                                        .buttonStyle(.plain)
-                                        if suggestion != viewModel.suggestions.last {
-                                            Divider().padding(.horizontal, AppMetrics.spacing16)
-                                        }
-                                    }
-                                }
-                                .background(AppColors.surfaceCard)
-                                .cornerRadius(AppMetrics.radiusMedium)
-                                .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                                        .strokeBorder(AppColors.borderSubtle, lineWidth: AppMetrics.borderWidth)
-                                )
-                                .offset(y: AppMetrics.textFieldHeight + AppMetrics.spacing4)
-                                .zIndex(10)
-                            }
+                        if isEmailMode {
+                            emailSection(proxy: proxy)
+                        } else {
+                            pinSection
                         }
 
-                        ESecureField(
-                            label: L10n.Auth.Login.passwordLabel,
-                            placeholder: L10n.Auth.Login.passwordPlaceholder,
-                            text: $viewModel.password,
-                            errorMessage: viewModel.passwordError
-                        )
-                        .focused($focusedField, equals: .password)
-                        .id(LoginViewModel.Field.password)
-                        .onChange(of: viewModel.password) { _, _ in
-                            viewModel.clearFieldError(for: .password)
-                            viewModel.dismissSuggestions()
-                        }
-                        .onSubmit { focusedField = nil; viewModel.login() }
-                    }
+                        Spacer(minLength: AppMetrics.spacing20)
 
-                    // Forgot password
-                    HStack {
-                        Spacer()
-                        Button(L10n.Auth.Login.forgotPassword) {
+                        SecondaryButton(
+                            title: isEmailMode ? L10n.Auth.Login.pinButton : L10n.Auth.Login.pinBackToEmail
+                        ) {
                             focusedField = nil
-                            viewModel.openForgotPassword()
-                        }
-                        .font(AppTypography.subheadline)
-                        .foregroundStyle(AppColors.brandPrimary)
-                    }
-                    .padding(.top, AppMetrics.spacing12)
-                    .padding(.bottom, AppMetrics.spacing32)
-
-                    // Primary action
-                    PrimaryButton(
-                        title: L10n.Auth.Login.loginButton,
-                        isLoading: viewModel.isLoading
-                    ) {
-                        focusedField = nil
-                        viewModel.login()
-                    }
-
-                    // Divider
-                    HStack {
-                        Rectangle()
-                            .fill(AppColors.borderSubtle)
-                            .frame(height: 1)
-                        Text("or")
-                            .font(AppTypography.caption)
-                            .foregroundStyle(AppColors.textSecondary)
-                            .padding(.horizontal, AppMetrics.spacing12)
-                        Rectangle()
-                            .fill(AppColors.borderSubtle)
-                            .frame(height: 1)
-                    }
-                    .padding(.vertical, AppMetrics.spacing24)
-
-                    // PIN Login
-                    SecondaryButton(title: L10n.Auth.Login.pinButton) {
-                        focusedField = nil
-                        viewModel.enterWithPin()
-                    }
-
-                    Spacer(minLength: AppMetrics.spacing16)
-
-                    // Sign-in link hint
-                    HStack {
-                        Spacer()
-                        Text(L10n.Auth.Login.noAccount)
-                            .font(AppTypography.footnote)
-                            .foregroundStyle(AppColors.textSecondary)
-                        Button(L10n.Auth.Login.registerButton) {
-                            viewModel.navigateToRegister()
-                        }
-                        .font(AppTypography.footnote)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(AppColors.brandPrimary)
-                        Spacer()
-                    }
-                    .padding(.top, AppMetrics.spacing16)
-
-                    // Offline / local mode
-                    Divider()
-                        .padding(.vertical, AppMetrics.spacing24)
-
-                    Button {
-                        focusedField = nil
-                        viewModel.continueOffline()
-                    } label: {
-                        HStack(spacing: AppMetrics.spacing8) {
-                            Image(systemName: "wifi.slash")
-                                .font(.system(size: 14, weight: .medium))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(L10n.Auth.Login.localMode)
-                                    .font(AppTypography.subheadline)
-                                    .fontWeight(.medium)
-                                Text(L10n.Auth.Login.localModeSubtitle)
-                                    .font(AppTypography.caption)
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                if isEmailMode { viewModel.cancelPinLogin() }
+                                isEmailMode.toggle()
                             }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
                         }
-                        .foregroundStyle(AppColors.textSecondary)
-                        .padding(AppMetrics.spacing16)
-                        .background(AppColors.surfaceCard)
-                        .cornerRadius(AppMetrics.radiusMedium)
-                    }
-                    .buttonStyle(.plain)
+                        .padding(.bottom, AppMetrics.spacing12)
 
-                    Spacer(minLength: AppMetrics.spacing64)
+                        // EKG Emergency
+                        Button { viewModel.startEmergency() } label: {
+                            HStack(spacing: AppMetrics.spacing10) {
+                                Image(systemName: "cross.case.fill")
+                                    .font(.system(size: 15, weight: .semibold))
+                                Text("EKG Emergency")
+                                    .font(AppTypography.bodyMedium)
+                            }
+                            .foregroundStyle(AppColors.statusCritical)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: AppMetrics.buttonHeight)
+                            .background(AppColors.statusCritical.opacity(0.07))
+                            .cornerRadius(AppMetrics.radiusMedium)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                                    .strokeBorder(AppColors.statusCritical.opacity(0.25), lineWidth: AppMetrics.borderWidth)
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.bottom, AppMetrics.spacing24)
+
+                        HStack {
+                            Spacer()
+                            Text(L10n.Auth.Login.noAccount)
+                                .font(AppTypography.footnote)
+                                .foregroundStyle(AppColors.textSecondary)
+                            Button(L10n.Auth.Login.registerButton) {
+                                viewModel.navigateToRegister()
+                            }
+                            .font(AppTypography.footnote)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(AppColors.brandPrimary)
+                            Spacer()
+                        }
+
+                        Spacer(minLength: AppMetrics.spacing48)
+                    }
+                    .padding(.horizontal, AppMetrics.spacing48)
+                    .frame(maxWidth: AppMetrics.formMaxWidth)
+                    .frame(maxWidth: .infinity)
                 }
-                .padding(.horizontal, AppMetrics.spacing48)
-                .frame(maxWidth: AppMetrics.formMaxWidth)
-                .frame(maxWidth: .infinity)
-            }
-            .background(AppColors.surfaceBackground)
-            .scrollDismissesKeyboard(.interactively)
-            .onChange(of: focusedField) { _, newValue in
-                guard let field = newValue else { return }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                    withAnimation(.easeInOut(duration: 0.3)) {
-                        proxy.scrollTo(field, anchor: .top)
+                .background(AppColors.surfaceBackground)
+                .scrollDismissesKeyboard(.interactively)
+                .onChange(of: focusedField) { _, newValue in
+                    guard let field = newValue else { return }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        withAnimation(.easeInOut(duration: 0.3)) {
+                            proxy.scrollTo(field, anchor: .top)
+                        }
                     }
                 }
             }
-            } // ScrollViewReader
 
             // Dark mode toggle
             Button {
@@ -533,50 +395,22 @@ private struct LoginFormPanel: View {
             .padding(.trailing, AppMetrics.spacing24)
         }
     }
-}
 
-// MARK: - PIN Login Sheet
+    // MARK: - PIN Section
 
-private struct PinLoginSheet: View {
-
-    @Bindable var viewModel: LoginViewModel
-
-    var body: some View {
+    private var pinSection: some View {
         VStack(spacing: 0) {
-
-            // Handle
-            Capsule()
-                .fill(AppColors.borderSubtle)
-                .frame(width: 40, height: 4)
-                .padding(.top, AppMetrics.spacing16)
-                .padding(.bottom, AppMetrics.spacing24)
-
-            // Icon
-            ZStack {
-                Circle()
-                    .fill(AppColors.brandPrimary.opacity(0.12))
-                    .frame(width: 72, height: 72)
-                Image(systemName: "lock.shield.fill")
-                    .font(.system(size: 30, weight: .semibold))
-                    .foregroundStyle(AppColors.brandPrimary)
-            }
-            .padding(.bottom, AppMetrics.spacing16)
-
-            // Title & subtitle
             VStack(spacing: AppMetrics.spacing8) {
                 Text(L10n.Auth.Login.pinTitle)
-                    .font(AppTypography.title2)
+                    .font(AppTypography.title1)
                     .foregroundStyle(AppColors.textPrimary)
-
                 Text(L10n.Auth.Login.pinSubtitle)
                     .font(AppTypography.callout)
                     .foregroundStyle(AppColors.textSecondary)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, AppMetrics.spacing32)
             }
             .padding(.bottom, AppMetrics.spacing28)
 
-            // PIN dot indicators
             HStack(spacing: AppMetrics.spacing20) {
                 ForEach(0..<6, id: \.self) { index in
                     ZStack {
@@ -588,7 +422,6 @@ private struct PinLoginSheet: View {
                                 lineWidth: 2
                             )
                             .frame(width: 20, height: 20)
-
                         if index < viewModel.pinInput.count {
                             Circle()
                                 .fill(AppColors.brandPrimary)
@@ -600,39 +433,156 @@ private struct PinLoginSheet: View {
             }
             .padding(.bottom, AppMetrics.spacing12)
 
-            // Error
-            if let error = viewModel.pinError {
-                Text(error)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.statusCritical)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, AppMetrics.spacing32)
-                    .padding(.bottom, AppMetrics.spacing8)
-                    .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.2), value: viewModel.pinError)
-            } else {
-                Spacer(minLength: AppMetrics.spacing20)
+            Group {
+                if let error = viewModel.pinError {
+                    Text(error)
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.statusCritical)
+                        .multilineTextAlignment(.center)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.2), value: viewModel.pinError)
+                } else if viewModel.isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
+                } else {
+                    Color.clear
+                }
             }
+            .frame(height: 20)
+            .padding(.bottom, AppMetrics.spacing16)
 
-            // Embedded numeric keypad
             PinNumericKeypad(
                 onDigit:  { viewModel.keypadInput($0) },
                 onDelete: { viewModel.keypadDelete() }
             )
-            .padding(.horizontal, AppMetrics.spacing32)
-            .padding(.bottom, AppMetrics.spacing20)
             .disabled(viewModel.isLoading)
-
-            // Back to email
-            Button(L10n.Auth.Login.pinBackToEmail) {
-                viewModel.cancelPinLogin()
-            }
-            .font(AppTypography.subheadline)
-            .foregroundStyle(AppColors.brandPrimary)
-            .padding(.bottom, AppMetrics.spacing32)
+            .padding(.bottom, AppMetrics.spacing20)
         }
-        .frame(maxWidth: .infinity)
-        .background(AppColors.surfaceBackground)
+    }
+
+    // MARK: - Email Section
+
+    @ViewBuilder
+    private func emailSection(proxy: ScrollViewProxy) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header
+            VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
+                Text(L10n.Auth.Login.title)
+                    .font(AppTypography.title1)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text(L10n.Auth.Login.subtitle)
+                    .font(AppTypography.callout)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+            .padding(.bottom, AppMetrics.spacing32)
+
+            // Error banner
+            if let error = viewModel.errorMessage {
+                ErrorBanner(message: error) {
+                    withAnimation { viewModel.errorMessage = nil }
+                }
+                .padding(.bottom, AppMetrics.spacing24)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+                .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage)
+            }
+
+            // Fields
+            VStack(spacing: AppMetrics.spacing20) {
+                ZStack(alignment: .topLeading) {
+                    ETextField(
+                        label: L10n.Auth.Login.emailLabel,
+                        placeholder: L10n.Auth.Login.emailPlaceholder,
+                        systemImage: "person",
+                        text: $viewModel.email,
+                        errorMessage: viewModel.emailError,
+                        keyboardType: .default,
+                        textContentType: .username
+                    )
+                    .focused($focusedField, equals: .email)
+                    .id(LoginViewModel.Field.email)
+                    .onChange(of: viewModel.email) { _, _ in
+                        viewModel.clearFieldError(for: .email)
+                        viewModel.updateSuggestions()
+                    }
+                    .onSubmit { focusedField = .password; viewModel.dismissSuggestions() }
+
+                    if viewModel.showSuggestions {
+                        VStack(spacing: 0) {
+                            ForEach(viewModel.suggestions, id: \.self) { suggestion in
+                                Button {
+                                    viewModel.selectSuggestion(suggestion)
+                                    focusedField = .password
+                                } label: {
+                                    HStack(spacing: AppMetrics.spacing12) {
+                                        Image(systemName: "clock.arrow.circlepath")
+                                            .font(.system(size: 14))
+                                            .foregroundStyle(AppColors.textSecondary)
+                                        Text(suggestion)
+                                            .font(AppTypography.callout)
+                                            .foregroundStyle(AppColors.textPrimary)
+                                        Spacer()
+                                    }
+                                    .padding(.horizontal, AppMetrics.spacing16)
+                                    .padding(.vertical, AppMetrics.spacing12)
+                                    .frame(maxWidth: .infinity)
+                                    .contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain)
+                                if suggestion != viewModel.suggestions.last {
+                                    Divider().padding(.horizontal, AppMetrics.spacing16)
+                                }
+                            }
+                        }
+                        .background(AppColors.surfaceCard)
+                        .cornerRadius(AppMetrics.radiusMedium)
+                        .shadow(color: .black.opacity(0.12), radius: 12, x: 0, y: 6)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                                .strokeBorder(AppColors.borderSubtle, lineWidth: AppMetrics.borderWidth)
+                        )
+                        .offset(y: AppMetrics.textFieldHeight + AppMetrics.spacing4)
+                        .zIndex(10)
+                    }
+                }
+
+                ESecureField(
+                    label: L10n.Auth.Login.passwordLabel,
+                    placeholder: L10n.Auth.Login.passwordPlaceholder,
+                    text: $viewModel.password,
+                    errorMessage: viewModel.passwordError
+                )
+                .focused($focusedField, equals: .password)
+                .id(LoginViewModel.Field.password)
+                .onChange(of: viewModel.password) { _, _ in
+                    viewModel.clearFieldError(for: .password)
+                    viewModel.dismissSuggestions()
+                }
+                .onSubmit { focusedField = nil; viewModel.login() }
+            }
+
+            // Forgot password
+            HStack {
+                Spacer()
+                Button(L10n.Auth.Login.forgotPassword) {
+                    focusedField = nil
+                    viewModel.openForgotPassword()
+                }
+                .font(AppTypography.subheadline)
+                .foregroundStyle(AppColors.brandPrimary)
+            }
+            .padding(.top, AppMetrics.spacing12)
+            .padding(.bottom, AppMetrics.spacing28)
+
+            // Login button
+            PrimaryButton(
+                title: L10n.Auth.Login.loginButton,
+                isLoading: viewModel.isLoading
+            ) {
+                focusedField = nil
+                viewModel.login()
+            }
+            .padding(.bottom, AppMetrics.spacing20)
+        }
     }
 }
 

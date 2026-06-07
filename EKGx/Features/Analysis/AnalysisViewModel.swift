@@ -53,6 +53,41 @@ final class AnalysisViewModel {
     var uploadError: String? = nil
     var showUploadResult: Bool = false
 
+    // MARK: - Emergency Session
+
+    let isEmergencySession: Bool
+    private let emergencyReturnRoute: AppRoute
+    private let recordingIsEmergency: Bool
+
+    /// True when the emergency banner should be visible — live session OR a stored emergency exam.
+    var showEmergencyBanner: Bool { isEmergencySession || recordingIsEmergency }
+
+    // PIN gate (shown when anonymous user taps "Send to EMR")
+    var showEmergencyPinSheet: Bool = false
+    var emergencyPinInput: String = ""
+    var emergencyPinError: String? = nil
+    private(set) var isPinVerified: Bool = false
+
+    // Patient assignment (shown after PIN verified)
+    var showAssignPatientSheet: Bool = false
+    var assignedPatient: Patient? = nil
+
+    // Patient list state for the assignment sheet
+    var assignSearchQuery: String = "" { didSet { filterAssignPatients() } }
+    private var allAssignPatients: [LocalPatient] = []
+    var filteredAssignPatients: [LocalPatient] = []
+    var isLoadingAssignPatients: Bool = false
+
+    // Create patient inside assignment sheet
+    var showEmergencyCreatePatient: Bool = false
+    var ecFirstName: String = ""
+    var ecLastName: String = ""
+    var ecDob: Date? = nil
+    var ecGender: String = "Male"
+    var ecMRN: String = ""
+    var isEmergencyCreating: Bool = false
+    var emergencyCreateError: String? = nil
+
     /// True when the local recording is already synced — upload button should be disabled.
     var isAlreadySynced: Bool {
         guard let id = localRecordingId else { return false }
@@ -88,6 +123,7 @@ final class AnalysisViewModel {
     private let checkinService: AppCheckinService
     private let recordingStore: LocalRecordingStore
     private let authService: AuthServiceProtocol
+    private let patientRepository: PatientRepositoryProtocol?
     /// The locally persisted recording created when analysis starts.
     private var localRecordingId: String? = nil
 
@@ -102,23 +138,31 @@ final class AnalysisViewModel {
         totalDuration: Int? = nil,
         existingRecordingId: String? = nil,
         isLocalMode: Bool = false,
+        isEmergencySession: Bool = false,
+        emergencyReturnRoute: AppRoute = AppRoute.login,
+        recordingIsEmergency: Bool = false,
+        patientRepository: PatientRepositoryProtocol? = nil,
         router: AppRouter,
         uploadService: EKGUploadService,
         checkinService: AppCheckinService,
         recordingStore: LocalRecordingStore,
         authService: AuthServiceProtocol
     ) {
-        self.patient           = patient
-        self.ecgData           = ecgData
-        self.sampleRate        = sampleRate
-        self.totalDuration     = totalDuration
-        self.localRecordingId  = existingRecordingId
-        self.isLocalMode       = isLocalMode
-        self.router            = router
-        self.uploadService     = uploadService
-        self.checkinService    = checkinService
-        self.recordingStore    = recordingStore
-        self.authService       = authService
+        self.patient               = patient
+        self.ecgData               = ecgData
+        self.sampleRate            = sampleRate
+        self.totalDuration         = totalDuration
+        self.localRecordingId      = existingRecordingId
+        self.isLocalMode           = isLocalMode
+        self.isEmergencySession    = isEmergencySession
+        self.emergencyReturnRoute  = emergencyReturnRoute
+        self.recordingIsEmergency  = recordingIsEmergency
+        self.patientRepository     = patientRepository
+        self.router                = router
+        self.uploadService         = uploadService
+        self.checkinService        = checkinService
+        self.recordingStore        = recordingStore
+        self.authService           = authService
     }
 
     // MARK: - Analysis
@@ -158,6 +202,20 @@ final class AnalysisViewModel {
 
     func uploadEKG() {
         guard !isUploading else { return }
+
+        // Emergency gate 1: require PIN before upload
+        if isEmergencySession && !isPinVerified {
+            emergencyPinInput = ""
+            emergencyPinError = nil
+            showEmergencyPinSheet = true
+            return
+        }
+        // Emergency gate 2: require patient assignment
+        if isEmergencySession && assignedPatient == nil {
+            showAssignPatientSheet = true
+            return
+        }
+
         isUploading = true
         uploadError = nil
         showUploadResult = false
@@ -167,14 +225,24 @@ final class AnalysisViewModel {
 
         Task {
             do {
+                try await authService.ensureValidToken()
+
                 let appUuid = checkinService.appUuid
                 let fileData = EKGUploadService.serialise(ecgData: ecgData)
                 let m = measurements?.merge
 
+                // Use the assigned patient in emergency mode, otherwise the original patient
+                let uploadPatient = assignedPatient ?? patient
+
                 var payload = EKGUploadPayload(
-                    patientUuid: patient.patientId ?? patient.uniqueId ?? "",
+                    patientUuid: uploadPatient.patientId ?? uploadPatient.uniqueId ?? "",
                     appUuid: appUuid
                 )
+                payload.firstName           = uploadPatient.firstName.nilIfEmpty
+                payload.lastName            = uploadPatient.lastName.nilIfEmpty
+                payload.dob                 = uploadPatient.birthDate.nilIfEmpty
+                payload.gender              = uploadPatient.gender.nilIfEmpty
+                payload.medicalRecordNumber = uploadPatient.medicalRecordNumber
                 payload.heartRate   = nilIfEmpty(m?.hr)
                 payload.rrInterval  = nilIfEmpty(m?.rr)
                 payload.prInterval  = nilIfEmpty(m?.pr)
@@ -200,8 +268,14 @@ final class AnalysisViewModel {
                 payload.pdfData     = pdfData
 
                 print("── EKG Upload Payload ──────────────────")
-                print("  patientUuid : \(payload.patientUuid)")
-                print("  appUuid     : \(payload.appUuid)")
+                print("  emergency           : \(isEmergencySession) assignedPatient=\(assignedPatient?.firstName ?? "none")")
+                print("  patientUuid         : \(payload.patientUuid)")
+                print("  appUuid             : \(payload.appUuid)")
+                print("  firstName           : \(payload.firstName ?? "nil")")
+                print("  lastName            : \(payload.lastName ?? "nil")")
+                print("  dob                 : \(payload.dob ?? "nil")")
+                print("  gender              : \(payload.gender ?? "nil")")
+                print("  medicalRecordNumber : \(payload.medicalRecordNumber ?? "nil")")
                 print("  heartRate   : \(payload.heartRate ?? "nil")")
                 print("  rrInterval  : \(payload.rrInterval ?? "nil")")
                 print("  prInterval  : \(payload.prInterval ?? "nil")")
@@ -233,6 +307,7 @@ final class AnalysisViewModel {
                     recordingStore.updateStatus(id: rid, status: .synced)
                 }
             } catch let error as APIError {
+                print("❌ uploadEKG APIError: \(error)")
                 switch error {
                 case .sessionExpired, .invalidCredentials:
                     uploadError = L10n.Auth.Login.errorSessionExpired
@@ -244,6 +319,7 @@ final class AnalysisViewModel {
                     recordingStore.updateStatus(id: rid, status: .failed)
                 }
             } catch {
+                print("❌ uploadEKG error: \(error)")
                 uploadError = L10n.Auth.Login.errorGeneric
                 uploadSuccess = false
                 if let rid = localRecordingId {
@@ -282,7 +358,8 @@ final class AnalysisViewModel {
             qtCorrected:    nilIfEmpty(m?.qTc),
             fileSize:       fileData.count,
             appVersion:     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-            username:       authService.currentUser?.username
+            username:       authService.currentUser?.username,
+            isEmergency:    isEmergencySession
         )
         recordingStore.save(recording: recording, ecgFileData: fileData, pdfData: pdf)
         localRecordingId = recording.id
@@ -296,15 +373,151 @@ final class AnalysisViewModel {
     // MARK: - Navigation
 
     func goBack() {
+        if isEmergencySession {
+            router.navigate(to: emergencyReturnRoute)
+            return
+        }
         let dest = router.analysisReturnRoute
-        router.analysisReturnRoute = .dashboard
+        router.analysisReturnRoute = .patientSelection
         router.navigate(to: dest)
     }
 
     func confirmReject() {
+        if isEmergencySession {
+            router.navigate(to: emergencyReturnRoute)
+            return
+        }
         let dest = router.analysisReturnRoute
-        router.analysisReturnRoute = .dashboard
+        router.analysisReturnRoute = .patientSelection
         router.navigate(to: dest)
+    }
+
+    // MARK: - Emergency PIN Gate
+
+    func emergencyKeypadInput(_ digit: String) {
+        guard emergencyPinInput.count < 6 else { return }
+        emergencyPinInput += digit
+        emergencyPinError = nil
+        if emergencyPinInput.count == 6 { submitEmergencyPin() }
+    }
+
+    func emergencyKeypadDelete() {
+        guard !emergencyPinInput.isEmpty else { return }
+        emergencyPinInput.removeLast()
+    }
+
+    func submitEmergencyPin() {
+        guard LocalUserStore.shared.hasPin else {
+            emergencyPinError = L10n.Auth.Login.pinNotSetup
+            emergencyPinInput = ""
+            return
+        }
+        guard LocalUserStore.shared.validatePin(emergencyPinInput) else {
+            emergencyPinError = L10n.Auth.Login.pinErrorInvalid
+            emergencyPinInput = ""
+            return
+        }
+
+        isPinVerified = true
+        emergencyPinInput = ""
+        showEmergencyPinSheet = false
+
+        // PIN proved identity locally. Now do a full server login using the stored
+        // email+password so the upload has a real JWT token.
+        Task {
+            let store = LocalUserStore.shared
+            // Password is saved under the login input (email or username).
+            // Try the stored email key first, then username as fallback.
+            let loginId  = store.email ?? store.username ?? ""
+            let password = store.storedPassword(for: loginId)
+                        ?? store.username.flatMap { store.storedPassword(for: $0) }
+
+            if !loginId.isEmpty, let password {
+                try? await authService.login(email: loginId, password: password)
+            } else {
+                // No stored credentials — restore in-memory session only.
+                // The upload will surface its own auth error.
+                authService.restoreLocalSession(
+                    username:     store.username ?? "",
+                    email:        store.email,
+                    facilityId:   store.facilityId,
+                    facilityName: store.facilityName
+                )
+            }
+            showAssignPatientSheet = true
+        }
+    }
+
+    // MARK: - Emergency Patient Assignment
+
+    func loadPatientsForAssignment() {
+        guard let repo = patientRepository else { return }
+        Task {
+            isLoadingAssignPatients = true
+            allAssignPatients = (try? await repo.fetchAll()) ?? []
+            filterAssignPatients()
+            isLoadingAssignPatients = false
+        }
+    }
+
+    private func filterAssignPatients() {
+        let q = assignSearchQuery.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let base = allAssignPatients.filter { $0.mrn != "000000" }
+        filteredAssignPatients = q.isEmpty ? base : base.filter {
+            $0.firstName.lowercased().contains(q) ||
+            $0.lastName.lowercased().contains(q) ||
+            $0.mrn.lowercased().contains(q)
+        }
+    }
+
+    func confirmPatientAssignment(_ patient: LocalPatient) {
+        let resolved = patient.toPatient()
+        assignedPatient = resolved
+        showAssignPatientSheet = false
+        // Update the local Core Data record so it no longer shows as anonymous.
+        if let rid = localRecordingId {
+            recordingStore.updatePatient(id: rid, patient: resolved)
+        }
+        uploadEKG()
+    }
+
+    // MARK: - Emergency Create Patient
+
+    func submitEmergencyCreatePatient() {
+        guard !isEmergencyCreating else { return }
+        emergencyCreateError = nil
+        guard !ecFirstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              !ecLastName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              ecDob != nil else {
+            emergencyCreateError = L10n.Validation.required
+            return
+        }
+        guard let repo = patientRepository else { return }
+        isEmergencyCreating = true
+        Task {
+            defer { isEmergencyCreating = false }
+            let dobStr = LocalPatient.dateFormatter.string(from: ecDob ?? Date())
+            let input = NewPatientInput(
+                firstName: ecFirstName.trimmingCharacters(in: .whitespacesAndNewlines),
+                lastName:  ecLastName.trimmingCharacters(in: .whitespacesAndNewlines),
+                birthDate: dobStr,
+                gender:    ecGender,
+                mrn:       ecMRN.trimmingCharacters(in: .whitespacesAndNewlines),
+                createdBy: authService.currentUser?.username ?? "emergency"
+            )
+            do {
+                let created = try await repo.add(input)
+                showEmergencyCreatePatient = false
+                confirmPatientAssignment(created)
+            } catch {
+                emergencyCreateError = error.localizedDescription
+            }
+        }
+    }
+
+    func cancelEmergencyCreate() {
+        showEmergencyCreatePatient = false
+        emergencyCreateError = nil
     }
 
     // MARK: - Helpers

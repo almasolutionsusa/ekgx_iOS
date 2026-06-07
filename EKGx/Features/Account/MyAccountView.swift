@@ -12,13 +12,7 @@
 //  │                                                                      │
 //  │   Personal Information   ──────────────────────────────────────      │
 //  │   First Name  /  Last Name                                           │
-//  │   Work Email  /  Phone                                               │
-//  │                                                                      │
-//  │   Address  ────────────────────────────────────────────────────      │
-//  │   Address Line 1 / 2 / City / State / Zip / Country                 │
-//  │                                                                      │
-//  │   Facility & Role  ────────────────────────────────────────────      │
-//  │   Current Facility (Menu) / Department / Role                        │
+//  │   Email  /  Confirm Email                                            │
 //  │                                                                      │
 //  │   Security  ───────────────────────────────────────────────────      │
 //  │   [Set PIN Code]  [Change Password]                                  │
@@ -60,20 +54,6 @@ struct MyAccountView: View {
                         }
 
                         AccountFormCard(
-                            title: L10n.Account.Address.sectionTitle,
-                            subtitle: L10n.Account.Address.sectionSubtitle
-                        ) {
-                            AddressSection(viewModel: viewModel)
-                        }
-
-                        AccountFormCard(
-                            title: L10n.Account.Facility.sectionTitle,
-                            subtitle: L10n.Account.Facility.sectionSubtitle
-                        ) {
-                            FacilityRoleSection(viewModel: viewModel)
-                        }
-
-                        AccountFormCard(
                             title: L10n.Account.Security.sectionTitle,
                             subtitle: L10n.Account.Security.sectionSubtitle
                         ) {
@@ -90,13 +70,27 @@ struct MyAccountView: View {
                     .frame(maxWidth: .infinity)
                 }
             }
+
+            // PIN overlay
+            if viewModel.showSetPinSheet {
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                SetPinSheet(viewModel: viewModel)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            }
+
+            // Change Password overlay — ZStack so it survives background transitions
+            if viewModel.showChangePasswordSheet {
+                Color.black.opacity(0.35)
+                    .ignoresSafeArea()
+                    .transition(.opacity)
+                ChangePasswordSheet(viewModel: viewModel)
+                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+            }
         }
-        .sheet(isPresented: $viewModel.showSetPinSheet) {
-            SetPinSheet(viewModel: viewModel)
-        }
-        .sheet(isPresented: $viewModel.showChangePasswordSheet) {
-            ChangePasswordSheet(viewModel: viewModel)
-        }
+        .animation(.easeInOut(duration: 0.22), value: viewModel.showSetPinSheet)
+        .animation(.easeInOut(duration: 0.22), value: viewModel.showChangePasswordSheet)
         .alert(L10n.Account.Danger.alertTitle, isPresented: $viewModel.showDeactivateAlert) {
             Button(L10n.Account.Danger.alertCancel, role: .cancel) {}
             Button(L10n.Account.Danger.alertConfirm, role: .destructive) { viewModel.executeDeactivate() }
@@ -119,7 +113,7 @@ private struct AccountNavBar: View {
                 HStack(spacing: AppMetrics.spacing8) {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 15, weight: .semibold))
-                    Text(L10n.Home.Nav.menuButton) // "Dashboard" back label reuses common back concept
+                    Text(L10n.Home.Nav.menuButton)
                 }
                 .foregroundStyle(AppColors.textPrimary)
                 .padding(.horizontal, AppMetrics.spacing16)
@@ -286,9 +280,6 @@ private struct ProfilePictureSection: View {
                 Text(viewModel.facilityName)
                     .font(AppTypography.callout)
                     .foregroundStyle(AppColors.textSecondary)
-                Text(viewModel.role)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.brandPrimary)
 
                 Button(L10n.Account.Profile.changePhoto) {
                     viewModel.requestProfileImageChange()
@@ -306,45 +297,6 @@ private struct ProfilePictureSection: View {
         let f = viewModel.firstName.prefix(1).uppercased()
         let l = viewModel.lastName.prefix(1).uppercased()
         return "\(f)\(l)"
-    }
-}
-
-// MARK: - Locked (read-only) Field
-
-private struct LockedField: View {
-    let label: String
-    let systemImage: String
-    let value: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
-            Text(label.uppercased())
-                .font(AppTypography.captionBold)
-                .foregroundStyle(AppColors.textSecondary)
-                .tracking(0.5)
-
-            HStack(spacing: AppMetrics.spacing12) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundStyle(AppColors.textSecondary)
-                Text(value.isEmpty ? "—" : value)
-                    .font(AppTypography.body)
-                    .foregroundStyle(AppColors.textSecondary)
-                Spacer()
-                Image(systemName: "lock.fill")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(AppColors.borderSubtle)
-            }
-            .padding(.horizontal, AppMetrics.spacing16)
-            .frame(height: AppMetrics.textFieldHeight)
-            .background(AppColors.borderSubtle.opacity(0.2))
-            .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                    .strokeBorder(AppColors.borderSubtle.opacity(0.5), lineWidth: AppMetrics.borderWidth)
-            )
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 
@@ -374,111 +326,11 @@ private struct PersonalInfoSection: View {
                     autocapitalization: .words
                 )
             }
-            HStack(spacing: AppMetrics.spacing16) {
-                LockedField(
-                    label: L10n.Account.Personal.workEmail,
-                    systemImage: "envelope",
-                    value: viewModel.workEmail
-                )
-                LockedField(
-                    label: L10n.Account.Personal.phone,
-                    systemImage: "phone",
-                    value: viewModel.phone
-                )
-            }
-        }
-    }
-}
-
-// MARK: - Address Section
-
-private struct AddressSection: View {
-
-    @Bindable var viewModel: MyAccountViewModel
-
-    var body: some View {
-        VStack(spacing: AppMetrics.spacing16) {
-            ETextField(
-                label: L10n.Account.Address.line1,
-                placeholder: L10n.Account.Address.line1PH,
-                systemImage: "mappin",
-                text: $viewModel.addressLine1,
-                autocapitalization: .sentences
+            ELockedField(
+                label: L10n.Account.Personal.workEmail,
+                value: viewModel.email,
+                systemImage: "envelope"
             )
-            ETextField(
-                label: L10n.Account.Address.line2,
-                placeholder: L10n.Account.Address.line2PH,
-                systemImage: "mappin.and.ellipse",
-                text: $viewModel.addressLine2,
-                autocapitalization: .sentences
-            )
-            HStack(spacing: AppMetrics.spacing16) {
-                ETextField(
-                    label: L10n.Account.Address.city,
-                    placeholder: L10n.Account.Address.cityPH,
-                    systemImage: "building.2",
-                    text: $viewModel.city,
-                    autocapitalization: .words
-                )
-                ETextField(
-                    label: L10n.Account.Address.state,
-                    placeholder: L10n.Account.Address.statePH,
-                    systemImage: "map",
-                    text: $viewModel.state,
-                    autocapitalization: .characters
-                )
-                .frame(maxWidth: 160)
-                ETextField(
-                    label: L10n.Account.Address.zip,
-                    placeholder: L10n.Account.Address.zipPH,
-                    systemImage: "number",
-                    text: $viewModel.zipCode,
-                    keyboardType: .numbersAndPunctuation
-                )
-                .frame(maxWidth: 200)
-            }
-            ETextField(
-                label: L10n.Account.Address.country,
-                placeholder: L10n.Account.Address.countryPH,
-                systemImage: "globe",
-                text: $viewModel.country,
-                autocapitalization: .words
-            )
-        }
-    }
-}
-
-// MARK: - Facility & Role Section
-
-private struct FacilityRoleSection: View {
-
-    @Bindable var viewModel: MyAccountViewModel
-
-    var body: some View {
-        VStack(spacing: AppMetrics.spacing16) {
-
-            LockedField(
-                label: L10n.Account.Facility.currentFacility,
-                systemImage: "building.2.crop.circle",
-                value: viewModel.facilityName
-            )
-
-            HStack(spacing: AppMetrics.spacing16) {
-                ETextField(
-                    label: L10n.Account.Facility.department,
-                    placeholder: L10n.Account.Facility.departmentPH,
-                    systemImage: "staroflife",
-                    text: $viewModel.department,
-                    autocapitalization: .words
-                )
-                ETextField(
-                    label: L10n.Account.Facility.role,
-                    placeholder: L10n.Account.Facility.rolePH,
-                    systemImage: "person.badge.clock",
-                    text: $viewModel.role,
-                    autocapitalization: .words
-                )
-            }
         }
     }
 }
@@ -494,8 +346,8 @@ private struct SecurityActionsSection: View {
             SecurityActionButton(
                 icon: "lock.circle.fill",
                 iconColor: AppColors.brandPrimary,
-                title: (viewModel.hasPin == true) ? L10n.Account.Security.changePinTitle : L10n.Account.Security.setPinTitle,
-                subtitle: (viewModel.hasPin == true) ? L10n.Account.Security.changePinSubtitle : L10n.Account.Security.setPinSubtitle,
+                title: (viewModel.hasPin) ? L10n.Account.Security.changePinTitle : L10n.Account.Security.setPinTitle,
+                subtitle: (viewModel.hasPin) ? L10n.Account.Security.changePinSubtitle : L10n.Account.Security.setPinSubtitle,
                 action: { viewModel.openSetPin() }
             )
 
@@ -631,108 +483,100 @@ private struct SetPinSheet: View {
     @Bindable var viewModel: MyAccountViewModel
     @FocusState private var focusedField: PinField?
 
-    enum PinField { case old, pin, confirm }
+    enum PinField { case pin, confirm }
 
     var body: some View {
-        ZStack {
-            AppColors.surfaceBackground.ignoresSafeArea()
+        VStack(alignment: .leading, spacing: 0) {
 
-            VStack(alignment: .leading, spacing: 0) {
-
-                HStack {
-                    VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
-                        Text(viewModel.hasPin == true ? L10n.Account.Pin.changeSheetTitle : L10n.Account.Pin.sheetTitle)
-                            .font(AppTypography.title2)
-                            .foregroundStyle(AppColors.textPrimary)
-                        Text(viewModel.hasPin == true ? L10n.Account.Pin.changeSheetSubtitle : L10n.Account.Pin.sheetSubtitle)
-                            .font(AppTypography.callout)
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-                    Spacer()
-                    Button { viewModel.cancelPin() } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(AppColors.textSecondary)
-                            .frame(width: 36, height: 36)
-                            .background(AppColors.borderSubtle.opacity(0.5))
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(.plain)
+            HStack {
+                VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
+                    Text(viewModel.hasPin ? L10n.Account.Pin.changeSheetTitle : L10n.Account.Pin.sheetTitle)
+                        .font(AppTypography.title2)
+                        .foregroundStyle(AppColors.textPrimary)
+                    Text(viewModel.hasPin ? L10n.Account.Pin.changeSheetSubtitle : L10n.Account.Pin.sheetSubtitle)
+                        .font(AppTypography.callout)
+                        .foregroundStyle(AppColors.textSecondary)
                 }
-                .padding(.horizontal, AppMetrics.spacing40)
-                .padding(.top, AppMetrics.spacing32)
-                .padding(.bottom, AppMetrics.spacing24)
-
-                Rectangle()
-                    .fill(AppColors.borderSubtle.opacity(0.6))
-                    .frame(height: 1)
-                    .padding(.horizontal, AppMetrics.spacing40)
-
-                VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
-
-                    ZStack {
-                        RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
-                            .fill(AppColors.brandPrimary.opacity(0.1))
-                            .frame(width: 64, height: 64)
-                        Image(systemName: "lock.circle.fill")
-                            .font(.system(size: 30, weight: .medium))
-                            .foregroundStyle(AppColors.brandPrimary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, AppMetrics.spacing8)
-
-                    VStack(spacing: AppMetrics.spacing12) {
-                        if viewModel.hasPin == true {
-                            PinInputField(
-                                label: L10n.Account.Pin.fieldCurrent,
-                                placeholder: L10n.Account.Pin.fieldCurrentPH,
-                                text: $viewModel.pinOld,
-                                focusedField: $focusedField,
-                                fieldTag: .old
-                            )
-                        }
-                        PinInputField(
-                            label: L10n.Account.Pin.fieldNew,
-                            placeholder: L10n.Account.Pin.fieldNewPH,
-                            text: $viewModel.pinInput,
-                            focusedField: $focusedField,
-                            fieldTag: .pin
-                        )
-                        PinInputField(
-                            label: L10n.Account.Pin.fieldConfirm,
-                            placeholder: L10n.Account.Pin.fieldConfirmPH,
-                            text: $viewModel.pinConfirm,
-                            focusedField: $focusedField,
-                            fieldTag: .confirm
-                        )
-
-                        if let error = viewModel.pinError {
-                            HStack(spacing: AppMetrics.spacing4) {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .font(.system(size: 12))
-                                Text(error)
-                                    .font(AppTypography.caption)
-                            }
-                            .foregroundStyle(AppColors.statusCritical)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                        }
-                    }
-                    .animation(.easeInOut(duration: 0.2), value: viewModel.pinError)
-
-                    HStack(spacing: AppMetrics.spacing12) {
-                        SecondaryButton(title: L10n.Common.cancel) { viewModel.cancelPin() }
-                        PrimaryButton(title: viewModel.hasPin == true ? L10n.Account.Pin.changeSubmitButton : L10n.Account.Pin.submitButton, isLoading: viewModel.isSubmittingPin) { viewModel.submitPin() }
-                    }
-                }
-                .padding(.horizontal, AppMetrics.spacing40)
-                .padding(.top, AppMetrics.spacing28)
-                .frame(maxWidth: 520)
-                .frame(maxWidth: .infinity)
-
                 Spacer()
+                Button { viewModel.cancelPin() } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppColors.textSecondary)
+                        .frame(width: 36, height: 36)
+                        .background(AppColors.borderSubtle.opacity(0.5))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
             }
+            .padding(.horizontal, AppMetrics.spacing32)
+            .padding(.top, AppMetrics.spacing28)
+            .padding(.bottom, AppMetrics.spacing20)
+
+            Rectangle()
+                .fill(AppColors.borderSubtle.opacity(0.6))
+                .frame(height: 1)
+
+            VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                        .fill(AppColors.brandPrimary.opacity(0.1))
+                        .frame(width: 56, height: 56)
+                    Image(systemName: "lock.circle.fill")
+                        .font(.system(size: 26, weight: .medium))
+                        .foregroundStyle(AppColors.brandPrimary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, AppMetrics.spacing4)
+
+                VStack(spacing: AppMetrics.spacing12) {
+                    PinInputField(
+                        label: L10n.Account.Pin.fieldNew,
+                        placeholder: L10n.Account.Pin.fieldNewPH,
+                        text: $viewModel.pinInput,
+                        focusedField: $focusedField,
+                        fieldTag: .pin
+                    )
+                    PinInputField(
+                        label: L10n.Account.Pin.fieldConfirm,
+                        placeholder: L10n.Account.Pin.fieldConfirmPH,
+                        text: $viewModel.pinConfirm,
+                        focusedField: $focusedField,
+                        fieldTag: .confirm
+                    )
+
+                    if let error = viewModel.pinError {
+                        HStack(spacing: AppMetrics.spacing4) {
+                            Image(systemName: "exclamationmark.circle.fill")
+                                .font(.system(size: 12))
+                            Text(error)
+                                .font(AppTypography.caption)
+                        }
+                        .foregroundStyle(AppColors.statusCritical)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                }
+                .animation(.easeInOut(duration: 0.2), value: viewModel.pinError)
+
+                HStack(spacing: AppMetrics.spacing12) {
+                    SecondaryButton(title: L10n.Common.cancel) { viewModel.cancelPin() }
+                    PrimaryButton(title: viewModel.hasPin ? L10n.Account.Pin.changeSubmitButton : L10n.Account.Pin.submitButton) { viewModel.submitPin() }
+                }
+            }
+            .padding(.horizontal, AppMetrics.spacing32)
+            .padding(.top, AppMetrics.spacing24)
+            .padding(.bottom, AppMetrics.spacing32)
         }
-        .onAppear { focusedField = viewModel.hasPin == true ? .old : .pin }
+        .background(AppColors.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
+        .shadow(color: .black.opacity(0.2), radius: 28, x: 0, y: 12)
+        .overlay(
+            RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                .strokeBorder(AppColors.borderSubtle.opacity(0.5), lineWidth: AppMetrics.borderWidth)
+        )
+        .frame(maxWidth: 520)
+        .padding(.horizontal, AppMetrics.spacing32)
+        .onAppear { focusedField = .pin }
     }
 }
 
@@ -782,17 +626,20 @@ private struct ChangePasswordSheet: View {
     enum PasswordField { case current, new, confirm }
 
     var body: some View {
-        ZStack {
-            AppColors.surfaceBackground.ignoresSafeArea()
-
+        ScrollView {
             VStack(alignment: .leading, spacing: 0) {
 
+                // Header
                 HStack {
                     VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
-                        Text(L10n.Account.Password.sheetTitle)
+                        Text(viewModel.passwordStep == .verify
+                             ? L10n.Account.Password.verifyTitle
+                             : L10n.Account.Password.sheetTitle)
                             .font(AppTypography.title2)
                             .foregroundStyle(AppColors.textPrimary)
-                        Text(L10n.Account.Password.sheetSubtitle)
+                        Text(viewModel.passwordStep == .verify
+                             ? L10n.Account.Password.verifySubtitle
+                             : L10n.Account.Password.sheetSubtitle)
                             .font(AppTypography.callout)
                             .foregroundStyle(AppColors.textSecondary)
                     }
@@ -807,78 +654,142 @@ private struct ChangePasswordSheet: View {
                     }
                     .buttonStyle(.plain)
                 }
-                .padding(.horizontal, AppMetrics.spacing40)
-                .padding(.top, AppMetrics.spacing32)
-                .padding(.bottom, AppMetrics.spacing24)
+                .padding(.horizontal, AppMetrics.spacing32)
+                .padding(.top, AppMetrics.spacing28)
+                .padding(.bottom, AppMetrics.spacing20)
 
                 Rectangle()
                     .fill(AppColors.borderSubtle.opacity(0.6))
                     .frame(height: 1)
-                    .padding(.horizontal, AppMetrics.spacing40)
 
-                VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
-
-                    ZStack {
-                        RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
-                            .fill(AppColors.statusWarning.opacity(0.1))
-                            .frame(width: 64, height: 64)
-                        Image(systemName: "key.fill")
-                            .font(.system(size: 28, weight: .medium))
-                            .foregroundStyle(AppColors.statusWarning)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, AppMetrics.spacing8)
-
-                    VStack(spacing: AppMetrics.spacing12) {
-                        PasswordFieldView(
-                            label: L10n.Account.Password.fieldCurrent,
-                            placeholder: L10n.Account.Password.fieldCurrentPH,
-                            text: $viewModel.currentPassword,
-                            focusedField: $focusedField,
-                            fieldTag: .current
-                        )
-                        PasswordFieldView(
-                            label: L10n.Account.Password.fieldNew,
-                            placeholder: L10n.Account.Password.fieldNewPH,
-                            text: $viewModel.newPassword,
-                            focusedField: $focusedField,
-                            fieldTag: .new
-                        )
-                        PasswordFieldView(
-                            label: L10n.Account.Password.fieldConfirm,
-                            placeholder: L10n.Account.Password.fieldConfirmPH,
-                            text: $viewModel.confirmPassword,
-                            focusedField: $focusedField,
-                            fieldTag: .confirm
-                        )
-
-                        if let error = viewModel.passwordError {
-                            HStack(spacing: AppMetrics.spacing4) {
-                                Image(systemName: "exclamationmark.circle.fill")
-                                    .font(.system(size: 12))
-                                Text(error)
-                                    .font(AppTypography.caption)
-                            }
-                            .foregroundStyle(AppColors.statusCritical)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                        }
-                    }
-                    .animation(.easeInOut(duration: 0.2), value: viewModel.passwordError)
-
-                    HStack(spacing: AppMetrics.spacing12) {
-                        SecondaryButton(title: L10n.Common.cancel) { viewModel.cancelPasswordChange() }
-                        PrimaryButton(title: L10n.Account.Password.submitButton, isLoading: false) { viewModel.submitPasswordChange() }
-                    }
+                if viewModel.passwordStep == .verify {
+                    verifyStep
+                } else {
+                    setNewStep
                 }
-                .padding(.horizontal, AppMetrics.spacing40)
-                .padding(.top, AppMetrics.spacing28)
-                .frame(maxWidth: 520)
-                .frame(maxWidth: .infinity)
-
-                Spacer()
             }
         }
+        .scrollDismissesKeyboard(.interactively)
+        .background(AppColors.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
+        .shadow(color: .black.opacity(0.2), radius: 28, x: 0, y: 12)
+        .overlay(
+            RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                .strokeBorder(AppColors.borderSubtle.opacity(0.5), lineWidth: AppMetrics.borderWidth)
+        )
+        .frame(maxWidth: 520)
+        .padding(.horizontal, AppMetrics.spacing32)
         .onAppear { focusedField = .current }
+        .onChange(of: viewModel.passwordStep) { _, step in
+            focusedField = step == .verify ? .current : .new
+        }
+    }
+
+    private var verifyStep: some View {
+        VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+            ZStack {
+                RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                    .fill(AppColors.brandPrimary.opacity(0.1))
+                    .frame(width: 56, height: 56)
+                Image(systemName: "person.badge.key.fill")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(AppColors.brandPrimary)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, AppMetrics.spacing4)
+
+            // Locked email
+            ELockedField(
+                label: L10n.Account.Personal.workEmail,
+                value: viewModel.email,
+                systemImage: "envelope"
+            )
+
+            PasswordFieldView(
+                label: L10n.Account.Password.fieldCurrent,
+                placeholder: L10n.Account.Password.fieldCurrentPH,
+                text: $viewModel.verifyPasswordInput,
+                focusedField: $focusedField,
+                fieldTag: .current
+            )
+
+            if let error = viewModel.verifyError {
+                HStack(spacing: AppMetrics.spacing4) {
+                    Image(systemName: "exclamationmark.circle.fill")
+                        .font(.system(size: 12))
+                    Text(error)
+                        .font(AppTypography.caption)
+                }
+                .foregroundStyle(AppColors.statusCritical)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+
+            HStack(spacing: AppMetrics.spacing12) {
+                SecondaryButton(title: L10n.Common.cancel) { viewModel.cancelPasswordChange() }
+                PrimaryButton(title: L10n.Account.Password.verifyButton) {
+                    viewModel.verifyCurrentPassword()
+                }
+            }
+        }
+        .animation(.easeInOut(duration: 0.2), value: viewModel.verifyError)
+        .padding(.horizontal, AppMetrics.spacing32)
+        .padding(.top, AppMetrics.spacing24)
+        .padding(.bottom, AppMetrics.spacing32)
+    }
+
+    private var setNewStep: some View {
+        VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+            ZStack {
+                RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                    .fill(AppColors.statusWarning.opacity(0.1))
+                    .frame(width: 56, height: 56)
+                Image(systemName: "key.fill")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundStyle(AppColors.statusWarning)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, AppMetrics.spacing4)
+
+            VStack(spacing: AppMetrics.spacing12) {
+                PasswordFieldView(
+                    label: L10n.Account.Password.fieldNew,
+                    placeholder: L10n.Account.Password.fieldNewPH,
+                    text: $viewModel.newPassword,
+                    focusedField: $focusedField,
+                    fieldTag: .new
+                )
+                PasswordFieldView(
+                    label: L10n.Account.Password.fieldConfirm,
+                    placeholder: L10n.Account.Password.fieldConfirmPH,
+                    text: $viewModel.confirmPassword,
+                    focusedField: $focusedField,
+                    fieldTag: .confirm
+                )
+
+                if let error = viewModel.passwordError {
+                    HStack(spacing: AppMetrics.spacing4) {
+                        Image(systemName: "exclamationmark.circle.fill")
+                            .font(.system(size: 12))
+                        Text(error)
+                            .font(AppTypography.caption)
+                    }
+                    .foregroundStyle(AppColors.statusCritical)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+            }
+            .animation(.easeInOut(duration: 0.2), value: viewModel.passwordError)
+
+            HStack(spacing: AppMetrics.spacing12) {
+                SecondaryButton(title: L10n.Common.cancel) { viewModel.cancelPasswordChange() }
+                    .disabled(viewModel.isChangingPassword)
+                PrimaryButton(title: L10n.Account.Password.submitButton, isLoading: viewModel.isChangingPassword) {
+                    viewModel.submitPasswordChange()
+                }
+            }
+        }
+        .padding(.horizontal, AppMetrics.spacing32)
+        .padding(.top, AppMetrics.spacing24)
+        .padding(.bottom, AppMetrics.spacing32)
     }
 }
 
@@ -913,6 +824,48 @@ private struct PasswordFieldView: View {
                             lineWidth: isFocused ? AppMetrics.borderWidthFocused : AppMetrics.borderWidth
                         )
                 )
+        }
+    }
+}
+
+// MARK: - Locked (read-only) Field
+
+private struct ELockedField: View {
+    let label: String
+    let value: String
+    var systemImage: String? = nil
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
+            Text(label)
+                .font(AppTypography.captionBold)
+                .foregroundStyle(AppColors.textSecondary)
+                .textCase(.uppercase)
+                .tracking(0.5)
+
+            HStack(spacing: AppMetrics.spacing12) {
+                if let systemImage {
+                    Image(systemName: systemImage)
+                        .font(.system(size: AppMetrics.iconSizeSmall, weight: .medium))
+                        .foregroundStyle(AppColors.textSecondary)
+                        .frame(width: AppMetrics.iconSizeMedium)
+                }
+                Text(value.isEmpty ? "—" : value)
+                    .font(AppTypography.body)
+                    .foregroundStyle(AppColors.textSecondary)
+                Spacer()
+                Image(systemName: "lock.fill")
+                    .font(.system(size: AppMetrics.iconSizeSmall, weight: .medium))
+                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+            }
+            .padding(.horizontal, AppMetrics.spacing16)
+            .frame(height: AppMetrics.textFieldHeight)
+            .background(AppColors.surfaceCard.opacity(0.6))
+            .cornerRadius(AppMetrics.radiusMedium)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                    .strokeBorder(AppColors.borderSubtle, lineWidth: 1)
+            )
         }
     }
 }

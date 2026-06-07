@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="1" systemVersion="11A491" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="false" userDefinedModelVersionIdentifier="">
+    <entity name="Item" representedClassName="Item" syncable="YES" codeGenerationType="class">
+        <attribute name="timestamp" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+    </entity>
+    <entity name="PatientEntity" representedClassName="PatientEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="id"          attributeType="String"/>
+        <attribute name="firstName"   attributeType="String"/>
+        <attribute name="lastName"    attributeType="String"/>
+        <attribute name="dob"         attributeType="String"/>
+        <attribute name="gender"      attributeType="String"/>
+        <attribute name="mrn"         optional="YES" attributeType="String"/>
+        <attribute name="createdAt"   attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdBy"   optional="YES" attributeType="String"/>
+        <relationship name="exams" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="ECGRecordingEntity" inverseName="patient" inverseEntity="ECGRecordingEntity"/>
+    </entity>
+    <entity name="ECGRecordingEntity" representedClassName="ECGRecordingEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="id"              attributeType="String"/>
+        <attribute name="patientId"       attributeType="String"/>
+        <attribute name="patientName"     attributeType="String"/>
+        <attribute name="patientDob"      attributeType="String"/>
+        <attribute name="patientGender"   attributeType="String"/>
+        <attribute name="patientMrn"      optional="YES" attributeType="String"/>
+        <attribute name="recordedAt"      attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="durationSeconds" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="sampleRate"      attributeType="Integer 32" defaultValueString="660" usesScalarValueType="YES"/>
+        <attribute name="leadCount"       attributeType="Integer 32" defaultValueString="12" usesScalarValueType="YES"/>
+        <attribute name="fileSize"        attributeType="Integer 64" defaultValueString="0" usesScalarValueType="YES"/>
+        <attribute name="status"          attributeType="String" defaultValueString="pending"/>
+        <attribute name="diagnosis"       optional="YES" attributeType="String"/>
+        <attribute name="heartRate"       optional="YES" attributeType="String"/>
+        <attribute name="prInterval"      optional="YES" attributeType="String"/>
+        <attribute name="qrsDuration"     optional="YES" attributeType="String"/>
+        <attribute name="qtInterval"      optional="YES" attributeType="String"/>
+        <attribute name="qtCorrected"     optional="YES" attributeType="String"/>
+        <attribute name="ecgFileData"     optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="imageData"       optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES"/>
+        <attribute name="appVersion"      optional="YES" attributeType="String"/>
+        <attribute name="username"        optional="YES" attributeType="String"/>
+        <relationship name="patient" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="PatientEntity" inverseName="exams" inverseEntity="PatientEntity"/>
+    </entity>
+    <elements>
+        <element name="Item" positionX="-63" positionY="-18" width="128" height="44"/>
+        <element name="PatientEntity" positionX="-300" positionY="100" width="128" height="44"/>
+        <element name="ECGRecordingEntity" positionX="100" positionY="100" width="128" height="44"/>
+    </elements>
+</model>

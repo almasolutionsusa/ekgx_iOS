@@ -158,7 +158,7 @@ final class SettingsViewModel {
     }
 
     func navigateBack() {
-        router.navigate(to: .dashboard)
+        router.navigate(to: .patientSelection)
     }
 
     // MARK: - Demo code

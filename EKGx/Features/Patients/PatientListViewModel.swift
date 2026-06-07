@@ -33,8 +33,8 @@ final class PatientListViewModel {
     var searchMRN: String       = ""
     var isSearching: Bool       = false
     var hasSearched: Bool       = false
-    var searchResults: [SearchedPatient] = []
-    var selectedPatient: SearchedPatient? = nil
+    var searchResults: [Patient] = []
+    var selectedPatient: Patient? = nil
     var searchFirstNameError: String? = nil
     var searchDobError: String?       = nil
 
@@ -124,7 +124,7 @@ final class PatientListViewModel {
     // MARK: - Navigate back
 
     func navigateBack() {
-        router.navigate(to: .dashboard)
+        router.navigate(to: .patientSelection)
     }
 
     // MARK: - Start recording from waiting list
@@ -224,7 +224,19 @@ final class PatientListViewModel {
                 firstName: searchFirstName, lastName: searchLastName,
                 dob: dobString, mrn: searchMRN, facilityId: facilityId
             )
-            searchResults = remote.map { SearchedPatient.from($0) }
+            searchResults = remote.map {
+                Patient(
+                    id: $0.id.map { Int($0) },
+                    patientId: $0.emrPatientId,
+                    uniqueId: $0.uuid,
+                    firstName: $0.firstName ?? "",
+                    lastName: $0.lastName ?? "",
+                    birthDate: $0.dob ?? "",
+                    gender: $0.gender ?? "",
+                    medicalRecordNumber: $0.medicalRecordNumber,
+                    hasPhoto: nil
+                )
+            }
             if searchResults.count == 1 { selectedPatient = searchResults.first }
         } catch {
             searchResults = []
@@ -237,7 +249,7 @@ final class PatientListViewModel {
         searchFirstNameError = nil; searchDobError = nil
     }
 
-    func selectPatient(_ patient: SearchedPatient) {
+    func selectPatient(_ patient: Patient) {
         selectedPatient = patient
     }
 
@@ -284,8 +296,18 @@ final class PatientListViewModel {
                 mrn: createMRN.trimmingCharacters(in: .whitespacesAndNewlines),
                 facilityId: facId
             )
-            guard let patient else { createErrorMessage = L10n.Auth.Login.errorGeneric; return }
-            let created = SearchedPatient.from(patient)
+            guard let remote = patient else { createErrorMessage = L10n.Auth.Login.errorGeneric; return }
+            let created = Patient(
+                id: remote.id.map { Int($0) },
+                patientId: remote.emrPatientId,
+                uniqueId: remote.uuid,
+                firstName: remote.firstName ?? "",
+                lastName: remote.lastName ?? "",
+                birthDate: remote.dob ?? "",
+                gender: remote.gender ?? "",
+                medicalRecordNumber: remote.medicalRecordNumber,
+                hasPhoto: nil
+            )
             if !searchResults.contains(created) { searchResults.insert(created, at: 0) }
             selectedPatient = created
             hasSearched = true
@@ -301,7 +323,7 @@ final class PatientListViewModel {
 
     func confirmAddOrder() {
         guard let patient = selectedPatient else { return }
-        Task { await performAddOrder(patientUuid: patient.id) }
+        Task { await performAddOrder(patientUuid: patient.uniqueId ?? patient.patientId ?? "") }
     }
 
     private func performAddOrder(patientUuid: String) async {

@@ -4,6 +4,8 @@
 <dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>EKGx needs Bluetooth to connect to your ECG device.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>EKGx uses the camera to scan QR codes for quick patient MRN lookup.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>

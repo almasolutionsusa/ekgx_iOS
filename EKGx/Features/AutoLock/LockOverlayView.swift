@@ -26,16 +26,12 @@ struct LockOverlayView: View {
     @State private var errorMessage: String? = nil
     @State private var isSubmitting: Bool = false
 
-    private var loginMethod: String? {
-        diContainer.authService.loginData?.loginMethod
+    private var sessionUsername: String? {
+        diContainer.authService.currentUser?.username
     }
 
     private var isPinUser: Bool {
-        loginMethod?.uppercased() == "PIN"
-    }
-
-    private var lockedUserId: Int64? {
-        diContainer.authService.loginData?.user.id
+        LocalUserStore.shared.hasPin(forUser: sessionUsername)
     }
 
     var body: some View {
@@ -171,32 +167,14 @@ struct LockOverlayView: View {
         errorMessage = nil
         defer { isSubmitting = false }
 
-        let expectedUserId = lockedUserId
-        let appUuid = diContainer.checkinService.appUuid
-
-        do {
-            try await diContainer.authService.pinLogin(pin: pinInput, appUuid: appUuid)
-
-            // Verify the PIN belongs to the currently locked user
-            let returnedUserId = diContainer.authService.loginData?.user.id
-            guard returnedUserId == expectedUserId else {
-                // Wrong user's PIN — re-authenticate as the original user is no longer possible,
-                // so reject and force logout.
-                errorMessage = L10n.AutoLock.errorWrongUser
-                pinInput = ""
-                try? await diContainer.authService.logout()
-                return
-            }
-
+        guard LocalUserStore.shared.validatePin(pinInput, forUser: sessionUsername) else {
+            errorMessage = L10n.Auth.Login.pinErrorInvalid
             pinInput = ""
-            diContainer.autoLockManager.unlock()
-        } catch let error as AuthError {
-            errorMessage = error.errorDescription
-            pinInput = ""
-        } catch {
-            errorMessage = L10n.Auth.Login.errorGeneric
-            pinInput = ""
+            return
         }
+
+        pinInput = ""
+        diContainer.autoLockManager.unlock()
     }
 
     private func logoutAndReturnToLogin() {

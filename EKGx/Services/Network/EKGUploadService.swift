@@ -21,6 +21,13 @@ struct EKGUploadPayload {
     let patientUuid: String
     let appUuid: String
 
+    // Patient demographics (optional — enriches the server-side record)
+    var firstName: String?
+    var lastName: String?
+    var dob: String?
+    var gender: String?
+    var medicalRecordNumber: String?
+
     // Measurements (all optional)
     var heartRate: String?
     var rrInterval: String?
@@ -101,6 +108,11 @@ final class EKGUploadService {
             "appUuid":     p.appUuid,
             "patientUuid": p.patientUuid
         ]
+        if let v = p.firstName            { q["firstName"]           = v }
+        if let v = p.lastName             { q["lastName"]            = v }
+        if let v = p.dob                  { q["dob"]                 = v }
+        if let v = p.gender               { q["gender"]              = v }
+        if let v = p.medicalRecordNumber  { q["medicalRecordNumber"] = v }
         if let v = p.heartRate    { q["heartRate"]    = v }
         if let v = p.rrInterval   { q["rRInterval"]   = v }
         if let v = p.prInterval   { q["pRInterval"]   = v }

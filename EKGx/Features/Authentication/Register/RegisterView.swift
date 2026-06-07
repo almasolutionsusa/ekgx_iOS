@@ -2,8 +2,8 @@
 //  RegisterView.swift
 //  EKGx
 //
-//  Full registration form — split-panel layout.
-//  Left: branding. Right: scrollable multi-section form.
+//  Registration form — split-panel layout.
+//  Left: branding. Right: scrollable form or post-registration success screen.
 //
 
 import SwiftUI
@@ -24,91 +24,26 @@ struct RegisterView: View {
                 RegisterBrandingPanel(onBack: { viewModel.navigateToLogin() })
                     .frame(width: geometry.size.width * 0.26)
 
-                RegisterFormPanel(viewModel: viewModel)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if viewModel.registrationSucceeded {
+                    RegisterSuccessPanel(email: viewModel.email, onBackToLogin: { viewModel.navigateToLogin() })
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .transition(.opacity.combined(with: .move(edge: .trailing)))
+                } else {
+                    RegisterFormPanel(viewModel: viewModel)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .transition(.opacity)
+                }
             }
         }
         .ignoresSafeArea()
         .background(AppColors.surfaceBackground)
+        .animation(.easeInOut(duration: 0.35), value: viewModel.registrationSucceeded)
         .overlay {
             if viewModel.isLoading {
                 LoadingOverlay()
                     .transition(.opacity)
                     .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
             }
-        }
-        .onAppear { viewModel.activate() }
-    }
-}
-
-// MARK: - Resolved Facility Field (read-only, fetched from server)
-
-private struct ResolvedFacilityField: View {
-
-    @Bindable var viewModel: RegisterViewModel
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-            Text(L10n.Auth.Register.facilityLabel)
-                .font(AppTypography.captionBold)
-                .foregroundStyle(AppColors.textSecondary)
-
-            HStack(spacing: AppMetrics.spacing12) {
-                Image(systemName: "building.2")
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(viewModel.facilityNotAssigned
-                                     ? AppColors.statusCritical
-                                     : AppColors.brandPrimary)
-
-                VStack(alignment: .leading, spacing: 2) {
-                    if viewModel.isLoadingFacility {
-                        Text(L10n.Auth.Register.facilityLoading)
-                            .font(AppTypography.body)
-                            .foregroundStyle(AppColors.textSecondary)
-                    } else if viewModel.facilityNotAssigned {
-                        Text(L10n.Auth.Register.facilityNotAssigned)
-                            .font(AppTypography.footnote)
-                            .foregroundStyle(AppColors.statusCritical)
-                    } else if !viewModel.facilityName.isEmpty {
-                        Text(viewModel.facilityName)
-                            .font(AppTypography.bodyMedium)
-                            .foregroundStyle(AppColors.textPrimary)
-                        if !viewModel.organizationName.isEmpty {
-                            Text(viewModel.organizationName)
-                                .font(AppTypography.caption)
-                                .foregroundStyle(AppColors.textSecondary)
-                        }
-                    } else {
-                        Text(L10n.Auth.Register.facilityPlaceholder)
-                            .font(AppTypography.body)
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-                }
-
-                Spacer()
-
-                if viewModel.isLoadingFacility {
-                    ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: AppColors.brandPrimary))
-                } else if !viewModel.facilityNotAssigned && !viewModel.facilityName.isEmpty {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(AppColors.statusSuccess)
-                        .font(.system(size: 18))
-                }
-            }
-            .padding(.horizontal, AppMetrics.spacing16)
-            .frame(height: AppMetrics.textFieldHeight)
-            .background(AppColors.surfaceCard)
-            .cornerRadius(AppMetrics.radiusMedium)
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                    .strokeBorder(
-                        viewModel.facilityNotAssigned
-                            ? AppColors.statusCritical
-                            : AppColors.borderSubtle,
-                        lineWidth: AppMetrics.borderWidth
-                    )
-            )
         }
     }
 }
@@ -168,6 +103,55 @@ private struct RegisterBrandingPanel: View {
     }
 }
 
+// MARK: - Success Panel
+
+private struct RegisterSuccessPanel: View {
+
+    let email: String
+    let onBackToLogin: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            Spacer()
+
+            VStack(spacing: AppMetrics.spacing24) {
+                ZStack {
+                    Circle()
+                        .fill(AppColors.brandPrimary.opacity(0.12))
+                        .frame(width: 96, height: 96)
+                    Image(systemName: "envelope.badge.checkmark.fill")
+                        .font(.system(size: 40, weight: .semibold))
+                        .foregroundStyle(AppColors.brandPrimary)
+                }
+
+                VStack(spacing: AppMetrics.spacing10) {
+                    Text(L10n.Auth.Register.successTitle)
+                        .font(AppTypography.title2)
+                        .foregroundStyle(AppColors.textPrimary)
+                        .multilineTextAlignment(.center)
+
+                    Text(L10n.Auth.Register.successMessage(email))
+                        .font(AppTypography.callout)
+                        .foregroundStyle(AppColors.textSecondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                }
+
+                PrimaryButton(title: L10n.Auth.Register.successBackToLogin) {
+                    onBackToLogin()
+                }
+                .frame(maxWidth: 320)
+            }
+            .padding(.horizontal, AppMetrics.spacing48)
+
+            Spacer()
+        }
+        .frame(maxWidth: AppMetrics.registerFormMaxWidth)
+        .frame(maxWidth: .infinity)
+        .background(AppColors.surfaceBackground)
+    }
+}
+
 // MARK: - Form Panel
 
 private struct RegisterFormPanel: View {
@@ -204,10 +188,9 @@ private struct RegisterFormPanel: View {
                     .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage)
                 }
 
-                // ── Section 1: Personal Information
-                FormSectionHeader(title: L10n.Auth.Register.sectionPersonal)
-
                 VStack(spacing: AppMetrics.spacing14) {
+
+                    // First + Last name
                     HStack(spacing: AppMetrics.spacing14) {
                         ETextField(
                             label: L10n.Auth.Register.firstNameLabel,
@@ -215,7 +198,6 @@ private struct RegisterFormPanel: View {
                             systemImage: "person",
                             text: $viewModel.firstName,
                             errorMessage: viewModel.firstNameError,
-                            textContentType: .givenName,
                             autocapitalization: .words
                         )
                         .focused($focus, equals: .firstName)
@@ -229,81 +211,15 @@ private struct RegisterFormPanel: View {
                             systemImage: nil,
                             text: $viewModel.lastName,
                             errorMessage: viewModel.lastNameError,
-                            textContentType: .familyName,
                             autocapitalization: .words
                         )
                         .focused($focus, equals: .lastName)
                         .id(RegisterViewModel.Field.lastName)
                         .onChange(of: viewModel.lastName) { _, _ in viewModel.clearFieldError(for: .lastName) }
-                        .onSubmit { focus = .phone }
+                        .onSubmit { focus = .email }
                     }
 
-                }
-
-                Spacer(minLength: AppMetrics.spacing24)
-
-                // ── Section 2: Professional Details
-                FormSectionHeader(title: L10n.Auth.Register.sectionProfessional)
-
-                VStack(spacing: AppMetrics.spacing14) {
-                    ResolvedFacilityField(viewModel: viewModel)
-
-                    DropdownPicker(
-                        label: L10n.Auth.Register.titleLabel,
-                        placeholder: L10n.Auth.Register.titlePlaceholder,
-                        systemImage: "person.text.rectangle",
-                        selection: $viewModel.title,
-                        options: viewModel.titles,
-                        displayText: { $0 },
-                        errorMessage: viewModel.titleError
-                    )
-                    .id(RegisterViewModel.Field.title)
-                    .onChange(of: viewModel.title) { _, _ in viewModel.clearFieldError(for: .title) }
-
-                    DropdownPicker(
-                        label: L10n.Auth.Register.degreeLabel,
-                        placeholder: L10n.Auth.Register.degreePlaceholder,
-                        systemImage: "graduationcap",
-                        selection: $viewModel.degree,
-                        options: viewModel.degrees,
-                        displayText: { $0 },
-                        errorMessage: viewModel.degreeError
-                    )
-                    .id(RegisterViewModel.Field.degree)
-                    .onChange(of: viewModel.degree) { _, _ in viewModel.clearFieldError(for: .degree) }
-
-                    ETextField(
-                        label: L10n.Auth.Register.phoneLabel,
-                        placeholder: L10n.Auth.Register.phonePlaceholder,
-                        systemImage: "phone",
-                        text: $viewModel.phone,
-                        errorMessage: viewModel.phoneError,
-                        keyboardType: .phonePad,
-                        textContentType: .telephoneNumber
-                    )
-                    .focused($focus, equals: .phone)
-                    .id(RegisterViewModel.Field.phone)
-                    .onChange(of: viewModel.phone) { _, _ in viewModel.clearFieldError(for: .phone) }
-                    .onSubmit { focus = .npi }
-
-                    OptionalTextField(
-                        label: L10n.Auth.Register.npiLabel,
-                        placeholder: L10n.Auth.Register.npiPlaceholder,
-                        systemImage: "number",
-                        text: $viewModel.npi,
-                        keyboardType: .numberPad
-                    )
-                    .focused($focus, equals: .npi)
-                    .id(RegisterViewModel.Field.npi)
-                    .onSubmit { focus = .email }
-                }
-
-                Spacer(minLength: AppMetrics.spacing24)
-
-                // ── Section 3: Account Credentials
-                FormSectionHeader(title: L10n.Auth.Register.sectionCredentials)
-
-                VStack(spacing: AppMetrics.spacing14) {
+                    // Email
                     ETextField(
                         label: L10n.Auth.Register.emailLabel,
                         placeholder: L10n.Auth.Register.emailPlaceholder,
@@ -318,6 +234,7 @@ private struct RegisterFormPanel: View {
                     .onChange(of: viewModel.email) { _, _ in viewModel.clearFieldError(for: .email) }
                     .onSubmit { focus = .confirmEmail }
 
+                    // Confirm Email
                     ETextField(
                         label: L10n.Auth.Register.confirmEmailLabel,
                         placeholder: L10n.Auth.Register.confirmEmailPlaceholder,
@@ -332,6 +249,7 @@ private struct RegisterFormPanel: View {
                     .onChange(of: viewModel.confirmEmail) { _, _ in viewModel.clearFieldError(for: .confirmEmail) }
                     .onSubmit { focus = .password }
 
+                    // Password
                     ESecureField(
                         label: L10n.Auth.Register.passwordLabel,
                         placeholder: L10n.Auth.Register.passwordPlaceholder,
@@ -343,6 +261,7 @@ private struct RegisterFormPanel: View {
                     .onChange(of: viewModel.password) { _, _ in viewModel.clearFieldError(for: .password) }
                     .onSubmit { focus = .confirmPassword }
 
+                    // Confirm Password
                     ESecureField(
                         label: L10n.Auth.Register.confirmPasswordLabel,
                         placeholder: L10n.Auth.Register.confirmPasswordPlaceholder,
@@ -382,7 +301,7 @@ private struct RegisterFormPanel: View {
                 }
                 .padding(.top, AppMetrics.spacing20)
 
-                // Extra scroll runway so bottom fields can scroll above the keyboard
+                // Extra scroll runway so bottom fields clear the keyboard
                 Spacer(minLength: 400)
             }
             .padding(.horizontal, AppMetrics.spacing40)
@@ -393,7 +312,6 @@ private struct RegisterFormPanel: View {
         .scrollDismissesKeyboard(.interactively)
         .onChange(of: focus) { _, newValue in
             guard let field = newValue else { return }
-            // Small delay so the keyboard has started appearing before we scroll
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
                 withAnimation(.easeInOut(duration: 0.3)) {
                     proxy.scrollTo(field, anchor: .top)
@@ -401,115 +319,6 @@ private struct RegisterFormPanel: View {
             }
         }
         } // ScrollViewReader
-    }
-}
-
-// MARK: - FormSectionHeader
-
-private struct FormSectionHeader: View {
-    let title: String
-    var body: some View {
-        Text(title)
-            .font(AppTypography.captionBold)
-            .foregroundStyle(AppColors.brandPrimary)
-            .tracking(1)
-            .padding(.bottom, AppMetrics.spacing12)
-    }
-}
-
-// MARK: - OptionalTextField
-
-/// ETextField variant with an "Optional" badge in the label.
-private struct OptionalTextField: View {
-
-    let label: String
-    let placeholder: String
-    let systemImage: String?
-    @Binding var text: String
-    var keyboardType: UIKeyboardType = .default
-
-    var body: some View {
-        ETextField(
-            label: label,
-            placeholder: placeholder,
-            systemImage: systemImage,
-            text: $text,
-            errorMessage: nil,
-            keyboardType: keyboardType
-        )
-        .overlay(alignment: .topTrailing) {
-            Text(L10n.Auth.Register.optionalBadge)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(AppColors.textSecondary)
-                .padding(.horizontal, 6)
-                .padding(.vertical, 2)
-                .background(AppColors.borderSubtle.opacity(0.5))
-                .clipShape(Capsule())
-                .offset(y: 2)
-        }
-    }
-}
-
-// MARK: - DropdownPicker
-
-private struct DropdownPicker<T: Hashable>: View {
-
-    let label: String
-    let placeholder: String
-    let systemImage: String
-    @Binding var selection: T?
-    let options: [T]
-    let displayText: (T) -> String
-    var errorMessage: String?
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
-            Text(label)
-                .font(AppTypography.captionBold)
-                .foregroundStyle(AppColors.textSecondary)
-
-            Menu {
-                ForEach(options, id: \.self) { option in
-                    Button(displayText(option)) {
-                        selection = option
-                    }
-                }
-            } label: {
-                HStack(spacing: AppMetrics.spacing12) {
-                    Image(systemName: systemImage)
-                        .font(.system(size: 16))
-                        .foregroundStyle(selection != nil ? AppColors.brandPrimary : AppColors.textSecondary)
-                        .frame(width: 20)
-
-                    Text(selection.map(displayText) ?? placeholder)
-                        .font(AppTypography.body)
-                        .foregroundStyle(selection != nil ? AppColors.textPrimary : AppColors.textSecondary)
-
-                    Spacer()
-
-                    Image(systemName: "chevron.up.chevron.down")
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(AppColors.textSecondary)
-                }
-                .padding(.horizontal, AppMetrics.spacing16)
-                .frame(height: AppMetrics.textFieldHeight)
-                .background(AppColors.surfaceCard)
-                .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
-                .overlay(
-                    RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                        .strokeBorder(
-                            errorMessage != nil ? AppColors.statusCritical : AppColors.borderSubtle,
-                            lineWidth: errorMessage != nil ? AppMetrics.borderWidthFocused : AppMetrics.borderWidth
-                        )
-                )
-            }
-
-            if let error = errorMessage {
-                Text(error)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.statusCritical)
-            }
-        }
     }
 }
 

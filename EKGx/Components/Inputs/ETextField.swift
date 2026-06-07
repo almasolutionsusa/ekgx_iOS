@@ -9,7 +9,7 @@
 
 import SwiftUI
 
-struct ETextField: View {
+struct ETextField<Trailing: View>: View {
 
     // MARK: - Properties
 
@@ -22,6 +22,21 @@ struct ETextField: View {
     var textContentType: UITextContentType? = nil
     var autocapitalization: TextInputAutocapitalization = .never
     var autocorrectionDisabled: Bool = true
+    var trailingContent: (() -> Trailing)?
+
+    init(label: String, placeholder: String, systemImage: String? = nil,
+         text: Binding<String>, errorMessage: String? = nil,
+         keyboardType: UIKeyboardType = .default,
+         textContentType: UITextContentType? = nil,
+         autocapitalization: TextInputAutocapitalization = .never,
+         autocorrectionDisabled: Bool = true,
+         @ViewBuilder trailingContent: @escaping () -> Trailing) {
+        self.label = label; self.placeholder = placeholder; self.systemImage = systemImage
+        self._text = text; self.errorMessage = errorMessage; self.keyboardType = keyboardType
+        self.textContentType = textContentType; self.autocapitalization = autocapitalization
+        self.autocorrectionDisabled = autocorrectionDisabled
+        self.trailingContent = trailingContent
+    }
 
     @FocusState private var isFocused: Bool
 
@@ -53,6 +68,10 @@ struct ETextField: View {
                     .textInputAutocapitalization(autocapitalization)
                     .autocorrectionDisabled(autocorrectionDisabled)
                     .focused($isFocused)
+
+                if let trailing = trailingContent {
+                    trailing()
+                }
             }
             .padding(.horizontal, AppMetrics.spacing16)
             .frame(height: AppMetrics.textFieldHeight)
@@ -97,6 +116,23 @@ struct ETextField: View {
         if errorMessage != nil { return AppColors.statusCritical }
         if isFocused         { return AppColors.brandPrimary }
         return AppColors.textSecondary
+    }
+}
+
+// MARK: - Convenience init (no trailing)
+
+extension ETextField where Trailing == EmptyView {
+    init(label: String, placeholder: String, systemImage: String? = nil,
+         text: Binding<String>, errorMessage: String? = nil,
+         keyboardType: UIKeyboardType = .default,
+         textContentType: UITextContentType? = nil,
+         autocapitalization: TextInputAutocapitalization = .never,
+         autocorrectionDisabled: Bool = true) {
+        self.label = label; self.placeholder = placeholder; self.systemImage = systemImage
+        self._text = text; self.errorMessage = errorMessage; self.keyboardType = keyboardType
+        self.textContentType = textContentType; self.autocapitalization = autocapitalization
+        self.autocorrectionDisabled = autocorrectionDisabled
+        self.trailingContent = nil
     }
 }
 

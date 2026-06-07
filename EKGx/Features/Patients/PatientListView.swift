@@ -729,6 +729,73 @@ struct AddOrderSheet: View {
     }
 }
 
+// MARK: - Patient Result Card (used in add-order search results)
+
+private struct PatientResultCard: View {
+
+    let patient: Patient
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: AppMetrics.spacing14) {
+                ZStack {
+                    Circle()
+                        .fill(AppColors.brandPrimary.opacity(isSelected ? 0.25 : 0.10))
+                        .frame(width: 44, height: 44)
+                    Text(patient.initials)
+                        .font(AppTypography.bodySemibold)
+                        .foregroundStyle(AppColors.brandPrimary)
+                }
+
+                VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
+                    Text(patient.fullName)
+                        .font(AppTypography.bodySemibold)
+                        .foregroundStyle(AppColors.textPrimary)
+                        .lineLimit(1)
+
+                    HStack(spacing: AppMetrics.spacing6) {
+                        if !patient.birthDate.isEmpty {
+                            Text(patient.age)
+                                .font(AppTypography.caption)
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                        if !patient.gender.isEmpty {
+                            GenderBadge(gender: patient.gender)
+                        }
+                        if let mrn = patient.medicalRecordNumber, !mrn.isEmpty {
+                            Text("·").foregroundStyle(AppColors.borderSubtle).font(AppTypography.caption)
+                            Text("#\(mrn)")
+                                .font(AppTypography.caption)
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                    }
+                }
+
+                Spacer(minLength: 0)
+
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(AppColors.brandPrimary)
+                }
+            }
+            .padding(AppMetrics.spacing14)
+            .background(isSelected ? AppColors.brandPrimary.opacity(0.06) : AppColors.surfaceCard)
+            .cornerRadius(AppMetrics.radiusMedium)
+            .overlay(
+                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                    .strokeBorder(
+                        isSelected ? AppColors.brandPrimary.opacity(0.4) : AppColors.borderSubtle,
+                        lineWidth: 1
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 // MARK: - DOB Field (local to add order sheet)
 
 private struct AddOrderDOBField: View {

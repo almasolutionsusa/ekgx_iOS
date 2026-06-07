@@ -308,9 +308,14 @@ final class APIClient {
         guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return nil
         }
-        if let nested = json["data"] as? [String: Any],
-           let message = nested["message"] as? String, !message.isEmpty {
-            return .backend(message: message)
+        if let nested = json["data"] as? [String: Any] {
+            // data.error takes priority (e.g. "A patient with this MRN already exists")
+            if let error = nested["error"] as? String, !error.isEmpty {
+                return .backend(message: error)
+            }
+            if let message = nested["message"] as? String, !message.isEmpty {
+                return .backend(message: message)
+            }
         }
         if let message = json["message"] as? String,
            !message.isEmpty, message.lowercased() != "success" {

@@ -104,7 +104,7 @@ final class CloudViewModel {
     }
 
     func navigateBack() {
-        router.navigate(to: .dashboard)
+        router.navigate(to: .patientSelection)
     }
 
     // MARK: - Open recording in Analysis view
@@ -147,6 +147,8 @@ final class CloudViewModel {
 
         Task {
             do {
+                try await diContainer.authService.ensureValidToken()
+
                 let rawData  = recordingStore.ecgFileData(for: recording.id)
                 let pdfData  = recordingStore.pdfData(for: recording.id)
                 let appUuid  = diContainer.checkinService.appUuid
@@ -155,6 +157,11 @@ final class CloudViewModel {
                     patientUuid: recording.patientId,
                     appUuid: appUuid
                 )
+                payload.firstName           = recording.patientName.components(separatedBy: " ").first
+                payload.lastName            = recording.patientName.components(separatedBy: " ").dropFirst().joined(separator: " ").nilIfEmpty
+                payload.dob                 = recording.patientDob.nilIfEmpty
+                payload.gender              = recording.patientGender.nilIfEmpty
+                payload.medicalRecordNumber = recording.patientMrn
                 payload.heartRate    = recording.heartRate
                 payload.prInterval   = recording.prInterval
                 payload.qrsDuration  = recording.qrsDuration
@@ -178,6 +185,7 @@ final class CloudViewModel {
                 uploadResultSuccess = true
                 uploadResultMessage = nil
             } catch {
+                print("❌ CloudViewModel uploadRecording error: \(error)")
                 recordingStore.updateStatus(id: recording.id, status: .failed)
                 if let patient = selectedPatient {
                     recordings = recordingStore.recordings(for: patient.patientId ?? patient.uniqueId ?? "")

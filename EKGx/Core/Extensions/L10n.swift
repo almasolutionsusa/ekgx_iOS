@@ -35,10 +35,11 @@ enum L10n {
             static let registerButton          = "auth.login.registerButton".localized
             static let forgotPassword          = "auth.login.forgotPassword".localized
             static let noAccount               = "auth.login.noAccount".localized
-            static let errorInvalidCredentials = "auth.login.errorInvalidCredentials".localized
-            static let errorNetwork            = "auth.login.errorNetwork".localized
-            static let errorGeneric            = "auth.login.errorGeneric".localized
-            static let errorSessionExpired     = "auth.login.errorSessionExpired".localized
+            static let errorInvalidCredentials  = "auth.login.errorInvalidCredentials".localized
+            static let errorNetwork             = "auth.login.errorNetwork".localized
+            static let errorGeneric             = "auth.login.errorGeneric".localized
+            static let errorSessionExpired      = "auth.login.errorSessionExpired".localized
+            static let errorAccountNotVerified  = "auth.login.errorAccountNotVerified".localized
             static let forgotPasswordTitle     = "auth.login.forgotPasswordTitle".localized
             static let forgotPasswordSubtitle  = "auth.login.forgotPasswordSubtitle".localized
             static let forgotPasswordEmailLabel = "auth.login.forgotPasswordEmailLabel".localized
@@ -50,6 +51,7 @@ enum L10n {
             static let pinPlaceholder          = "auth.login.pinPlaceholder".localized
             static let pinErrorEmpty           = "auth.login.pinErrorEmpty".localized
             static let pinErrorInvalid         = "auth.login.pinErrorInvalid".localized
+            static let pinNotSetup             = "auth.login.pinNotSetup".localized
             static let pinBackToEmail          = "auth.login.pinBackToEmail".localized
             static let localMode               = "auth.login.localMode".localized
             static let localModeSubtitle       = "auth.login.localModeSubtitle".localized
@@ -95,6 +97,11 @@ enum L10n {
             static let sectionProfessional      = "auth.register.sectionProfessional".localized
             static let sectionCredentials       = "auth.register.sectionCredentials".localized
             static let optionalBadge            = "auth.register.optionalBadge".localized
+            static let successTitle             = "auth.register.successTitle".localized
+            static let successBackToLogin       = "auth.register.successBackToLogin".localized
+            static func successMessage(_ email: String) -> String {
+                String(format: "auth.register.successMessage".localized, email)
+            }
         }
     }
 
@@ -114,6 +121,21 @@ enum L10n {
         static let phoneEmpty        = "validation.phone.empty".localized
         static let nameEmpty         = "validation.name.empty".localized
         static let required          = "validation.required".localized
+        static let mrnDuplicate      = "validation.mrn.duplicate".localized
+    }
+
+    // MARK: - Emergency
+
+    enum Emergency {
+        static let buttonTitle      = "emergency.buttonTitle".localized
+        static let pinTitle         = "emergency.pinTitle".localized
+        static let pinSubtitle      = "emergency.pinSubtitle".localized
+        static let assignTitle      = "emergency.assignTitle".localized
+        static let assignSubtitle   = "emergency.assignSubtitle".localized
+        static let assignSearch     = "emergency.assignSearch".localized
+        static let assignNoPatients = "emergency.assignNoPatients".localized
+        static let createNew        = "emergency.createNew".localized
+        static let createTitle      = "emergency.createTitle".localized
     }
 
     // MARK: - Branding
@@ -334,10 +356,13 @@ enum L10n {
             static let firstName    = "patientSelection.search.firstName".localized
             static let lastName     = "patientSelection.search.lastName".localized
             static let dob          = "patientSelection.search.dob".localized
-            static let mrn          = "patientSelection.search.mrn".localized
-            static let or           = "patientSelection.search.or".localized
-            static let button       = "patientSelection.search.button".localized
-            static let clearButton  = "patientSelection.search.clearButton".localized
+            static let mrn            = "patientSelection.search.mrn".localized
+            static let mrnPlaceholder = "patientSelection.search.mrnPlaceholder".localized
+            static let nameSegment    = "patientSelection.search.nameSegment".localized
+            static let mrnSegment     = "patientSelection.search.mrnSegment".localized
+            static let or             = "patientSelection.search.or".localized
+            static let button         = "patientSelection.search.button".localized
+            static let clearButton    = "patientSelection.search.clearButton".localized
         }
         enum Results {
             static let title         = "patientSelection.results.title".localized
@@ -345,8 +370,9 @@ enum L10n {
             static let emptySubtitle = "patientSelection.results.emptySubtitle".localized
         }
         enum Prompt {
-            static let title    = "patientSelection.prompt.title".localized
-            static let subtitle = "patientSelection.prompt.subtitle".localized
+            static let title      = "patientSelection.prompt.title".localized
+            static let subtitle   = "patientSelection.prompt.subtitle".localized
+            static let selectHint = "patientSelection.prompt.selectHint".localized
         }
         static let confirm   = "patientSelection.confirm".localized
         static let createNew = "patientSelection.createNew".localized
@@ -362,6 +388,46 @@ enum L10n {
             static let mrnPlaceholder  = "patientSelection.create.mrnPlaceholder".localized
             static let cancel          = "patientSelection.create.cancel".localized
             static let submit          = "patientSelection.create.submit".localized
+        }
+        enum CreateCell {
+            static let hint = "patientSelection.createCell.hint".localized
+        }
+        enum Edit {
+            static let title    = "patientSelection.edit.title".localized
+            static let subtitle = "patientSelection.edit.subtitle".localized
+            static let button   = "patientSelection.edit.button".localized
+            static let submit   = "patientSelection.edit.submit".localized
+        }
+        enum Delete {
+            static let alertTitle  = "patientSelection.delete.alertTitle".localized
+            static let message     = "patientSelection.delete.message".localized
+            static let confirm     = "patientSelection.delete.confirm".localized
+            static let contextMenu = "patientSelection.delete.contextMenu".localized
+        }
+    }
+
+    // MARK: - Patient Exams (History)
+
+    enum PatientExams {
+        static let navTitle      = "patientExams.nav.title".localized
+        static let filterAll     = "patientExams.filter.all".localized
+        static let examSingular  = "patientExams.exam.singular".localized
+        static let examPlural    = "patientExams.exam.plural".localized
+        static let ekgCardTitle  = "patientExams.card.ekgTitle".localized
+        static let statusLocal   = "patientExams.status.local".localized
+        static let emptyTitle    = "patientExams.empty.title".localized
+        static let emptySubtitle = "patientExams.empty.subtitle".localized
+        enum Delete {
+            static let alertTitle   = "patientExams.delete.alertTitle".localized
+            static let confirm      = "patientExams.delete.confirm".localized
+            static let message      = "patientExams.delete.message".localized
+            static let contextMenu  = "patientExams.delete.contextMenu".localized
+        }
+        static func examNumber(_ n: Int) -> String {
+            String(format: "patientExams.card.examNumber".localized, n)
+        }
+        static func examCountLabel(_ n: Int) -> String {
+            "\(n) \(n == 1 ? examSingular : examPlural)"
         }
     }
 
@@ -657,6 +723,8 @@ enum L10n {
             static let changeSubmitButton = "account.pin.changeSubmitButton".localized
             static let errorDigits        = "account.pin.errorDigits".localized
             static let errorMismatch      = "account.pin.errorMismatch".localized
+            static let errorOldPinInvalid = "account.pin.errorOldPinInvalid".localized
+            static let errorSamePin       = "account.pin.errorSamePin".localized
         }
 
         enum Password {
@@ -668,10 +736,40 @@ enum L10n {
             static let fieldNewPH      = "account.password.fieldNewPH".localized
             static let fieldConfirm    = "account.password.fieldConfirm".localized
             static let fieldConfirmPH  = "account.password.fieldConfirmPH".localized
-            static let submitButton    = "account.password.submitButton".localized
-            static let errorCurrent    = "account.password.errorCurrent".localized
-            static let errorTooShort   = "account.password.errorTooShort".localized
-            static let errorMismatch   = "account.password.errorMismatch".localized
+            static let submitButton      = "account.password.submitButton".localized
+            static let verifyTitle       = "account.password.verifyTitle".localized
+            static let verifySubtitle    = "account.password.verifySubtitle".localized
+            static let verifyButton      = "account.password.verifyButton".localized
+            static let errorCurrent      = "account.password.errorCurrent".localized
+            static let errorWrongCurrent = "account.password.errorWrongCurrent".localized
+            static let errorTooShort     = "account.password.errorTooShort".localized
+            static let errorMismatch     = "account.password.errorMismatch".localized
+        }
+    }
+
+    // MARK: - Vitals
+
+    enum Vitals {
+        enum Nav {
+            static let title    = "vitals.nav.title".localized
+        }
+        static let selectVital     = "vitals.selectVital".localized
+        static let comingSoon      = "vitals.comingSoon".localized
+        enum EKG {
+            static let title    = "vitals.ekg.title".localized
+            static let subtitle = "vitals.ekg.subtitle".localized
+        }
+        enum SpO2 {
+            static let title    = "vitals.spo2.title".localized
+            static let subtitle = "vitals.spo2.subtitle".localized
+        }
+        enum BP {
+            static let title    = "vitals.bp.title".localized
+            static let subtitle = "vitals.bp.subtitle".localized
+        }
+        enum Temp {
+            static let title    = "vitals.temp.title".localized
+            static let subtitle = "vitals.temp.subtitle".localized
         }
     }
 }

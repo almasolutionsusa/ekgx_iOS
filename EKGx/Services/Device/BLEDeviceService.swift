@@ -75,6 +75,7 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
     func disconnect() {
         scanPending = false
         scanAfterDisconnect = false
+        connectedDeviceName = nil
         bleManager.stopScan()
         bleManager.collectStop()
         if currentState == .connected {
@@ -93,6 +94,7 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
     // MARK: - Private
 
     private func performScan() {
+        connectedDeviceName = nil
         bleManager.stopScan()
         bleManager.checkBletooth { [weak self] status in
             guard let self else { return }
@@ -138,7 +140,15 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
     }
 
     func icvBleManager(_ manager: vhiCVBleManager, foundDeviceName name: String) {
+        // Guard prevents a second foundDeviceName (same scan cycle) from calling connect() twice.
+        // connectedDeviceName being set here (synchronously) also lets lostDeviceName ignore
+        // the peripheral dropping out of advertisement once the connection handshake begins.
+        guard connectedDeviceName == nil else { return }
         connectedDeviceName = name
+        // Do NOT call stopScan() here — the SDK needs the scan active through the full
+        // GATT handshake (Connecting→DiscoverChars→BuildCredits→InitDevice→Connected).
+        // Stopping early causes LostDevice (status 9) to fire mid-handshake.
+        // stopScan() is called in the .connected case below.
         DispatchQueue.main.async {
             self.currentState = .connecting
             self.onConnectionStateChanged?(.connecting)
@@ -147,8 +157,12 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
     }
 
     func icvBleManager(_ manager: vhiCVBleManager, lostDeviceName name: String) {
+        // connectedDeviceName is set synchronously in foundDeviceName (no dispatch).
+        // If it's already set, we've found the device and are connecting — the peripheral
+        // simply stopped advertising after accepting our connection request. This is normal.
+        // True disconnects are handled by icvBleManager(_:connecting:status:).
+        guard connectedDeviceName == nil else { return }
         DispatchQueue.main.async {
-            self.connectedDeviceName = nil
             self.currentState = .disconnected
             self.onConnectionStateChanged?(.disconnected)
         }
@@ -169,11 +183,20 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
                 if manager.batVol > 0 {
                     self.onBattery?(Int(manager.batVol))
                 }
-            case .disconnectedError, .disconnected, .lostDevice:
+            case .disconnectedError:
+                // Connection failed — reset and auto-restart scan so user sees "Searching"
+                // rather than having to press Connect again.
+                self.connectedDeviceName = nil
+                self.currentState = .searching
+                self.onConnectionStateChanged?(.searching)
+                manager.startScan()
+            case .disconnected, .lostDevice:
                 self.connectedDeviceName = nil
                 self.currentState = .disconnected
                 self.onConnectionStateChanged?(.disconnected)
             default:
+                // Intermediate GATT phases (0-5): Connecting, DiscoverChars, DiscoverDescriptors,
+                // BuildCredits, InitDevice, InitDeviceAgain — all mean "still handshaking".
                 self.currentState = .connecting
                 self.onConnectionStateChanged?(.connecting)
             }
@@ -184,7 +207,7 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
         guard let ECGs else { return }
         DispatchQueue.main.async {
             #if DEBUG
-            print("📡 [BLE] SDK data arrived — leads=\(ECGs.count) samples=\(ECGs.first?.count ?? 0) callbackSet=\(self.onECGData != nil)")
+           // print("📡 [BLE] SDK data arrived — leads=\(ECGs.count) samples=\(ECGs.first?.count ?? 0) callbackSet=\(self.onECGData != nil)")
             #endif
             self.onECGData?(ECGs)
         }

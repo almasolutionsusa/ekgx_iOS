@@ -61,6 +61,9 @@ final class RecordingViewModel {
     var showExitConfirmation: Bool = false
     var showPreviewSheet: Bool = false
     var showDeviceDisconnected: Bool = false
+    var showConnectSheet: Bool = false
+    var connectSheetState: DeviceConnectionState = .disconnected
+    var connectSheetDeviceName: String? = nil
     var isFiltersEnabled: Bool = true
 
     // MARK: - Reconnect State
@@ -89,7 +92,7 @@ final class RecordingViewModel {
 
     // MARK: - Dependencies
 
-    let deviceService: DeviceServiceProtocol
+    var deviceService: DeviceServiceProtocol
     private let router: AppRouter
     private let diContainer: AppDIContainer
     private var countTimer: Timer?
@@ -117,16 +120,67 @@ final class RecordingViewModel {
         #if DEBUG
         print("🟢 [Recording] reconfigureFilters() called — deviceState=\(deviceService.currentState)")
         #endif
+        connectSheetState = deviceService.currentState
+        wireConnectionCallback()
+        if deviceService.currentState != .connected {
+            showConnectSheet = true
+            deviceService.connect()
+        }
+    }
+
+    // MARK: - Connect Sheet Actions
+
+    func connectDevice() {
+        nilOutCallbacks()
+        diContainer.switchToRealDevice()
+        deviceService = diContainer.deviceService
+        connectSheetState = .disconnected
+        connectSheetDeviceName = nil
+        setupDeviceCallbacks()
+        deviceService.reconfigureFilters()
+        wireConnectionCallback()
+        deviceService.connect()
+    }
+
+    func connectDemoDevice() {
+        nilOutCallbacks()
+        diContainer.switchToDemo()
+        deviceService = diContainer.deviceService
+        connectSheetState = .disconnected
+        connectSheetDeviceName = nil
+        setupDeviceCallbacks()
+        deviceService.reconfigureFilters()
+        wireConnectionCallback()
+        deviceService.connect()
+    }
+
+    func cancelConnect() {
+        showConnectSheet = false
+        confirmExit()
+    }
+
+    private func nilOutCallbacks() {
+        deviceService.onECGData = nil
+        deviceService.onLeadStatus = nil
+        deviceService.onBattery = nil
+        deviceService.onConnectionStateChanged = nil
+    }
+
+    private func wireConnectionCallback() {
         deviceService.onConnectionStateChanged = { [weak self] state in
             guard let self else { return }
             DispatchQueue.main.async {
                 #if DEBUG
                 print("📡 [Recording] connectionStateChanged → \(state)")
                 #endif
+                self.connectSheetState = state
                 switch state {
                 case .connected where self.isReconnecting:
                     self.handleReconnectSuccess()
-                case .disconnected where !self.isReconnecting:
+                case .connected where self.showConnectSheet:
+                    self.connectSheetDeviceName = self.deviceService.connectedDeviceName
+                    self.showConnectSheet = false
+                case .disconnected where !self.isReconnecting && !self.showConnectSheet:
                     self.stopTimers()
                     self.startReconnectFlow()
                 default:
@@ -138,10 +192,7 @@ final class RecordingViewModel {
 
     /// Call from RecordingView .onDisappear — releases the callback so the next VM can own it.
     func deactivate() {
-        deviceService.onConnectionStateChanged = nil
-        deviceService.onECGData = nil
-        deviceService.onLeadStatus = nil
-        deviceService.onBattery = nil
+        nilOutCallbacks()
         stopTimers()
     }
 
@@ -185,7 +236,7 @@ final class RecordingViewModel {
     func confirmExit() {
         resetRecording()
         let dest = router.recordingReturnRoute
-        router.recordingReturnRoute = .dashboard
+        router.recordingReturnRoute = .patientSelection
         router.navigate(to: dest)
     }
 
@@ -198,6 +249,7 @@ final class RecordingViewModel {
         if let start = diContainer.recordingSessionStartedAt {
             diContainer.lastRecordingTotalDuration = Int(Date().timeIntervalSince(start))
         }
+        router.analysisReturnRoute = .vitals
         router.navigate(to: .ecgAnalysis(recordingId: ""))
     }
 
@@ -330,17 +382,17 @@ final class RecordingViewModel {
         deviceService.onECGData = { [weak self] leads in
             guard let self else { return }
             #if DEBUG
-            print("📦 [Recording] onECGData fired — leads=\(leads.count) samples=\(leads.first?.count ?? 0)")
+            //print("📦 [Recording] onECGData fired — leads=\(leads.count) samples=\(leads.first?.count ?? 0)")
             #endif
             vhECGFiltersLib.shared().filtersECGsData(leads) { [weak self] filtered in
                 guard let self, let filtered else {
                     #if DEBUG
-                    print("⚠️ [Recording] filtersECGsData callback — filtered is nil!")
+                    //print("⚠️ [Recording] filtersECGsData callback — filtered is nil!")
                     #endif
                     return
                 }
                 #if DEBUG
-                print("✅ [Recording] filtersECGsData done — filtered leads=\(filtered.count) frameCount will be=\(self.frameCount + 1)")
+                //print("✅ [Recording] filtersECGsData done — filtered leads=\(filtered.count) frameCount will be=\(self.frameCount + 1)")
                 #endif
                 let frame = filtered.map { $0.map { Int16(truncatingIfNeeded: $0.intValue) } }
                 Task { @MainActor in

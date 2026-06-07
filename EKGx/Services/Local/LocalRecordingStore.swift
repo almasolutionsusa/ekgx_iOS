@@ -53,8 +53,25 @@ final class LocalRecordingStore {
         entity.imageData       = pdfData
         entity.appVersion      = recording.appVersion
         entity.username        = recording.username
+        entity.isEmergency     = recording.isEmergency
         persist()
         return entity
+    }
+
+    // MARK: - Update Patient
+
+    /// Reassigns a local recording to a different patient (used in the emergency assign flow).
+    func updatePatient(id: String, patient: Patient) {
+        let request: NSFetchRequest<ECGRecordingEntity> = ECGRecordingEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        guard let entity = try? context.fetch(request).first else { return }
+        entity.patientId     = patient.patientId ?? patient.uniqueId
+        entity.patientName   = patient.fullName
+        entity.patientDob    = patient.birthDate.isEmpty ? nil : patient.birthDate
+        entity.patientGender = patient.gender.isEmpty ? nil : patient.gender
+        entity.patientMrn    = patient.medicalRecordNumber
+        persist()
     }
 
     // MARK: - Update Status
@@ -109,6 +126,14 @@ final class LocalRecordingStore {
         guard let entity = try? context.fetch(request).first else { return }
         context.delete(entity)
         persist()
+    }
+
+    /// Returns true if the stored recording was flagged as an emergency exam.
+    func isEmergency(for id: String) -> Bool {
+        let request: NSFetchRequest<ECGRecordingEntity> = ECGRecordingEntity.fetchRequest()
+        request.predicate = NSPredicate(format: "id == %@", id)
+        request.fetchLimit = 1
+        return (try? context.fetch(request).first)?.isEmergency ?? false
     }
 
     /// Status of a recording by ID, or nil if not found.
