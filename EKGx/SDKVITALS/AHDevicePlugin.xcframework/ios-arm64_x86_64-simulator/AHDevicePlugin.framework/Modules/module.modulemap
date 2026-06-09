@@ -1,0 +1,6 @@
+framework module AHDevicePlugin {
+  umbrella header "AHDevicePluginHeader.h"
+  export *
+
+  module * { export * }
+}
