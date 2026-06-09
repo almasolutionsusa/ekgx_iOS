@@ -298,7 +298,7 @@ private struct OrderRow: View {
 
     var body: some View {
         Button(action: onSelect) { orderContent }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
     }
 
     private var orderContent: some View {
@@ -384,7 +384,7 @@ private struct OrderRow: View {
                         .font(.system(size: 24))
                         .foregroundStyle(AppColors.statusCritical.opacity(0.6))
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
             }
             .padding(.horizontal, AppMetrics.spacing20)
             .padding(.vertical, AppMetrics.spacing20)
@@ -476,7 +476,7 @@ struct AddOrderSheet: View {
                     .font(.system(size: 26))
                     .foregroundStyle(AppColors.textSecondary.opacity(0.5))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
         }
         .padding(.horizontal, AppMetrics.spacing28)
         .padding(.vertical, AppMetrics.spacing20)
@@ -503,7 +503,7 @@ struct AddOrderSheet: View {
                         text: $viewModel.searchFirstName,
                         errorMessage: viewModel.searchFirstNameError,
                         textContentType: .givenName,
-                        autocapitalization: .words
+                        autocapitalization: .characters
                     )
                     .focused($focused, equals: .firstName)
                     .onChange(of: viewModel.searchFirstName) { _, _ in viewModel.searchFirstNameError = nil }
@@ -515,7 +515,7 @@ struct AddOrderSheet: View {
                         systemImage: "person",
                         text: $viewModel.searchLastName,
                         textContentType: .familyName,
-                        autocapitalization: .words
+                        autocapitalization: .characters
                     )
                     .focused($focused, equals: .lastName)
 
@@ -698,7 +698,7 @@ struct AddOrderSheet: View {
                             .strokeBorder(AppColors.brandPrimary.opacity(0.3), lineWidth: AppMetrics.borderWidth)
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
 
                 Button(action: { viewModel.confirmAddOrder() }) {
                     HStack(spacing: AppMetrics.spacing8) {
@@ -792,7 +792,7 @@ private struct PatientResultCard: View {
                     )
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 }
 
@@ -852,7 +852,7 @@ private struct OrderCreatePatientSheet: View {
                                 text: $viewModel.createFirstName,
                                 errorMessage: viewModel.createFirstNameError,
                                 textContentType: .givenName,
-                                autocapitalization: .words
+                                autocapitalization: .characters
                             )
                             .focused($focused, equals: .firstName)
                             .onChange(of: viewModel.createFirstName) { _, _ in viewModel.createFirstNameError = nil }
@@ -865,7 +865,7 @@ private struct OrderCreatePatientSheet: View {
                                 text: $viewModel.createLastName,
                                 errorMessage: viewModel.createLastNameError,
                                 textContentType: .familyName,
-                                autocapitalization: .words
+                                autocapitalization: .characters
                             )
                             .focused($focused, equals: .lastName)
                             .onChange(of: viewModel.createLastName) { _, _ in viewModel.createLastNameError = nil }
@@ -919,7 +919,7 @@ private struct OrderCreatePatientSheet: View {
                     .font(.system(size: 24))
                     .foregroundStyle(AppColors.textSecondary.opacity(0.5))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
         }
         .padding(.horizontal, AppMetrics.spacing28)
         .padding(.vertical, AppMetrics.spacing20)
@@ -938,7 +938,7 @@ private struct OrderCreatePatientSheet: View {
                     .background(AppColors.borderSubtle.opacity(0.5))
                     .cornerRadius(AppMetrics.radiusMedium)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
 
             Button(action: { focused = nil; viewModel.submitCreatePatient() }) {
                 HStack(spacing: AppMetrics.spacing8) {
@@ -959,7 +959,7 @@ private struct OrderCreatePatientSheet: View {
                 .background(AppColors.brandPrimary)
                 .cornerRadius(AppMetrics.radiusMedium)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
             .disabled(viewModel.isCreating)
         }
         .padding(.horizontal, AppMetrics.spacing28)

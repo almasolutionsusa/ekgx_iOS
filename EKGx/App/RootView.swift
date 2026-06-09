@@ -14,6 +14,7 @@ struct RootView: View {
     @Environment(AppDIContainer.self) private var diContainer
 
     var body: some View {
+        let fontScale = diContainer.makeSettingsViewModel(router: router).fontSize.dynamicTypeSize
         ZStack {
             routedContent
 
@@ -50,6 +51,7 @@ struct RootView: View {
                 .padding(.top, 24)
             }
         }
+        .dynamicTypeSize(fontScale)
         .animation(.spring(duration: 0.35), value: diContainer.errorToast.message != nil)
         .animation(.easeInOut(duration: 0.25), value: diContainer.autoLockManager.isLocked)
     }
@@ -131,6 +133,16 @@ struct RootView: View {
             case .patientExams:
                 PatientExamsView(viewModel: diContainer.makePatientExamsViewModel(router: router))
                     .id(AppRoute.patientExams)
+                    .transition(.push(from: .trailing))
+
+            case .menu:
+                MenuView(viewModel: diContainer.makeMenuViewModel(router: router))
+                    .id(AppRoute.menu)
+                    .transition(.opacity)
+
+            case .waitingList:
+                WaitingListView(viewModel: diContainer.makeWaitingListViewModel(router: router))
+                    .id(AppRoute.waitingList)
                     .transition(.push(from: .trailing))
 
             case .patientDetail:

@@ -36,7 +36,7 @@ struct AnalysisDiagnosisPanel: View {
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.secondary)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.hapticPlain)
                     }
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
@@ -60,7 +60,7 @@ struct AnalysisDiagnosisPanel: View {
                                 .foregroundStyle(customText.count >= 3
                                                   ? AppColors.brandPrimary : .secondary)
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.hapticPlain)
                         .disabled(customText.count < 3)
                     }
                     .padding(.horizontal, 14)
@@ -148,6 +148,6 @@ private struct DiagnosisCell: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 }

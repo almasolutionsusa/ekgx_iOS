@@ -47,7 +47,7 @@ struct ExitConfirmationOverlay: View {
             .padding(AppMetrics.spacing32)
             .background(AppColors.surfaceBackground)
             .cornerRadius(AppMetrics.radiusLarge)
-            .padding(.horizontal, AppMetrics.spacing64)
+            .padding(.horizontal, UIScreen.main.bounds.size.width * 0.2)
             .shadow(color: .black.opacity(0.4), radius: 24)
         }
     }

@@ -1,6 +1,43 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Vital Save States
+
+enum BPSaveState:   Equatable { case idle, saved }
+enum SpO2SaveState: Equatable { case idle, saved }
+enum TempSaveState: Equatable { case idle, saved }
+enum RRSaveState:   Equatable { case idle, saved }
+
+// MARK: - SpO2 History Item
+
+struct SpO2HistoryItem: Identifiable {
+    let id: String
+    let displayValue: String
+    let pulseRate: Int?
+    let formattedDate: String
+    let formattedTime: String
+}
+
+// MARK: - Temp History Item
+
+struct TempHistoryItem: Identifiable {
+    let id: String
+    let displayValue: String
+    let formattedDate: String
+    let formattedTime: String
+}
+
+// MARK: - RR History Item
+
+struct RRHistoryItem: Identifiable {
+    let id: String
+    let displayValue: String
+    let formattedDate: String
+    let formattedTime: String
+}
+
+// MARK: - VitalsViewModel
+
 @Observable
 @MainActor
 final class VitalsViewModel {
@@ -20,10 +57,328 @@ final class VitalsViewModel {
     // Observable connection states — updated via service callbacks.
     var connectionStates: [VitalType: DeviceConnectionState] = [:]
 
+    // Device measurements — updated whenever a service fires new data.
+    var measurements: [VitalType: VitalMeasurement] = [:]
+
+    // MARK: - Weight Scan
+
+    // Direct reference kept so the scan picker can call selectDevice
+    @ObservationIgnored private var weightService: WeightVitalDeviceService?
+    var weightScanDevices: [WeightDeviceInfo] = []
+
+    func selectWeightDevice(_ info: WeightDeviceInfo) {
+        weightService?.selectDevice(info)
+    }
+
     // MARK: - Sheet State
 
     var selectedVital: VitalType? = nil
     var showConnectSheet: Bool = false
+    var showWeightPopover: Bool = false
+
+    // MARK: - Pain Level
+
+    var showPainLevelPicker: Bool = false
+    var painLevel: Int? = nil
+
+    func openPainLevel() { showPainLevelPicker = true }
+    func savePainLevel(_ level: Int) { painLevel = level; showPainLevelPicker = false }
+
+    // MARK: - Height
+
+    var showHeightPicker: Bool = false
+    var heightCm: Double? = nil
+    var heightDisplay: String? = nil
+
+    func openHeight() { showHeightPicker = true }
+    func saveHeight(_ cm: Double, display: String) {
+        heightCm = cm; heightDisplay = display; showHeightPicker = false
+    }
+
+    // MARK: - Weight
+
+    var showWeightPicker: Bool = false
+    var weightKg: Double? = nil
+    var weightDisplay: String? = nil
+
+    func openWeight() { showWeightPicker = true }
+    func saveWeight(_ value: Double, unit: String, display: String) {
+        weightKg      = unit == "lb" ? value / 2.2046 : value
+        weightDisplay = display
+        showWeightPicker  = false
+        showWeightPopover = false
+        measurements[.weight] = VitalMeasurement(displayValue: String(format: "%.1f", value), unit: unit)
+        let deviceName = connectedDeviceName(for: .weight)
+        Task {
+            try? await self.diContainer.vitalsUploadService.uploadWeight(
+                value: value, unit: unit, patient: patient, deviceName: deviceName
+            )
+        }
+    }
+
+    // MARK: - BP History (last 3 readings shown in the vitals card)
+
+    var bpHistory: [BPHistoryItem] = []
+
+    private func loadBPHistory() {
+        let pid = patient.patientId ?? patient.uniqueId ?? ""
+        let readings = pid.isEmpty ? [] : Array(diContainer.bpStore.readings(for: pid).prefix(20))
+        bpHistory = readings.map { r in
+            BPHistoryItem(
+                id:            r.id,
+                displayValue:  r.displayValue,
+                riskColor:     bpRiskColor(r.riskLevel),
+                riskLabel:     r.riskLevel.label,
+                pulseRate:     r.pulseRate,
+                formattedDate: r.formattedDate,
+                formattedTime: r.formattedTime,
+                armLabel:      r.arm?.label,
+                positionLabel: r.position?.shortLabel
+            )
+        }
+    }
+
+    private func bpRiskColor(_ level: BPRiskLevel) -> Color {
+        switch level {
+        case .normal:      return AppColors.statusSuccess
+        case .elevated:    return Color(red: 0.86, green: 0.72, blue: 0.10)
+        case .highStage1:  return Color(red: 0.95, green: 0.50, blue: 0.10)
+        case .highStage2:  return AppColors.statusCritical
+        case .crisis:      return Color(red: 0.65, green: 0.05, blue: 0.05)
+        }
+    }
+
+    // MARK: - BP Arm & Position
+
+    var bpArm: BPArm = .right
+    var bpPosition: BPPosition = .sitting
+
+    // MARK: - BP Save
+
+    var bpSaveState: BPSaveState = .idle
+    @ObservationIgnored private var bpSaveTask: Task<Void, Never>?
+
+    // MARK: - BP Sensor Error
+
+    var bpSensorError: Bool = false
+    @ObservationIgnored private var bpErrorTask: Task<Void, Never>?
+
+    var hasCompleteBPReading: Bool {
+        let m = measurements[.bloodPressure]
+        return m?.systolic != nil && m?.diastolic != nil
+    }
+
+    func saveBPReading() {
+        guard let m = measurements[.bloodPressure],
+              let sys = m.systolic, let dia = m.diastolic else { return }
+        let pid = patient.patientId ?? patient.uniqueId ?? UUID().uuidString
+        let reading = BPRecording(
+            id:           UUID().uuidString,
+            patientId:    pid,
+            patientName:  patient.fullName,
+            patientDob:   patient.birthDate,
+            patientGender: patient.gender,
+            patientMrn:   patient.medicalRecordNumber,
+            recordedAt:   Date(),
+            systolic:     sys,
+            diastolic:    dia,
+            pulseRate:    m.pulseRate,
+            username:     diContainer.authService.currentUser?.username,
+            arm:          bpArm,
+            position:     bpPosition
+        )
+        diContainer.bpStore.save(reading)
+        loadBPHistory()
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { bpSaveState = .saved }
+        bpSaveTask?.cancel()
+        bpSaveTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            withAnimation(.spring(duration: 0.3)) { self?.bpSaveState = .idle }
+        }
+        let deviceName = connectedDeviceName(for: .bloodPressure)
+        let pulseRate  = m.pulseRate
+        Task {
+            try? await self.diContainer.vitalsUploadService.uploadBP(
+                systolic: sys, diastolic: dia, pulseRate: pulseRate,
+                patient: patient, deviceName: deviceName,
+                arm: bpArm, position: bpPosition
+            )
+            if let pr = pulseRate {
+                try? await self.diContainer.vitalsUploadService.uploadHeartRate(
+                    bpm: pr, patient: patient, deviceName: deviceName
+                )
+            }
+        }
+    }
+
+    // MARK: - SpO2 Save
+
+    var spo2SaveState: SpO2SaveState = .idle
+    @ObservationIgnored private var spo2SaveTask: Task<Void, Never>?
+    var spo2History: [SpO2HistoryItem] = []
+
+    var hasCompleteSpO2Reading: Bool {
+        guard let m = measurements[.oxygenSaturation] else { return false }
+        return Int(m.displayValue) != nil
+    }
+
+    func saveSpO2Reading() {
+        guard let m = measurements[.oxygenSaturation],
+              let val = Int(m.displayValue) else { return }
+        let pid = patient.patientId ?? patient.uniqueId ?? UUID().uuidString
+        let reading = SpO2Reading(
+            id:           UUID().uuidString,
+            patientId:    pid,
+            patientName:  patient.fullName,
+            patientDob:   patient.birthDate,
+            patientGender: patient.gender,
+            patientMrn:   patient.medicalRecordNumber,
+            recordedAt:   Date(),
+            value:        val,
+            pulseRate:    m.pulseRate,
+            unit:         m.unit.isEmpty ? "%" : m.unit,
+            username:     diContainer.authService.currentUser?.username
+        )
+        diContainer.spo2Store.save(reading)
+        loadSpO2History()
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { spo2SaveState = .saved }
+        spo2SaveTask?.cancel()
+        spo2SaveTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            withAnimation(.spring(duration: 0.3)) { self?.spo2SaveState = .idle }
+        }
+        let deviceName = connectedDeviceName(for: .oxygenSaturation)
+        let pulseRate  = m.pulseRate
+        Task {
+            try? await self.diContainer.vitalsUploadService.uploadSpO2(
+                value: val, pulseRate: pulseRate,
+                patient: patient, deviceName: deviceName
+            )
+            if let pr = pulseRate {
+                try? await self.diContainer.vitalsUploadService.uploadHeartRate(
+                    bpm: pr, patient: patient, deviceName: deviceName
+                )
+            }
+        }
+    }
+
+    private func loadSpO2History() {
+        let pid = patient.patientId ?? patient.uniqueId ?? ""
+        let readings = pid.isEmpty ? [] : Array(diContainer.spo2Store.readings(for: pid).prefix(20))
+        spo2History = readings.map { r in
+            SpO2HistoryItem(
+                id:           r.id,
+                displayValue: r.displayValue,
+                pulseRate:    r.pulseRate,
+                formattedDate: r.formattedDate,
+                formattedTime: r.formattedTime
+            )
+        }
+    }
+
+    // MARK: - Temp Save
+
+    var tempSaveState: TempSaveState = .idle
+    @ObservationIgnored private var tempSaveTask: Task<Void, Never>?
+    var tempHistory: [TempHistoryItem] = []
+
+    var hasCompleteTempReading: Bool {
+        guard let m = measurements[.temperature] else { return false }
+        return Double(m.displayValue) != nil
+    }
+
+    func saveTempReading() {
+        guard let m = measurements[.temperature],
+              let val = Double(m.displayValue) else { return }
+        let pid = patient.patientId ?? patient.uniqueId ?? UUID().uuidString
+        let reading = TempReading(
+            id:           UUID().uuidString,
+            patientId:    pid,
+            patientName:  patient.fullName,
+            patientDob:   patient.birthDate,
+            patientGender: patient.gender,
+            patientMrn:   patient.medicalRecordNumber,
+            recordedAt:   Date(),
+            value:        val,
+            unit:         m.unit.isEmpty ? "°C" : m.unit,
+            username:     diContainer.authService.currentUser?.username
+        )
+        diContainer.tempStore.save(reading)
+        loadTempHistory()
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { tempSaveState = .saved }
+        tempSaveTask?.cancel()
+        tempSaveTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            withAnimation(.spring(duration: 0.3)) { self?.tempSaveState = .idle }
+        }
+        let unit       = m.unit.isEmpty ? "°C" : m.unit
+        let deviceName = connectedDeviceName(for: .temperature)
+        Task {
+            try? await self.diContainer.vitalsUploadService.uploadTemp(
+                value: val, unit: unit,
+                patient: patient, deviceName: deviceName
+            )
+        }
+    }
+
+    private func loadTempHistory() {
+        let pid = patient.patientId ?? patient.uniqueId ?? ""
+        let readings = pid.isEmpty ? [] : Array(diContainer.tempStore.readings(for: pid).prefix(20))
+        tempHistory = readings.map { r in
+            TempHistoryItem(
+                id:           r.id,
+                displayValue: r.displayValue,
+                formattedDate: r.formattedDate,
+                formattedTime: r.formattedTime
+            )
+        }
+    }
+
+    // MARK: - Respirations
+
+    var rrSaveState: RRSaveState = .idle
+    @ObservationIgnored private var rrSaveTask: Task<Void, Never>?
+    var rrHistory: [RRHistoryItem] = []
+
+    func saveRR(_ value: Int) {
+        measurements[.respirations] = VitalMeasurement(displayValue: "\(value)", unit: "rpm")
+        let pid = patient.patientId ?? patient.uniqueId ?? UUID().uuidString
+        let reading = RRReading(
+            id:           UUID().uuidString,
+            patientId:    pid,
+            patientName:  patient.fullName,
+            patientDob:   patient.birthDate,
+            patientGender: patient.gender,
+            patientMrn:   patient.medicalRecordNumber,
+            recordedAt:   Date(),
+            value:        value,
+            username:     diContainer.authService.currentUser?.username
+        )
+        diContainer.rrStore.save(reading)
+        loadRRHistory()
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { rrSaveState = .saved }
+        rrSaveTask?.cancel()
+        rrSaveTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 2_500_000_000)
+            withAnimation(.spring(duration: 0.3)) { self?.rrSaveState = .idle }
+        }
+        Task {
+            try? await self.diContainer.vitalsUploadService.uploadRR(value: value, patient: patient)
+        }
+    }
+
+    private func loadRRHistory() {
+        let pid = patient.patientId ?? patient.uniqueId ?? ""
+        let readings = pid.isEmpty ? [] : Array(diContainer.rrStore.readings(for: pid).prefix(20))
+        rrHistory = readings.map { r in
+            RRHistoryItem(
+                id:           r.id,
+                displayValue: r.displayValue,
+                formattedDate: r.formattedDate,
+                formattedTime: r.formattedTime
+            )
+        }
+    }
 
     // MARK: - Init
 
@@ -38,6 +393,10 @@ final class VitalsViewModel {
 
     func activate() {
         setUp()
+        loadBPHistory()
+        loadSpO2History()
+        loadTempHistory()
+        loadRRHistory()
     }
 
     // Register all known device services here.
@@ -45,6 +404,27 @@ final class VitalsViewModel {
     private func setUp() {
         let ekgService = EKGVitalDeviceService(diContainer: diContainer)
         register(ekgService, for: .ekg)
+
+        register(diContainer.bpVitalService,   for: .bloodPressure)
+        register(diContainer.spo2VitalService, for: .oxygenSaturation)
+        register(diContainer.tempVitalService, for: .temperature)
+
+        let ws = diContainer.weightVitalService
+        weightService = ws
+        ws.onScanDevicesChanged = { [weak self] devices in
+            DispatchQueue.main.async { self?.weightScanDevices = devices }
+        }
+        register(ws, for: .weight)
+        // Wrap the box callback: BLE measurement also auto-saves to the patient weight pill
+        let boxHandler = ws.onMeasurement
+        ws.onMeasurement = { [weak self] measurement in
+            boxHandler?(measurement)
+            guard let kg = Double(measurement.displayValue) else { return }
+            DispatchQueue.main.async {
+                self?.weightKg = kg
+                self?.weightDisplay = "\(measurement.displayValue) \(measurement.unit)"
+            }
+        }
     }
 
     private func register(_ service: some VitalDeviceServiceProtocol, for type: VitalType) {
@@ -52,6 +432,53 @@ final class VitalsViewModel {
         box.observe { [weak self] state in
             withAnimation { self?.connectionStates[type] = state }
             if state == .connected { self?.showConnectSheet = false }
+        }
+        box.observeMeasurement { [weak self] measurement in
+            // Reject obviously invalid BP sensor values (> 1000 mmHg is a device error)
+            if type == .bloodPressure {
+                let sysValue  = measurement.systolic ?? 0
+                let diaValue  = measurement.diastolic ?? 0
+                let cuffValue = Int(measurement.displayValue.components(separatedBy: "/").first ?? "") ?? 0
+                let maxRaw    = max(sysValue, diaValue, cuffValue)
+                if maxRaw > 1000 {
+                    withAnimation { self?.bpSensorError = true }
+                    self?.bpErrorTask?.cancel()
+                    self?.bpErrorTask = Task { @MainActor [weak self] in
+                        try? await Task.sleep(nanoseconds: 4_000_000_000)
+                        withAnimation { self?.bpSensorError = false }
+                    }
+                    return
+                }
+                // Valid reading — clear any prior error
+                if self?.bpSensorError == true {
+                    withAnimation { self?.bpSensorError = false }
+                    self?.bpErrorTask?.cancel()
+                }
+            }
+
+            withAnimation { self?.measurements[type] = measurement }
+            // New complete BP reading — reset save state so user can save again
+            // Guard: don't interrupt the "Saved" confirmation while it's showing
+            if type == .bloodPressure, measurement.systolic != nil, self?.bpSaveState != .saved {
+                self?.bpSaveTask?.cancel()
+                withAnimation { self?.bpSaveState = .idle }
+            }
+            if type == .oxygenSaturation, Int(measurement.displayValue) != nil, self?.spo2SaveState != .saved {
+                self?.spo2SaveTask?.cancel()
+                withAnimation { self?.spo2SaveState = .idle }
+            }
+            if type == .temperature, Double(measurement.displayValue) != nil, self?.tempSaveState != .saved {
+                self?.tempSaveTask?.cancel()
+                withAnimation { self?.tempSaveState = .idle }
+            }
+            // Heart rate reported by BP/SpO2 also populates the HR card
+            if let pr = measurement.pulseRate {
+                withAnimation {
+                    self?.measurements[.heartRate] = VitalMeasurement(
+                        displayValue: "\(pr)", unit: "BPM"
+                    )
+                }
+            }
         }
         connectionStates[type] = service.connectionState
         registry[type] = box
@@ -70,7 +497,30 @@ final class VitalsViewModel {
         registry[type]?.connectedDeviceName
     }
 
-    // MARK: - Connect Sheet
+    // MARK: - Connect
+
+    func startConnect(for type: VitalType) {
+        switch connectionState(for: type) {
+        case .disconnected:
+            selectedVital = type
+            registry[type]?.connect()
+            // Weight uses a popover anchored on the pill
+            if type == .weight { showWeightPopover = true }
+        case .connected:
+            registry[type]?.disconnect()
+            withAnimation { connectionStates[type] = .disconnected }
+        case .searching, .connecting:
+            break
+        }
+    }
+
+    func openWeightScanSheet() {
+        selectedVital = .weight
+        if connectionState(for: .weight) == .disconnected {
+            registry[.weight]?.connect()
+        }
+        showWeightPopover = true
+    }
 
     func openConnectSheet(for type: VitalType) {
         selectedVital    = type
@@ -97,7 +547,7 @@ final class VitalsViewModel {
 
     func startEKG() {
         guard connectionState(for: .ekg) == .connected else {
-            openConnectSheet(for: .ekg)
+            startConnect(for: .ekg)
             return
         }
         diContainer.lastRecordingPatient = patient
@@ -108,14 +558,27 @@ final class VitalsViewModel {
     var examCount: Int {
         let pid = patient.patientId ?? patient.uniqueId ?? ""
         guard !pid.isEmpty else { return 0 }
-        return diContainer.recordingStore.recordings(for: pid).count
+        let ekgCount  = diContainer.recordingStore.recordings(for: pid).count
+        let bpCount   = diContainer.bpStore.readings(for: pid).count
+        let spo2Count = diContainer.spo2Store.readings(for: pid).count
+        let tempCount = diContainer.tempStore.readings(for: pid).count
+        let rrCount   = diContainer.rrStore.readings(for: pid).count
+        return ekgCount + bpCount + spo2Count + tempCount + rrCount
     }
 
     func openExams() {
         router.navigate(to: .patientExams)
     }
 
+    func deactivate() {
+        // Services are app-scoped — devices stay connected across navigation.
+        // Callbacks use [weak self] so they become no-ops once this ViewModel is deallocated.
+    }
+
     func navigateBack() {
-        router.navigate(to: .patientSelection)
+        deactivate()
+        let dest = router.vitalsReturnRoute
+        router.vitalsReturnRoute = .patientSelection
+        router.navigate(to: dest)
     }
 }

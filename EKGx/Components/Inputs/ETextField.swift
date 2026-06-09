@@ -13,7 +13,7 @@ struct ETextField<Trailing: View>: View {
 
     // MARK: - Properties
 
-    let label: String
+    let label: String?
     let placeholder: String
     let systemImage: String?
     @Binding var text: String
@@ -24,7 +24,7 @@ struct ETextField<Trailing: View>: View {
     var autocorrectionDisabled: Bool = true
     var trailingContent: (() -> Trailing)?
 
-    init(label: String, placeholder: String, systemImage: String? = nil,
+    init(label: String? = nil, placeholder: String, systemImage: String? = nil,
          text: Binding<String>, errorMessage: String? = nil,
          keyboardType: UIKeyboardType = .default,
          textContentType: UITextContentType? = nil,
@@ -45,11 +45,12 @@ struct ETextField<Trailing: View>: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
             // Label
-            Text(label)
-                .font(AppTypography.captionBold)
-                .foregroundStyle(AppColors.textSecondary)
-                .textCase(.uppercase)
-                .tracking(0.5)
+            if let label {
+                Text(label)
+                    .font(AppTypography.captionBold)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .tracking(0.5)
+            }
 
             // Input container
             HStack(spacing: AppMetrics.spacing12) {
@@ -69,6 +70,16 @@ struct ETextField<Trailing: View>: View {
                     .autocorrectionDisabled(autocorrectionDisabled)
                     .focused($isFocused)
 
+                if !text.isEmpty {
+                    Button { text = "" } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: AppMetrics.iconSizeSmall, weight: .medium))
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+                    .buttonStyle(.hapticPlain)
+                    .transition(.opacity.combined(with: .scale(scale: 0.7)))
+                }
+
                 if let trailing = trailingContent {
                     trailing()
                 }
@@ -81,6 +92,7 @@ struct ETextField<Trailing: View>: View {
                 RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
                     .strokeBorder(borderColor, lineWidth: borderWidth)
             )
+            .animation(.easeInOut(duration: 0.15), value: text.isEmpty)
 
             // Inline error
             if let error = errorMessage {
@@ -122,7 +134,7 @@ struct ETextField<Trailing: View>: View {
 // MARK: - Convenience init (no trailing)
 
 extension ETextField where Trailing == EmptyView {
-    init(label: String, placeholder: String, systemImage: String? = nil,
+    init(label: String? = nil, placeholder: String, systemImage: String? = nil,
          text: Binding<String>, errorMessage: String? = nil,
          keyboardType: UIKeyboardType = .default,
          textContentType: UITextContentType? = nil,

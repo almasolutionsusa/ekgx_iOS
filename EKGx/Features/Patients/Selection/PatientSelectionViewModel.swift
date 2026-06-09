@@ -92,6 +92,13 @@ final class PatientSelectionViewModel {
     var isCreating:           Bool    = false
     var createErrorMessage:   String? = nil
 
+    var canSubmitCreate: Bool {
+        !createFirstName.trimmingCharacters(in: .whitespaces).isEmpty &&
+        !createLastName.trimmingCharacters(in: .whitespaces).isEmpty &&
+        createDob != nil &&
+        !createMRN.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
     let genderOptions: [String] = ["Male", "Female"]
     var canConfirm: Bool { selected != nil }
     var isSearchActive: Bool {
@@ -100,39 +107,20 @@ final class PatientSelectionViewModel {
 
     // MARK: - Menu / Logout
 
-    var isMenuVisible: Bool = false
-
     func openMenu() {
-        withAnimation(.easeInOut(duration: 0.28)) { isMenuVisible = true }
-    }
-
-    func closeMenu() {
-        withAnimation(.easeInOut(duration: 0.24)) { isMenuVisible = false }
+        router.menuReturnRoute = .patientSelection
+        router.navigate(to: .menu)
     }
 
     func logout() {
-        closeMenu()
         diContainer.autoLockManager.stop()
         Task { try? await diContainer.authService.logout() }
         router.navigate(to: .login)
     }
 
-    // User info for the side menu header
-    private var sessionUser: SessionUser? { diContainer.authService.loginData?.user }
-    var menuUserFullName: String  { sessionUser?.username ?? LocalUserStore.shared.username ?? "" }
-    var menuUserEmail: String     { sessionUser?.email ?? LocalUserStore.shared.email ?? "" }
-    var menuUserInitials: String  {
-        let name = menuUserFullName
-        return name.isEmpty ? "?" : String(name.prefix(2)).uppercased()
-    }
-    var menuUserRole: String      { sessionUser?.title?.capitalized ?? sessionUser?.role?.capitalized ?? "" }
+    func navigateToWaitingList() { router.navigate(to: .waitingList) }
 
-    // Side menu navigation
-    func navigateToMyAccount()         { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .myAccount) }
-    func navigateToSettings()          { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .settings) }
-    func navigateToSupport()           { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .support) }
-    func navigateToFAQ()               { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .faq) }
-    func navigateToIndicationsForUse() { closeMenu(); router.reopenMenuOnBack = true; router.navigate(to: .indicationsForUse) }
+    var waitingListBadgeCount: Int { WaitingListStore.shared.activeCount }
 
     // MARK: - Dependencies
 
@@ -149,10 +137,6 @@ final class PatientSelectionViewModel {
     // MARK: - Load
 
     func activate() {
-        if router.reopenMenuOnBack {
-            router.reopenMenuOnBack = false
-            openMenu()
-        }
         Task { await loadAll() }
     }
 
@@ -353,8 +337,8 @@ final class PatientSelectionViewModel {
                 let patient = try await repository.add(input)
                 allPatients.insert(patient, at: 0)
                 applyFilter()
-                selected = patient
                 showCreatePatient = false
+                navigateToVitals(patient)
             } catch {
                 createErrorMessage = error.localizedDescription
             }

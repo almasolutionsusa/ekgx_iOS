@@ -17,18 +17,19 @@ struct SecondaryButton: View {
         Button(action: action) {
             Text(title)
                 .font(AppTypography.bodyMedium)
-                .foregroundStyle(isDisabled ? AppColors.brandPrimary.opacity(0.4) : AppColors.brandPrimary)
+                .foregroundStyle(isDisabled ? AppColors.accentTeal.opacity(0.4) : AppColors.accentTeal)
                 .frame(maxWidth: .infinity)
                 .frame(height: AppMetrics.buttonHeight)
                 .background(Color.clear)
                 .overlay(
                     RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
                         .strokeBorder(
-                            isDisabled ? AppColors.brandPrimary.opacity(0.4) : AppColors.brandPrimary,
+                            isDisabled ? AppColors.accentTeal.opacity(0.4) : AppColors.accentTeal,
                             lineWidth: 1.5
                         )
                 )
         }
+        .buttonStyle(.hapticPlain)
         .disabled(isDisabled)
     }
 }

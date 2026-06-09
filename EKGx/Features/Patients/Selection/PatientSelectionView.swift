@@ -49,28 +49,12 @@ struct PatientSelectionView: View {
                     centerPanel
                         .frame(maxWidth: .infinity)
 
-                    divider
-
-                    rightPanel
-                        .frame(width: 360)
+//                    divider
+//
+//                    rightPanel
+//                        .frame(width: 360)
                 }
             }
-
-            // Side menu overlay
-            SideMenuView(
-                userFullName:        viewModel.menuUserFullName,
-                userEmail:           viewModel.menuUserEmail,
-                userInitials:        viewModel.menuUserInitials,
-                userRoleDisplayName: viewModel.menuUserRole,
-                isVisible:           viewModel.isMenuVisible,
-                onDismiss:           { viewModel.closeMenu() },
-                onSettings:          { viewModel.navigateToSettings() },
-                onMyAccount:         { viewModel.navigateToMyAccount() },
-                onSupport:           { viewModel.navigateToSupport() },
-                onFAQ:               { viewModel.navigateToFAQ() },
-                onIndicationsForUse: { viewModel.navigateToIndicationsForUse() },
-                onLogout:            { viewModel.logout() }
-            )
         }
         .sheet(isPresented: $viewModel.showCreatePatient) {
             CreatePatientSheet(viewModel: viewModel)
@@ -80,12 +64,6 @@ struct PatientSelectionView: View {
             EditPatientSheet(viewModel: viewModel)
                 .interactiveDismissDisabled()
         }
-        .alert(L10n.PatientSelection.Delete.alertTitle, isPresented: $viewModel.showDeleteConfirm) {
-            Button(L10n.PatientSelection.Delete.confirm, role: .destructive) { viewModel.deleteConfirmed() }
-            Button(L10n.Common.cancel, role: .cancel) { viewModel.cancelDelete() }
-        } message: {
-            Text(L10n.PatientSelection.Delete.message)
-        }
         .sheet(isPresented: $showQRScanner) {
             QRScannerView { scanned in
                 viewModel.searchMRN = scanned
@@ -93,7 +71,15 @@ struct PatientSelectionView: View {
             }
             .ignoresSafeArea()
         }
-        .onAppear { viewModel.activate() }
+        .background(KeyboardShiftBlocker())
+        .onAppear {
+            // Delay until after the navigation push animation (~0.35s) so the list
+            // doesn't render mid-transition.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                viewModel.activate()
+            }
+        }
+        .ignoresSafeArea(.keyboard)
     }
 
     private var divider: some View {
@@ -108,7 +94,7 @@ struct PatientSelectionView: View {
         ZStack {
             // Title — truly centered regardless of button widths
             Text(L10n.PatientSelection.Nav.title)
-                .font(AppTypography.title2)
+                .font(AppTypography.title3)
                 .foregroundStyle(AppColors.textPrimary)
                 .frame(maxWidth: .infinity)
 
@@ -116,10 +102,10 @@ struct PatientSelectionView: View {
                 // Menu button
                 Button(action: { viewModel.openMenu() }) {
                     HStack(spacing: AppMetrics.spacing8) {
-                        Image(systemName: "line.3.horizontal")
-                            .font(.system(size: 18, weight: .medium))
-                        Text(L10n.Home.Nav.menuButton)
-                            .font(AppTypography.callout)
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 20, weight: .medium))
+//                        Text(L10n.Home.Nav.menuButton)
+//                            .font(AppTypography.callout)
                     }
                     .foregroundStyle(AppColors.textPrimary)
                     .padding(.horizontal, AppMetrics.spacing16)
@@ -129,6 +115,36 @@ struct PatientSelectionView: View {
                 }
 
                 Spacer()
+
+                // Waiting List button
+                Button(action: { viewModel.navigateToWaitingList() }) {
+                    ZStack(alignment: .topTrailing) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "list.clipboard")
+                                .font(.system(size: 16, weight: .medium))
+                            Text(L10n.WaitingList.title)
+                                .font(AppTypography.callout)
+                        }
+                        .foregroundStyle(AppColors.textPrimary)
+                        .padding(.horizontal, AppMetrics.spacing16)
+                        .padding(.vertical, AppMetrics.spacing8)
+                        .background(AppColors.borderSubtle.opacity(0.5))
+                        .cornerRadius(AppMetrics.radiusMedium)
+
+                        if viewModel.waitingListBadgeCount > 0 {
+                            Text("\(viewModel.waitingListBadgeCount)")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 5)
+                                .padding(.vertical, 2)
+                                .background(AppColors.brandPrimary)
+                                .clipShape(Capsule())
+                                .offset(x: 8, y: -8)
+                        }
+                    }
+                }
+                .buttonStyle(.hapticPlain)
+                .padding(.trailing, AppMetrics.spacing8)
 
                 // Logout button
                 Button(action: { viewModel.logout() }) {
@@ -144,7 +160,7 @@ struct PatientSelectionView: View {
                     .background(AppColors.statusCritical.opacity(0.08))
                     .cornerRadius(AppMetrics.radiusMedium)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
             }
         }
         .padding(.horizontal, AppMetrics.spacing32)
@@ -157,78 +173,96 @@ struct PatientSelectionView: View {
 
     private var leftPanel: some View {
         VStack(alignment: .leading, spacing: 0) {
-            VStack(alignment: .leading, spacing: AppMetrics.spacing16) {
-                Text(L10n.PatientSelection.Search.title)
-                    .font(AppTypography.bodyMedium)
-                    .foregroundStyle(AppColors.textSecondary)
-
-                brandSegment
-
-                if searchMode == .name {
-                    ETextField(
-                        label: L10n.PatientSelection.Search.firstName,
-                        placeholder: L10n.PatientSelection.Search.firstName,
-                        systemImage: "person",
-                        text: $viewModel.searchFirstName
-                    )
-                    ETextField(
-                        label: L10n.PatientSelection.Search.lastName,
-                        placeholder: L10n.PatientSelection.Search.lastName,
-                        systemImage: "person",
-                        text: $viewModel.searchLastName
-                    )
-                    DOBTextField(
-                        label: L10n.PatientSelection.Search.dob,
-                        date: $viewModel.searchDob
-                    )
-                } else {
-                    ETextField(
-                        label: L10n.PatientSelection.Search.mrn,
-                        placeholder: L10n.PatientSelection.Search.mrnPlaceholder,
-                        systemImage: "number",
-                        text: $viewModel.searchMRN
-                    ) {
-                        Button { showQRScanner = true } label: {
-                            Image(systemName: "qrcode.viewfinder")
-                                .font(.system(size: 20, weight: .medium))
-                                .foregroundStyle(AppColors.brandPrimary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-
-                if viewModel.isSearchActive {
-                    Button(action: viewModel.clearSearch) {
-                        HStack(spacing: AppMetrics.spacing6) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 13))
-                            Text(L10n.PatientSelection.Search.clearButton)
-                                .font(AppTypography.caption)
-                        }
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: AppMetrics.spacing16) {
+                    
+                    brandSegment
+                    
+                    Text(L10n.PatientSelection.Search.title)
+                        .font(AppTypography.bodyMedium)
                         .foregroundStyle(AppColors.textSecondary)
+
+
+                    if searchMode == .name {
+                        ETextField(
+                            placeholder: L10n.PatientSelection.Search.firstName,
+                            systemImage: "person",
+                            text: $viewModel.searchFirstName,
+                            autocapitalization: .characters
+                        )
+                        ETextField(
+                            placeholder: L10n.PatientSelection.Search.lastName,
+                            systemImage: "person",
+                            text: $viewModel.searchLastName,
+                            autocapitalization: .characters
+                        )
+                        DOBTextField(
+                            date: $viewModel.searchDob
+                        )
+                    } else {
+                        ETextField(
+                            label: L10n.PatientSelection.Search.mrn,
+                            placeholder: L10n.PatientSelection.Search.mrnPlaceholder,
+                            systemImage: "number",
+                            text: $viewModel.searchMRN
+                        )
+
+                        Button { showQRScanner = true } label: {
+                            HStack(spacing: AppMetrics.spacing8) {
+                                Image(systemName: "qrcode.viewfinder")
+                                    .font(.system(size: 18, weight: .medium))
+                                Text(L10n.PatientSelection.Search.scanQRCode)
+                                    .font(AppTypography.body)
+                            }
+                            .foregroundStyle(AppColors.brandPrimary)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, AppMetrics.spacing12)
+                            .background(AppColors.brandPrimary.opacity(0.1), in: RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                                    .stroke(AppColors.brandPrimary.opacity(0.3), lineWidth: 1)
+                            )
+                        }
+                        .buttonStyle(.hapticPlain)
                     }
-                    .buttonStyle(.plain)
+
+                    if viewModel.isSearchActive {
+                        Button(action: viewModel.clearSearch) {
+                            HStack(spacing: AppMetrics.spacing6) {
+                                Image(systemName: "xmark.circle.fill")
+                                    .font(.system(size: 13))
+                                Text(L10n.PatientSelection.Search.clearButton)
+                                    .font(AppTypography.caption)
+                            }
+                            .foregroundStyle(AppColors.textSecondary)
+                        }
+                        .buttonStyle(.hapticPlain)
+                    }
                 }
+                .padding(AppMetrics.spacing20)
             }
-            .padding(AppMetrics.spacing20)
+            .scrollDismissesKeyboard(.interactively)
+            .frame(maxHeight: .infinity)
 
             Spacer()
 
-            VStack(alignment: .center, spacing: AppMetrics.spacing8) {
+            VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
                 AppImages.logo
                     .resizable()
                     .scaledToFit()
-                    .frame(height: 60)
-
+                    .frame(height: 67)
+                    
                 Text(L10n.Branding.tagline)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.textOnDark.opacity(0.7))
+                    .font(AppTypography.bodyMedium)
+                    .foregroundStyle(AppColors.textSecondary)
                     .lineLimit(2)
-            }.frame(maxWidth: .infinity)
-            
-            Spacer()
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, AppMetrics.spacing16)
+            .padding(.bottom, UIScreen.main.bounds.size.height * 0.18)
+            .padding(.trailing,30)
         }
-        .background(AppColors.surfaceCard)
+        .background(AppColors.surfaceBackground)
     }
 
     private var brandSegment: some View {
@@ -242,17 +276,17 @@ struct PatientSelectionView: View {
                 } label: {
                     Text(mode.displayTitle)
                         .font(AppTypography.bodyMedium)
-                        .foregroundStyle(searchMode == mode ? .white : AppColors.brandPrimary)
+                        .foregroundStyle(searchMode == mode ? AppColors.ecgBackground : AppColors.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 44)
-                        .background(searchMode == mode ? AppColors.brandPrimary : AppColors.brandPrimary.opacity(0.08))
+                        .background(searchMode == mode ? AppColors.accentTeal : Color.clear)
                         .cornerRadius(AppMetrics.radiusMedium)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
             }
         }
         .padding(4)
-        .background(AppColors.brandPrimary.opacity(0.08))
+        .background(AppColors.surfaceCard)
         .cornerRadius(AppMetrics.radiusMedium + 4)
     }
 
@@ -270,6 +304,7 @@ struct PatientSelectionView: View {
                     }
                     .padding(AppMetrics.spacing16)
                 }
+                .ignoresSafeArea(.keyboard)
             } else {
                 patientList
             }
@@ -286,7 +321,6 @@ struct PatientSelectionView: View {
                         isSelected: viewModel.selected?.id == patient.id,
                         examCount: viewModel.examCount(for: patient),
                         onEdit:       { viewModel.openEditPatient(patient) },
-                        onDelete:     { viewModel.confirmDelete(patient) },
                         onHistoryTap: { viewModel.navigateToHistory(patient) }
                     ) {
                         viewModel.navigateToVitals(patient)
@@ -298,6 +332,7 @@ struct PatientSelectionView: View {
             }
             .padding(AppMetrics.spacing16)
         }
+        .ignoresSafeArea(.keyboard)
     }
 
     private var emptyState: some View {
@@ -370,7 +405,7 @@ struct PatientSelectionView: View {
                     .foregroundStyle(AppColors.brandPrimary.opacity(0.35))
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 
     // MARK: - Right Panel: Selection + Actions
@@ -469,7 +504,7 @@ struct PatientSelectionView: View {
                         .strokeBorder(AppColors.brandPrimary.opacity(0.3), lineWidth: AppMetrics.borderWidth)
                 )
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
 
             if let patient = viewModel.selected {
                 Button { viewModel.openEditPatient(patient) } label: {
@@ -485,7 +520,7 @@ struct PatientSelectionView: View {
                     .background(AppColors.borderSubtle.opacity(0.5))
                     .cornerRadius(AppMetrics.radiusMedium)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
             }
         }
         .padding(.horizontal, AppMetrics.spacing20)
@@ -503,7 +538,6 @@ private struct PatientRow: View {
     let isSelected: Bool
     let examCount: Int
     let onEdit: () -> Void
-    let onDelete: () -> Void
     let onHistoryTap: () -> Void
     let onTap: () -> Void
 
@@ -512,16 +546,16 @@ private struct PatientRow: View {
             HStack(spacing: AppMetrics.spacing14) {
                 ZStack {
                     Circle()
-                        .fill(AppColors.brandPrimary.opacity(isSelected ? 0.25 : 0.10))
+                        .fill(AppColors.ecgBackground)
                         .frame(width: 48, height: 48)
                     Text(patient.initials)
-                        .font(AppTypography.bodySemibold)
-                        .foregroundStyle(AppColors.brandPrimary)
+                        .font(AppTypography.calloutBold)
+                        .foregroundStyle(AppColors.textPrimary)
                 }
 
                 VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
                     Text(patient.fullName)
-                        .font(AppTypography.bodySemibold)
+                        .font(AppTypography.calloutBold)
                         .foregroundStyle(AppColors.textPrimary)
                         .lineLimit(1)
 
@@ -552,48 +586,47 @@ private struct PatientRow: View {
 
                 Spacer(minLength: 0)
 
+                // Edit button
+                Button(action: onEdit) {
+                    Image(systemName: "pencil")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(AppColors.statusWarning)
+                        .frame(width: 40, height: 40)
+                        .background(AppColors.statusWarning.opacity(0.12))
+                        .cornerRadius(AppMetrics.radiusMedium)
+                }
+                .buttonStyle(.hapticPlain)
+
                 // History badge — tappable, navigates to patient's exam history
                 if examCount > 0 {
                     Button(action: onHistoryTap) {
-                        VStack(spacing: 4) {
+                        VStack(spacing: 3) {
                             Image(systemName: "clock.arrow.circlepath")
-                                .font(.system(size: 20, weight: .medium))
+                                .font(.system(size: 16, weight: .medium))
                             Text("\(examCount)")
-                                .font(.system(size: 12, weight: .bold))
+                                .font(.system(size: 11, weight: .bold))
                         }
                         .foregroundStyle(AppColors.brandPrimary)
-                        .frame(width: 48, height: 48)
+                        .frame(width: 40, height: 40)
                         .background(AppColors.brandPrimary.opacity(0.10))
                         .cornerRadius(AppMetrics.radiusMedium)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.hapticPlain)
                 }
-
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(AppColors.borderSubtle)
             }
             .padding(.horizontal, AppMetrics.spacing16)
             .padding(.vertical, AppMetrics.spacing12)
-            .background(isSelected ? AppColors.brandPrimary.opacity(0.07) : AppColors.surfaceCard)
-            .cornerRadius(AppMetrics.radiusLarge)
+            .background(isSelected ? AppColors.accentTeal.opacity(0.07) : AppColors.surfaceElevatedOverride)
+            .cornerRadius(AppMetrics.radiusSmall)
             .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                RoundedRectangle(cornerRadius: AppMetrics.radiusSmall)
                     .strokeBorder(
                         isSelected ? AppColors.brandPrimary : AppColors.borderSubtle.opacity(0.6),
                         lineWidth: isSelected ? AppMetrics.borderWidthFocused : AppMetrics.borderWidth
                     )
             )
         }
-        .buttonStyle(.plain)
-        .contextMenu {
-            Button { onEdit() } label: {
-                Label(L10n.PatientSelection.Edit.button, systemImage: "pencil")
-            }
-            Button(role: .destructive) { onDelete() } label: {
-                Label(L10n.PatientSelection.Delete.contextMenu, systemImage: "trash")
-            }
-        }
+        .buttonStyle(.hapticPlain)
     }
 }
 
@@ -629,40 +662,35 @@ struct CreatePatientSheet: View {
 
                         HStack(spacing: AppMetrics.spacing14) {
                             ETextField(
-                                label: L10n.PatientSelection.Create.firstName,
                                 placeholder: L10n.PatientSelection.Create.firstName,
                                 systemImage: "person",
                                 text: $viewModel.createFirstName,
                                 errorMessage: viewModel.createFirstNameError,
-                                autocapitalization: .words
+                                autocapitalization: .characters
                             )
                             .focused($focused, equals: .firstName)
                             .onChange(of: viewModel.createFirstName) { _, _ in viewModel.createFirstNameError = nil }
                             .onSubmit { focused = .lastName }
 
                             ETextField(
-                                label: L10n.PatientSelection.Create.lastName,
                                 placeholder: L10n.PatientSelection.Create.lastName,
                                 systemImage: "person",
                                 text: $viewModel.createLastName,
                                 errorMessage: viewModel.createLastNameError,
-                                autocapitalization: .words
+                                autocapitalization: .characters
                             )
                             .focused($focused, equals: .lastName)
                             .onChange(of: viewModel.createLastName) { _, _ in viewModel.createLastNameError = nil }
                         }
 
                         DOBTextField(
-                            label: L10n.PatientSelection.Create.dob,
                             date: $viewModel.createDob,
                             errorMessage: viewModel.createDobError
                         )
                         .onChange(of: viewModel.createDob) { _, _ in viewModel.createDobError = nil }
 
                         VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-                            Text(L10n.PatientSelection.Create.gender)
-                                .font(AppTypography.captionBold)
-                                .foregroundStyle(AppColors.textSecondary)
+                           
                             Picker("", selection: $viewModel.createGender) {
                                 ForEach(viewModel.genderOptions, id: \.self) { Text($0).tag($0) }
                             }
@@ -670,7 +698,6 @@ struct CreatePatientSheet: View {
                         }
 
                         ETextField(
-                            label: L10n.PatientSelection.Create.mrn,
                             placeholder: L10n.PatientSelection.Create.mrnPlaceholder,
                             systemImage: "number",
                             text: $viewModel.createMRN,
@@ -693,9 +720,6 @@ struct CreatePatientSheet: View {
                 Text(L10n.PatientSelection.Create.title)
                     .font(AppTypography.title2)
                     .foregroundStyle(AppColors.textPrimary)
-                Text(L10n.PatientSelection.Create.subtitle)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.textSecondary)
             }
             Spacer()
             Button(action: viewModel.cancelCreatePatient) {
@@ -703,7 +727,7 @@ struct CreatePatientSheet: View {
                     .font(.system(size: 24))
                     .foregroundStyle(AppColors.textSecondary.opacity(0.5))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
         }
         .padding(.horizontal, AppMetrics.spacing28)
         .padding(.vertical, AppMetrics.spacing20)
@@ -722,7 +746,7 @@ struct CreatePatientSheet: View {
                     .background(AppColors.borderSubtle.opacity(0.5))
                     .cornerRadius(AppMetrics.radiusMedium)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
 
             Button(action: { focused = nil; viewModel.submitCreatePatient() }) {
                 HStack(spacing: AppMetrics.spacing8) {
@@ -740,11 +764,12 @@ struct CreatePatientSheet: View {
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
                 .frame(height: AppMetrics.buttonHeight)
-                .background(AppColors.brandPrimary)
+                .background(viewModel.canSubmitCreate ? AppColors.brandPrimary : AppColors.borderSubtle)
                 .cornerRadius(AppMetrics.radiusMedium)
+                .animation(.easeInOut(duration: 0.2), value: viewModel.canSubmitCreate)
             }
-            .buttonStyle(.plain)
-            .disabled(viewModel.isCreating)
+            .buttonStyle(.hapticPlain)
+            .disabled(!viewModel.canSubmitCreate || viewModel.isCreating)
         }
         .padding(.horizontal, AppMetrics.spacing28)
         .padding(.vertical, AppMetrics.spacing20)
@@ -790,7 +815,7 @@ struct EditPatientSheet: View {
                                 systemImage: "person",
                                 text: $viewModel.editFirstName,
                                 errorMessage: viewModel.editFirstNameError,
-                                autocapitalization: .words
+                                autocapitalization: .characters
                             )
                             .focused($focused, equals: .firstName)
                             .onChange(of: viewModel.editFirstName) { _, _ in viewModel.editFirstNameError = nil }
@@ -802,7 +827,7 @@ struct EditPatientSheet: View {
                                 systemImage: "person",
                                 text: $viewModel.editLastName,
                                 errorMessage: viewModel.editLastNameError,
-                                autocapitalization: .words
+                                autocapitalization: .characters
                             )
                             .focused($focused, equals: .lastName)
                             .onChange(of: viewModel.editLastName) { _, _ in viewModel.editLastNameError = nil }
@@ -859,7 +884,7 @@ struct EditPatientSheet: View {
                     .font(.system(size: 24))
                     .foregroundStyle(AppColors.textSecondary.opacity(0.5))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
         }
         .padding(.horizontal, AppMetrics.spacing28)
         .padding(.vertical, AppMetrics.spacing20)
@@ -878,7 +903,7 @@ struct EditPatientSheet: View {
                     .background(AppColors.borderSubtle.opacity(0.5))
                     .cornerRadius(AppMetrics.radiusMedium)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
 
             Button(action: { focused = nil; viewModel.submitEditPatient() }) {
                 HStack(spacing: AppMetrics.spacing8) {
@@ -899,7 +924,7 @@ struct EditPatientSheet: View {
                 .background(AppColors.brandPrimary)
                 .cornerRadius(AppMetrics.radiusMedium)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
             .disabled(viewModel.isUpdating)
         }
         .padding(.horizontal, AppMetrics.spacing28)
@@ -955,6 +980,45 @@ private struct CompactLabelStyle: LabelStyle {
             configuration.icon
             configuration.title
         }
+    }
+}
+
+// MARK: - Keyboard Shift Blocker
+//
+// UIHostingController sets additionalSafeAreaInsets.bottom = keyboardHeight inside
+// a UIKit animation block — this shifts the view even with .ignoresSafeArea(.keyboard).
+// Embedding a child UIViewController lets us intercept viewSafeAreaInsetsDidChange(),
+// which fires synchronously inside the same animation block. Wrapping the reset in
+// CATransaction(disableActions:true) makes it instant, overriding the animated shift.
+
+private struct KeyboardShiftBlocker: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> KeyboardBlockerVC { KeyboardBlockerVC() }
+    func updateUIViewController(_ vc: KeyboardBlockerVC, context: Context) {}
+}
+
+final class KeyboardBlockerVC: UIViewController {
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .clear
+        view.isUserInteractionEnabled = false
+    }
+
+    override func viewSafeAreaInsetsDidChange() {
+        super.viewSafeAreaInsetsDidChange()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        var vc: UIViewController? = parent
+        while let current = vc {
+            if current.additionalSafeAreaInsets.bottom != 0 {
+                current.additionalSafeAreaInsets.bottom = 0
+            }
+            if current.view.frame.origin.y != 0 {
+                current.view.frame.origin.y = 0
+            }
+            vc = current.parent
+        }
+        CATransaction.commit()
     }
 }
 

@@ -29,6 +29,9 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
     private let bleManager: vhiCVBleManager   // never replaced
     private var scanPending = false
     private var scanAfterDisconnect = false    // true = start scan once disConnect callback fires
+    // Incremented by disconnect() and each performScan() — lets in-flight checkBletooth
+    // callbacks detect that the scan was cancelled before they start a new scan.
+    private var scanGeneration: Int = 0
 
     override init() {
         bleManager = vhiCVBleManager()
@@ -72,38 +75,67 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
         }
     }
 
+    func stopScan() {
+        guard currentState == .searching || currentState == .connecting else { return }
+        scanGeneration += 1
+        bleManager.stopScan()
+        connectedDeviceName = nil
+        currentState = .disconnected
+        onConnectionStateChanged?(.disconnected)
+    }
+
     func disconnect() {
+        // Capture before we reset state — we need to know whether to call disConnect().
+        let wasBusy = currentState == .connected || currentState == .connecting
         scanPending = false
         scanAfterDisconnect = false
+        scanGeneration += 1          // invalidate any in-flight checkBletooth callbacks
         connectedDeviceName = nil
         bleManager.stopScan()
         bleManager.collectStop()
-        if currentState == .connected {
-            bleManager.disConnect { [weak self] _ in
-                DispatchQueue.main.async {
-                    self?.currentState = .disconnected
-                    self?.onConnectionStateChanged?(.disconnected)
-                }
-            }
-        } else {
-            currentState = .disconnected
-            onConnectionStateChanged?(.disconnected)
+        // Set .disconnected synchronously so any in-flight disconnectedError callback
+        // sees this state and skips auto-reconnect, preventing a zombie NSAVHCVConnect crash.
+        currentState = .disconnected
+        onConnectionStateChanged?(.disconnected)
+        if wasBusy {
+            // Abort the ongoing GATT handshake (.connecting) or clean up the active
+            // connection (.connected). Without this, the SDK fires disconnectedError
+            // after stopScan() which would restart the scan and create a new NSAVHCVConnect
+            // while CoreBluetooth still has didDiscoverPeripheral queued on the released one.
+            bleManager.disConnect { _ in }
         }
     }
 
     // MARK: - Private
 
     private func performScan() {
+        // Each call gets a new generation token. disconnect() also increments it.
+        // Any in-flight checkBletooth callback that sees a stale generation bails out,
+        // preventing it from firing startScan() after an explicit disconnect().
+        scanGeneration += 1
+        let myGeneration = scanGeneration
         connectedDeviceName = nil
         bleManager.stopScan()
         bleManager.checkBletooth { [weak self] status in
             guard let self else { return }
             DispatchQueue.main.async {
+                guard self.scanGeneration == myGeneration else { return }
+                guard self.currentState != .connected else { return }
                 if status == .OK {
                     self.scanPending = false
                     self.currentState = .searching
                     self.onConnectionStateChanged?(.searching)
-                    self.bleManager.startScan()
+                    // 250ms drain delay: CoreBluetooth queues didDiscoverPeripheral callbacks
+                    // asynchronously. If startScan() creates a new NSAVHCVConnect (new delegate)
+                    // while the old peripheral's callbacks are still queued, CB fires them on
+                    // the freed NSAVHCVConnect pointer → crash. The delay lets CB drain that
+                    // queue before a new delegate object exists.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+                        guard let self,
+                              self.scanGeneration == myGeneration,
+                              self.currentState == .searching else { return }
+                        self.bleManager.startScan()
+                    }
                 } else {
                     // BT not ready — wait for icvBleManagerBluetoothOn.
                     self.scanPending = true
@@ -186,10 +218,29 @@ extension BLEDeviceService: vhiCVBleManagerDelegate {
             case .disconnectedError:
                 // Connection failed — reset and auto-restart scan so user sees "Searching"
                 // rather than having to press Connect again.
+                //
+                // Guard: if disconnect() was already called explicitly (e.g. user pressed Back
+                // from RecordingView), currentState is already .disconnected. Skip auto-reconnect
+                // so we don't create a new NSAVHCVConnect → zombie crash on the queued callback.
+                //
+                // MUST call stopScan() before startScan(): without it the SDK creates a new
+                // NSAVHCVConnect delegate while CoreBluetooth still has a queued
+                // didDiscoverPeripheral addressed to the released instance → zombie crash.
+                // The 250ms delay lets CoreBluetooth drain that callback queue before the
+                // new scan (and new NSAVHCVConnect) is created.
+                guard self.currentState != .disconnected else { return }
                 self.connectedDeviceName = nil
                 self.currentState = .searching
                 self.onConnectionStateChanged?(.searching)
-                manager.startScan()
+                manager.stopScan()
+                self.scanGeneration += 1
+                let gen = self.scanGeneration
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+                    guard let self,
+                          self.scanGeneration == gen,
+                          self.currentState == .searching else { return }
+                    manager.startScan()
+                }
             case .disconnected, .lostDevice:
                 self.connectedDeviceName = nil
                 self.currentState = .disconnected

@@ -225,7 +225,7 @@ private struct SectionRow: View {
             .background(isSelected ? AppColors.brandPrimary.opacity(0.06) : Color.clear)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 }
 
@@ -457,10 +457,18 @@ private struct DisplaySection: View {
                     iconColor: AppColors.accentViolet,
                     title: L10n.Settings.Display.darkModeTitle,
                     subtitle: L10n.Settings.Display.darkModeSubtitle,
-                    isOn: $viewModel.darkModeEnabled,
+                    isOn: $viewModel.darkModeEnabled
+                )
+                ToggleRow(
+                    icon: "speaker.wave.2.fill",
+                    iconColor: AppColors.brandPrimary,
+                    title: "Tap Sound",
+                    subtitle: "Play a sound on every button tap",
+                    isOn: $viewModel.tapSoundEnabled,
                     showDivider: false
                 )
             }
+
         }
     }
 }
@@ -608,7 +616,7 @@ private struct DemoCodeSheet: View {
                             .background(AppColors.borderSubtle.opacity(0.5))
                             .clipShape(Circle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.hapticPlain)
                 }
                 .padding(.horizontal, AppMetrics.spacing40)
                 .padding(.top, AppMetrics.spacing32)

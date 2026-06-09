@@ -343,7 +343,7 @@ private struct AnalysisNavBar: View {
                     .background(AppColors.brandPrimary.opacity(0.1))
                     .clipShape(Circle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
             .padding(.leading, 12)
         }
         .padding(.horizontal, AppMetrics.spacing24)
@@ -363,7 +363,7 @@ private struct AnalysisNavBar: View {
             .background(AppColors.brandPrimary.opacity(0.1))
             .cornerRadius(AppMetrics.radiusMedium)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 
     private var patientInfo: some View {
@@ -516,7 +516,7 @@ private struct EmergencyChip: View {
 
     private var label: String {
         if let p = assignedPatient { return p.firstName + " " + p.lastName }
-        return "Emergency"
+        return "Rapid EKG"
     }
 }
 
@@ -551,7 +551,7 @@ private struct EmergencyPinOverlay: View {
                             .font(.system(size: 28))
                             .foregroundStyle(AppColors.textSecondary)
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.hapticPlain)
                 }
                 .padding(.bottom, AppMetrics.spacing24)
 
@@ -691,7 +691,7 @@ private struct EmergencyAssignPatientSheet: View {
                                 }
                                 .padding(.vertical, 4)
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.hapticPlain)
                         }
                     }
                     .listStyle(.plain)

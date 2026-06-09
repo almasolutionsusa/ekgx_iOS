@@ -15,6 +15,8 @@
 //
 
 import SwiftUI
+import AVFoundation
+import AVKit
 
 // MARK: - RecordingView
 
@@ -34,12 +36,11 @@ struct RecordingView: View {
                 RecordingNavBar(viewModel: viewModel)
                     .zIndex(1)
 
-                HStack(spacing: 0) {
+                ZStack {
                     waveformPanel
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
 
                     RecordingControlsPanel(viewModel: viewModel)
-                        .frame(width: 160)
                 }
             }
 
@@ -138,7 +139,7 @@ private struct RecordingNavBar: View {
             .background(AppColors.borderSubtle.opacity(0.5))
             .cornerRadius(AppMetrics.radiusMedium)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 
     private var patientInfo: some View {
@@ -249,110 +250,193 @@ private struct RecordingControlsPanel: View {
 
     let viewModel: RecordingViewModel
 
+    @State private var showLayoutPicker   = false
+    @State private var showDurationPicker = false
+    @State private var showVideoSheet     = false
+
+    // Beep
+    @State private var isBeeping:  Bool = false
+    @State private var beepPlayer: AVAudioPlayer?
+    @State private var beepTimer:  Timer?
+    private let beepGap: TimeInterval = 1.5
+
+    @Environment(\.colorScheme) private var colorScheme
+
+    // Adaptive frosted-glass surface: white tint on dark canvas, dark tint on light canvas.
+    private var floatingSurface: Color {
+        colorScheme == .dark ? Color.white.opacity(0.12) : Color.black.opacity(0.25)
+    }
+    private var floatingBorder: Color {
+        colorScheme == .dark ? Color.white.opacity(0.25) : Color.black.opacity(0.18)
+    }
+
     var body: some View {
-        VStack(spacing: 0) {
-            // Pickers
-            VStack(spacing: AppMetrics.spacing12) {
-                leadLayoutSection
-                panelDivider
-                durationSection
-            }
-            .padding(.horizontal, AppMetrics.spacing12)
-            .padding(.top, AppMetrics.spacing14)
+        GeometryReader { geo in
+            let shortSide  = min(geo.size.width, geo.size.height)
+            let btnSize    = min(shortSide * 0.15, 60.0)
+            // Create-button width mirrors the Medix 2 formula: shortSide * 0.30 * 0.5
+            let createW    = max(shortSide * 0.15, btnSize * 2.0)
+            // Each duration chip when expanded — four chips fill the same total width
+            let chipW      = max(0.0, (shortSide * 0.30 - 12.0) / 4.0)
 
-            Spacer()
-
-            // Progress indicator
-            if viewModel.recordingState == .recording {
-                Group {
-                    if viewModel.selectedDuration == .continuous {
-                        continuousTimer
-                    } else {
-                        progressRing
-                    }
+            ZStack {
+                // ── TOP-RIGHT: layout picker + beep + reset ──────────────
+                VStack(alignment: .trailing, spacing: 12) {
+                    layoutGroup(size: btnSize)
+                    beepBtn(size: btnSize)
+                    resetBtn(size: btnSize)
                 }
-                .padding(.bottom, AppMetrics.spacing8)
-            }
+                .padding(.top, 20)
+                .padding(.trailing, 14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
-            Spacer()
-
-            // Action buttons
-            VStack(spacing: AppMetrics.spacing8) {
-                resetButton
-                recordButton
-                if let name = viewModel.connectedDeviceName {
-                    Text(name)
-                        .font(.system(size: 9))
-                        .foregroundStyle(AppColors.textSecondary)
-                        .lineLimit(1)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                // ── BOTTOM-RIGHT: video + duration + record/stop ─────────
+                VStack(alignment: .trailing, spacing: 8) {
+                    videoBtn(size: btnSize)
+                    durationGroup(btnSize: btnSize, chipW: chipW)
+                    createButton(size: btnSize, width: createW)
                 }
+                .padding(.bottom, 14)
+                .padding(.trailing, 14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
             }
-            .padding(.horizontal, AppMetrics.spacing12)
-            .padding(.bottom, AppMetrics.spacing14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .background(AppColors.surfaceCard)
-        .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(width: 1), alignment: .leading)
-    }
-
-    private var panelDivider: some View {
-        Rectangle()
-            .fill(AppColors.borderSubtle.opacity(0.6))
-            .frame(height: 1)
-    }
-
-    private var leadLayoutSection: some View {
-        controlSection(title: L10n.Recording.Controls.leadLayout) {
-            VStack(spacing: AppMetrics.spacing6) {
-                ForEach(ECGLeadLayout.allCases, id: \.self) { layout in
-                    controlChip(title: layout.rawValue, isSelected: viewModel.selectedLayout == layout) {
-                        viewModel.selectedLayout = layout
-                    }
-                }
-            }
-        }
-    }
-
-    private var durationSection: some View {
-        controlSection(title: L10n.Recording.Controls.duration) {
-            VStack(spacing: AppMetrics.spacing6) {
-                ForEach(RecordingDuration.allCases, id: \.self) { duration in
-                    controlChip(title: duration.rawValue, isSelected: viewModel.selectedDuration == duration) {
-                        viewModel.selectedDuration = duration
-                    }
-                }
-            }
-        }
-    }
-
-    private var resetButton: some View {
-        Button {
+        // Force dark appearance: the waveform canvas is always black,
+        // so all AppColors tokens must resolve their dark variants here.
+        .environment(\.colorScheme, .dark)
+        .animation(.easeInOut(duration: 0.25), value: viewModel.recordingState)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showLayoutPicker)
+        .animation(.spring(response: 0.3, dampingFraction: 0.8), value: showDurationPicker)
+        .onChange(of: viewModel.selectedDuration) { _, _ in
             viewModel.resetRecording()
             viewModel.startRecording()
-        } label: {
-            HStack(spacing: AppMetrics.spacing6) {
-                Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 11, weight: .semibold))
-                Text(L10n.Recording.Controls.reset)
-                    .font(.system(size: 12, weight: .semibold))
-            }
-            .foregroundStyle(AppColors.textSecondary)
-            .frame(maxWidth: .infinity)
-            .frame(height: 38)
-            .background(AppColors.surfaceBackground)
-            .cornerRadius(AppMetrics.radiusSmall)
-            .overlay(
-                RoundedRectangle(cornerRadius: AppMetrics.radiusSmall)
-                    .strokeBorder(AppColors.borderSubtle, lineWidth: 1)
-            )
-            .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
-        .disabled(viewModel.recordingState == .idle)
-        .opacity(viewModel.recordingState == .idle ? 0.4 : 1)
+        .onDisappear { stopBeep() }
+        .sheet(isPresented: $showVideoSheet) {
+            LeadInstructionsVideoModal(gender: viewModel.patient.gender)
+        }
     }
 
-    private var recordButton: some View {
+    // MARK: - Layout group
+
+    private func layoutGroup(size: CGFloat) -> some View {
+        VStack(alignment: .trailing, spacing: 4) {
+            iconBtn(icon: "square.grid.3x3", size: size) {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                    showLayoutPicker.toggle()
+                    if showLayoutPicker { showDurationPicker = false }
+                }
+            }
+
+            if showLayoutPicker {
+                VStack(spacing: 4) {
+                    ForEach(ECGLeadLayout.allCases, id: \.self) { layout in
+                        let sel = viewModel.selectedLayout == layout
+                        Button {
+                            viewModel.selectedLayout = layout
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.8)) {
+                                showLayoutPicker = false
+                            }
+                        } label: {
+                            Text(layoutShort(layout))
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(Color.primary)
+                                .frame(width: size, height: size)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(sel ? AnyShapeStyle(AppColors.brandPrimary) : AnyShapeStyle(floatingSurface))
+                                )
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(floatingBorder, lineWidth: 0.5))
+                        }
+                        .buttonStyle(.hapticPlain)
+                    }
+                }
+                .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+        }
+    }
+
+    // MARK: - Beep toggle
+
+    private func beepBtn(size: CGFloat) -> some View {
+        Button { toggleBeep() } label: {
+            Image(systemName: isBeeping ? "speaker.slash.fill" : "speaker.fill")
+                .font(.title3)
+                .foregroundStyle(Color.primary)
+                .frame(width: size, height: size)
+                .background(RoundedRectangle(cornerRadius: 14).fill(floatingSurface))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(floatingBorder, lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+        }
+        .buttonStyle(.hapticPlain)
+    }
+
+    // MARK: - Video instructions
+
+    private func videoBtn(size: CGFloat) -> some View {
+        iconBtn(icon: "play.rectangle.fill", size: size) {
+            showVideoSheet = true
+        }
+    }
+
+    // MARK: - Reset
+
+    private func resetBtn(size: CGFloat) -> some View {
+        iconBtn(icon: "arrow.counterclockwise.circle.fill", size: size) {
+            viewModel.resetRecording()
+            viewModel.startRecording()
+        }
+    }
+
+    // MARK: - Duration group
+
+    private func durationGroup(btnSize: CGFloat, chipW: CGFloat) -> some View {
+        Group {
+            if showDurationPicker {
+                HStack(spacing: 4) {
+                    ForEach(RecordingDuration.allCases, id: \.self) { dur in
+                        let sel = viewModel.selectedDuration == dur
+                        Button {
+                            viewModel.selectedDuration = dur
+                            withAnimation { showDurationPicker = false }
+                        } label: {
+                            Text(durationShort(dur))
+                                .font(.title3.weight(.bold))
+                                .foregroundStyle(Color.primary)
+                                .frame(width: chipW, height: btnSize)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .fill(sel ? AnyShapeStyle(AppColors.brandPrimary) : AnyShapeStyle(floatingSurface))
+                                )
+                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(floatingBorder, lineWidth: 0.5))
+                                .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                        }
+                        .buttonStyle(.hapticPlain)
+                    }
+                }
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            } else {
+                Button {
+                    withAnimation { showDurationPicker = true; showLayoutPicker = false }
+                } label: {
+                    Text(durationShort(viewModel.selectedDuration))
+                        .font(.title3.weight(.bold))
+                        .foregroundStyle(Color.primary)
+                        .frame(width: btnSize, height: btnSize)
+                        .background(RoundedRectangle(cornerRadius: 12).fill(floatingSurface))
+                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(floatingBorder, lineWidth: 0.5))
+                        .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+                }
+                .buttonStyle(.hapticPlain)
+            }
+        }
+    }
+
+    // MARK: - Create / Stop button (with progress fill)
+
+    private func createButton(size: CGFloat, width: CGFloat) -> some View {
         Button {
             switch viewModel.recordingState {
             case .idle:      viewModel.startRecording()
@@ -360,113 +444,119 @@ private struct RecordingControlsPanel: View {
             case .done:      viewModel.showPreviewSheet = true
             }
         } label: {
-            HStack(spacing: AppMetrics.spacing6) {
-                Image(systemName: recordButtonIcon)
-                    .font(.system(size: 11, weight: .semibold))
-                Text(recordButtonLabel)
-                    .font(.system(size: 12, weight: .semibold))
+            ZStack(alignment: .leading) {
+                // Frosted base
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(floatingSurface)
+
+                // Accent / success fill growing left→right
+                GeometryReader { g in
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(createFillColor)
+                        .frame(width: g.size.width * createFillFraction)
+                        .animation(.linear(duration: 0.3), value: createFillFraction)
+                }
+                .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                Text(createLabel)
+                    .font(.title3.weight(.bold))
+                    .foregroundStyle(Color.primary)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .foregroundStyle(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 38)
-            .background(recordButtonColor)
-            .cornerRadius(AppMetrics.radiusSmall)
-            .contentShape(Rectangle())
+            .frame(width: width, height: size)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .overlay(RoundedRectangle(cornerRadius: 12).stroke(floatingBorder, lineWidth: 0.5))
+            .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
         .animation(.easeInOut(duration: 0.2), value: viewModel.recordingState)
     }
 
-    private var recordButtonIcon: String {
+    // MARK: - Icon button helper
+
+    private func iconBtn(icon: String, size: CGFloat, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.title3)
+                .foregroundStyle(Color.primary)
+                .frame(width: size, height: size)
+                .background(RoundedRectangle(cornerRadius: 14).fill(floatingSurface))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(floatingBorder, lineWidth: 0.5))
+                .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
+        }
+        .buttonStyle(.hapticPlain)
+    }
+
+    // MARK: - Helpers
+
+    private func layoutShort(_ l: ECGLeadLayout) -> String {
+        l.rawValue.filter { !$0.isWhitespace }
+    }
+
+    private func durationShort(_ d: RecordingDuration) -> String {
+        d == .continuous ? "∞" : d.rawValue.filter { !$0.isWhitespace }
+    }
+
+    private var createFillColor: Color {
+        viewModel.isBufferReady ? AppColors.statusSuccess : AppColors.brandPrimary
+    }
+
+    private var createFillFraction: Double {
         switch viewModel.recordingState {
-        case .idle:      return "record.circle"
-        case .recording: return "stop.circle.fill"
-        case .done:      return "eye.fill"
+        case .idle:
+            return 0.0
+        case .recording:
+            return viewModel.selectedDuration == .continuous ? 1.0 : viewModel.progressFraction
+        case .done:
+            return 1.0
         }
     }
 
-    private var recordButtonLabel: String {
+    private var createLabel: String {
         switch viewModel.recordingState {
         case .idle:      return L10n.Recording.Controls.record
-        case .recording: return L10n.Recording.Controls.stop
+        case .recording: return viewModel.isBufferReady ? L10n.Recording.Controls.viewResult : L10n.Recording.Controls.stop
         case .done:      return L10n.Recording.Controls.viewResult
         }
     }
 
-    private var recordButtonColor: Color {
-        switch viewModel.recordingState {
-        case .idle:      return AppColors.brandPrimary
-        case .recording: return AppColors.statusCritical
-        case .done:      return AppColors.statusSuccess
+    // MARK: - Beep logic
+
+    private func toggleBeep() {
+        if isBeeping { stopBeep(); return }
+        if beepPlayer == nil, let p = makeBeepPlayer() { beepPlayer = p }
+        playBeepOnce()
+        beepTimer = Timer.scheduledTimer(withTimeInterval: beepGap, repeats: true) { _ in
+            playBeepOnce()
         }
+        isBeeping = true
     }
 
-    private var continuousTimer: some View {
-        VStack(spacing: AppMetrics.spacing2) {
-            Text(viewModel.elapsedFormatted)
-                .font(AppTypography.title3)
-                .foregroundStyle(AppColors.textPrimary)
-                .monospacedDigit()
-            Text(L10n.Recording.Controls.elapsed)
-                .font(.system(size: 10))
-                .foregroundStyle(AppColors.textSecondary)
-        }
-        .frame(width: 64, height: 64)
+    private func stopBeep() {
+        beepTimer?.invalidate()
+        beepTimer = nil
+        beepPlayer?.stop()
+        isBeeping = false
     }
 
-    private var progressRing: some View {
-        ZStack {
-            Circle()
-                .stroke(AppColors.borderSubtle, lineWidth: 3)
-            Circle()
-                .trim(from: 0, to: viewModel.progressFraction)
-                .stroke(AppColors.brandPrimary, style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-                .animation(.linear(duration: 1), value: viewModel.progressFraction)
-            VStack(spacing: 1) {
-                Text(viewModel.elapsedFormatted)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(AppColors.textPrimary)
-                    .monospacedDigit()
-                Text(L10n.Recording.Controls.elapsed)
-                    .font(.system(size: 9))
-                    .foregroundStyle(AppColors.textSecondary)
-            }
-        }
-        .frame(width: 64, height: 64)
+    private func playBeepOnce() {
+        beepPlayer?.currentTime = 0
+        beepPlayer?.play()
     }
 
-    private func controlSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
-            Text(title)
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(AppColors.textSecondary)
-                .tracking(0.5)
-                .textCase(.uppercase)
-            content()
+    private func makeBeepPlayer() -> AVAudioPlayer? {
+        guard let asset = NSDataAsset(name: "BeepSound") else { return nil }
+        do {
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+            try session.setActive(true)
+            let player = try AVAudioPlayer(data: asset.data)
+            player.numberOfLoops = 0
+            player.prepareToPlay()
+            return player
+        } catch {
+            return nil
         }
-    }
-
-    private func controlChip(title: String, isSelected: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 11, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(isSelected ? AppColors.brandPrimary : AppColors.textSecondary)
-                .frame(maxWidth: .infinity)
-                .frame(height: 28)
-                .background(isSelected ? AppColors.brandPrimary.opacity(0.1) : Color.clear)
-                .cornerRadius(6)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .strokeBorder(
-                            isSelected ? AppColors.brandPrimary.opacity(0.4) : AppColors.borderSubtle.opacity(0.6),
-                            lineWidth: 1
-                        )
-                )
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
 }
 
@@ -605,7 +695,7 @@ private struct RecordingConnectOverlay: View {
                     .font(.system(size: 28))
                     .foregroundStyle(AppColors.textSecondary)
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
         }
     }
 
@@ -625,9 +715,90 @@ private struct RecordingConnectOverlay: View {
             Button(L10n.Common.cancel, action: viewModel.cancelConnect)
                 .font(AppTypography.callout)
                 .foregroundStyle(AppColors.textSecondary)
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
                 .padding(.top, AppMetrics.spacing4)
         }
+    }
+}
+
+// MARK: - Lead Instructions Video Modal
+
+private struct LeadInstructionsVideoModal: View {
+
+    @Environment(\.dismiss) private var dismiss
+    let gender: String
+
+    private var assetName: String {
+        gender.lowercased() == "female" ? "LeadPlacementFemale" : "LeadPlacementMale"
+    }
+
+    @State private var aspectRatio: CGFloat = 16.0 / 9.0
+
+    private var detentHeight: CGFloat {
+        max(120, UIScreen.main.bounds.width / aspectRatio)
+    }
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Color.black.ignoresSafeArea()
+            LocalAssetVideoPlayer(assetName: assetName) { ratio in
+                aspectRatio = ratio
+            }
+            Button { dismiss() } label: {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.title)
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(.white, .black.opacity(0.6))
+            }
+            .padding(12)
+        }
+        .presentationDetents([.height(detentHeight)])
+        .presentationDragIndicator(.hidden)
+    }
+}
+
+private struct LocalAssetVideoPlayer: View {
+
+    let assetName: String
+    var onAspectRatio: ((CGFloat) -> Void)? = nil
+
+    @State private var player: AVPlayer?
+
+    var body: some View {
+        Group {
+            if let player {
+                VideoPlayer(player: player).onAppear { player.play() }
+            } else {
+                ProgressView()
+            }
+        }
+        .onAppear { loadIfNeeded() }
+    }
+
+    private func loadIfNeeded() {
+        guard player == nil,
+              let asset = NSDataAsset(name: assetName) else { return }
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("\(assetName).mp4")
+        do {
+            if !FileManager.default.fileExists(atPath: tempURL.path) {
+                try asset.data.write(to: tempURL)
+            }
+            let urlAsset = AVURLAsset(url: tempURL)
+            player = AVPlayer(playerItem: AVPlayerItem(asset: urlAsset))
+            Task {
+                do {
+                    let tracks = try await urlAsset.loadTracks(withMediaType: .video)
+                    guard let track = tracks.first else { return }
+                    let size = try await track.load(.naturalSize)
+                    let transform = try await track.load(.preferredTransform)
+                    let oriented = size.applying(transform)
+                    let w = abs(oriented.width), h = abs(oriented.height)
+                    guard h > 0 else { return }
+                    await MainActor.run { onAspectRatio?(w / h) }
+                } catch {}
+            }
+        } catch {}
     }
 }
 

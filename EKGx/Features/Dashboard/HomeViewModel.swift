@@ -52,7 +52,6 @@ final class HomeViewModel {
 
     // MARK: - UI State
 
-    var isMenuVisible: Bool = false
     var deviceState: DeviceConnectionState = .disconnected
 
     // MARK: - Dependencies
@@ -89,21 +88,16 @@ final class HomeViewModel {
         deviceService.onConnectionStateChanged = { [weak self] state in
             withAnimation { self?.deviceState = state }
         }
-        if router.reopenMenuOnBack {
-            router.reopenMenuOnBack = false
-            openMenu()
-        }
     }
 
     // MARK: - Menu
 
     func openMenu() {
-        withAnimation(.easeInOut(duration: 0.28)) { isMenuVisible = true }
+        router.menuReturnRoute = .dashboard
+        router.navigate(to: .menu)
     }
 
-    func closeMenu() {
-        withAnimation(.easeInOut(duration: 0.24)) { isMenuVisible = false }
-    }
+    func confirmLogout() { logout() }
 
     // MARK: - Device
 
@@ -135,38 +129,18 @@ final class HomeViewModel {
     // MARK: - Feature Navigation
 
     func navigateToRecording() {
-        closeMenu()
         router.navigate(to: .patientSelection)
     }
 
     func navigateToPatients() {
-        closeMenu()
         router.navigate(to: .patientList)
     }
 
     func navigateToCloud() {
-        closeMenu()
         router.navigate(to: .cloudReports)
     }
 
-    // MARK: - Side Menu Navigation
-
-    func navigateToSettings()          { navigateFromMenu(to: .settings) }
-    func navigateToMyAccount()         { navigateFromMenu(to: .myAccount) }
-    func navigateToSupport()           { navigateFromMenu(to: .support) }
-    func navigateToFAQ()               { navigateFromMenu(to: .faq) }
-    func navigateToIndicationsForUse() { navigateFromMenu(to: .indicationsForUse) }
-
-    private func navigateFromMenu(to route: AppRoute) {
-        closeMenu()
-        router.reopenMenuOnBack = true
-        router.navigate(to: route)
-    }
-
-    func confirmLogout() { logout() }
-
     func logout() {
-        closeMenu()
         diContainer.autoLockManager.stop()
         Task { try? await diContainer.authService.logout() }
         router.navigate(to: .login)

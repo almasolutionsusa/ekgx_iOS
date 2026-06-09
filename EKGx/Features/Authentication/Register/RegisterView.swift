@@ -63,30 +63,6 @@ private struct RegisterBrandingPanel: View {
             )
 
             VStack(alignment: .leading, spacing: 0) {
-                Spacer()
-
-                VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
-                            .fill(AppColors.brandPrimary)
-                            .frame(width: 72, height: 72)
-                        Image(systemName: "person.badge.plus")
-                            .font(.system(size: 32, weight: .semibold))
-                            .foregroundStyle(.white)
-                    }
-
-                    VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-                        Text(L10n.Auth.Register.title)
-                            .font(AppTypography.title1)
-                            .foregroundStyle(AppColors.textOnDark)
-                        Text(L10n.Auth.Register.subtitle)
-                            .font(AppTypography.callout)
-                            .foregroundStyle(AppColors.textOnDark.opacity(0.7))
-                    }
-                }
-
-                Spacer()
-
                 Button(action: onBack) {
                     HStack(spacing: AppMetrics.spacing8) {
                         Image(systemName: "chevron.left")
@@ -96,7 +72,24 @@ private struct RegisterBrandingPanel: View {
                     }
                     .foregroundStyle(AppColors.textOnDark.opacity(0.6))
                 }
-                .padding(.bottom, AppMetrics.spacing48)
+                .padding(.top, AppMetrics.spacing48)
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+                    VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
+                        AppImages.logo
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 60)
+
+                        Text(L10n.Auth.Register.subtitle)
+                            .font(AppTypography.callout)
+                            .foregroundStyle(AppColors.textOnDark.opacity(0.7))
+                    }
+                }
+
+                Spacer()
             }
             .padding(.horizontal, AppMetrics.spacing40)
         }
@@ -164,16 +157,13 @@ private struct RegisterFormPanel: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
 
-                Spacer(minLength: AppMetrics.spacing40)
+                Spacer(minLength: AppMetrics.spacing20)
 
                 // Header
                 VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
                     Text(L10n.Auth.Register.title)
-                        .font(AppTypography.title1)
+                        .font(AppTypography.title2)
                         .foregroundStyle(AppColors.textPrimary)
-                    Text(L10n.Auth.Register.subtitle)
-                        .font(AppTypography.callout)
-                        .foregroundStyle(AppColors.textSecondary)
                 }
 
                 Spacer(minLength: AppMetrics.spacing24)
@@ -193,12 +183,11 @@ private struct RegisterFormPanel: View {
                     // First + Last name
                     HStack(spacing: AppMetrics.spacing14) {
                         ETextField(
-                            label: L10n.Auth.Register.firstNameLabel,
                             placeholder: L10n.Auth.Register.firstNamePlaceholder,
                             systemImage: "person",
                             text: $viewModel.firstName,
                             errorMessage: viewModel.firstNameError,
-                            autocapitalization: .words
+                            autocapitalization: .characters
                         )
                         .focused($focus, equals: .firstName)
                         .id(RegisterViewModel.Field.firstName)
@@ -206,12 +195,11 @@ private struct RegisterFormPanel: View {
                         .onSubmit { focus = .lastName }
 
                         ETextField(
-                            label: L10n.Auth.Register.lastNameLabel,
                             placeholder: L10n.Auth.Register.lastNamePlaceholder,
                             systemImage: nil,
                             text: $viewModel.lastName,
                             errorMessage: viewModel.lastNameError,
-                            autocapitalization: .words
+                            autocapitalization: .characters
                         )
                         .focused($focus, equals: .lastName)
                         .id(RegisterViewModel.Field.lastName)
@@ -221,7 +209,6 @@ private struct RegisterFormPanel: View {
 
                     // Email
                     ETextField(
-                        label: L10n.Auth.Register.emailLabel,
                         placeholder: L10n.Auth.Register.emailPlaceholder,
                         systemImage: "envelope",
                         text: $viewModel.email,
@@ -236,7 +223,6 @@ private struct RegisterFormPanel: View {
 
                     // Confirm Email
                     ETextField(
-                        label: L10n.Auth.Register.confirmEmailLabel,
                         placeholder: L10n.Auth.Register.confirmEmailPlaceholder,
                         systemImage: "checkmark.seal",
                         text: $viewModel.confirmEmail,
@@ -251,7 +237,6 @@ private struct RegisterFormPanel: View {
 
                     // Password
                     ESecureField(
-                        label: L10n.Auth.Register.passwordLabel,
                         placeholder: L10n.Auth.Register.passwordPlaceholder,
                         text: $viewModel.password,
                         errorMessage: viewModel.passwordError
@@ -263,7 +248,6 @@ private struct RegisterFormPanel: View {
 
                     // Confirm Password
                     ESecureField(
-                        label: L10n.Auth.Register.confirmPasswordLabel,
                         placeholder: L10n.Auth.Register.confirmPasswordPlaceholder,
                         text: $viewModel.confirmPassword,
                         errorMessage: viewModel.confirmPasswordError
@@ -274,7 +258,7 @@ private struct RegisterFormPanel: View {
                     .onSubmit { focus = nil; viewModel.register() }
                 }
 
-                Spacer(minLength: AppMetrics.spacing32)
+                Spacer(minLength: AppMetrics.spacing14)
 
                 // CTA
                 PrimaryButton(
@@ -285,21 +269,18 @@ private struct RegisterFormPanel: View {
                     viewModel.register()
                 }
 
-                // Back to login
-                HStack {
-                    Spacer()
-                    Text(L10n.Auth.Register.haveAccount)
-                        .font(AppTypography.footnote)
-                        .foregroundStyle(AppColors.textSecondary)
-                    Button(L10n.Auth.Register.signInLink) {
-                        viewModel.navigateToLogin()
-                    }
-                    .font(AppTypography.footnote)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(AppColors.brandPrimary)
-                    Spacer()
-                }
-                .padding(.top, AppMetrics.spacing20)
+                // Terms notice
+                (
+                    Text(L10n.Auth.Register.termsPrefix)
+                    + Text(L10n.Auth.Register.termsLink).bold()
+                    + Text(L10n.Auth.Register.termsSeparator)
+                    + Text(L10n.Auth.Register.privacyLink).bold()
+                )
+                .font(AppTypography.footnote)
+                .foregroundStyle(AppColors.textSecondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, AppMetrics.spacing8)
 
                 // Extra scroll runway so bottom fields clear the keyboard
                 Spacer(minLength: 400)

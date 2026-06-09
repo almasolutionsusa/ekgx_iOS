@@ -94,7 +94,7 @@ struct AnalysisControlsMenu: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
         .disabled(disabled)
     }
 }
@@ -149,7 +149,7 @@ struct VisualizationMenuSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 }
 

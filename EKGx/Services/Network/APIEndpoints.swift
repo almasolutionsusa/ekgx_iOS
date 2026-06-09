@@ -50,6 +50,12 @@ enum APIEndpoints {
         static let upload = "/api/ekg/upload"
     }
 
+    // MARK: - Vitals
+
+    enum Vitals {
+        static let upload = "/api/observations"
+    }
+
     // MARK: - Patients
 
     enum Patients {

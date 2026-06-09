@@ -69,7 +69,7 @@ struct DeviceConnectButton: View {
                     )
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
         .animation(.easeInOut(duration: 0.3), value: state)
         .onAppear {
             if state == .searching || state == .connecting { searchPulse = true }

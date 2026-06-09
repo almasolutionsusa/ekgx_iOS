@@ -28,6 +28,8 @@ enum AppRoute: Hashable, Equatable {
     case faq
     case indicationsForUse
     case patientExams
+    case waitingList
+    case menu
 }
 
 // MARK: - AppRouter
@@ -38,14 +40,16 @@ final class AppRouter {
 
     var currentRoute: AppRoute = .login
     var navigationPath: NavigationPath = NavigationPath()
-    /// Set to true by screens opened from the side menu so Back re-opens it.
-    var reopenMenuOnBack: Bool = false
     /// Route to return to when the user presses Back from Analysis. Defaults to .vitals.
     var analysisReturnRoute: AppRoute = .vitals
     /// Route to return to when the user exits the Recording screen. Defaults to .vitals.
     var recordingReturnRoute: AppRoute = .vitals
+    /// Route to return to when the user presses Back from Vitals. Defaults to .patientSelection.
+    var vitalsReturnRoute: AppRoute = .patientSelection
     /// Route to return to when the user presses Back from PatientExams. Defaults to .vitals.
     var patientExamsReturnRoute: AppRoute = .vitals
+    /// The screen that opened the full-screen menu — used by MenuView's close/back action.
+    var menuReturnRoute: AppRoute = .patientSelection
 
     // MARK: - Navigation
 

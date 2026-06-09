@@ -312,7 +312,7 @@ private struct OfflinePatientRow: View {
                     )
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
         .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
 }
@@ -334,7 +334,7 @@ private struct OfflineCreatePatientSheet: View {
                         text: $viewModel.createFirstName,
                         errorMessage: viewModel.createFirstNameError,
                         textContentType: .givenName,
-                        autocapitalization: .words
+                        autocapitalization: .characters
                     )
                     .onChange(of: viewModel.createFirstName) { _, _ in viewModel.createFirstNameError = nil }
 
@@ -345,7 +345,7 @@ private struct OfflineCreatePatientSheet: View {
                         text: $viewModel.createLastName,
                         errorMessage: viewModel.createLastNameError,
                         textContentType: .familyName,
-                        autocapitalization: .words
+                        autocapitalization: .characters
                     )
                     .onChange(of: viewModel.createLastName) { _, _ in viewModel.createLastNameError = nil }
 

@@ -122,7 +122,9 @@ final class RecordingViewModel {
         #endif
         connectSheetState = deviceService.currentState
         wireConnectionCallback()
-        if deviceService.currentState != .connected {
+        if deviceService.currentState == .connected {
+            startRecording()
+        } else {
             showConnectSheet = true
             deviceService.connect()
         }
@@ -180,6 +182,7 @@ final class RecordingViewModel {
                 case .connected where self.showConnectSheet:
                     self.connectSheetDeviceName = self.deviceService.connectedDeviceName
                     self.showConnectSheet = false
+                    self.startRecording()
                 case .disconnected where !self.isReconnecting && !self.showConnectSheet:
                     self.stopTimers()
                     self.startReconnectFlow()
@@ -208,10 +211,6 @@ final class RecordingViewModel {
         countTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.elapsedSeconds += 1
-            if self.selectedDuration != .continuous,
-               self.elapsedSeconds >= self.selectedDuration.recordSeconds {
-                self.finishRecording()
-            }
         }
     }
 
@@ -234,6 +233,7 @@ final class RecordingViewModel {
     }
 
     func confirmExit() {
+        nilOutCallbacks()
         resetRecording()
         let dest = router.recordingReturnRoute
         router.recordingReturnRoute = .patientSelection
@@ -272,6 +272,12 @@ final class RecordingViewModel {
 
     var isReadyToRecord: Bool {
         deviceService.currentState == .connected
+    }
+
+    // True once the rolling buffer has accumulated the full selected duration
+    var isBufferReady: Bool {
+        guard selectedDuration != .continuous else { return true }
+        return elapsedSeconds >= selectedDuration.seconds
     }
 
     var connectedDeviceName: String? {
@@ -343,10 +349,6 @@ final class RecordingViewModel {
             countTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
                 guard let self else { return }
                 self.elapsedSeconds += 1
-                if self.selectedDuration != .continuous,
-                   self.elapsedSeconds >= self.selectedDuration.recordSeconds {
-                    self.finishRecording()
-                }
             }
         }
     }

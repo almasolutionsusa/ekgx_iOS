@@ -30,7 +30,7 @@ struct ErrorToastView: View {
                     .font(.system(size: 13, weight: .bold))
                     .foregroundStyle(.white.opacity(0.8))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.hapticPlain)
         }
         .padding(.horizontal, 18)
         .padding(.vertical, 14)

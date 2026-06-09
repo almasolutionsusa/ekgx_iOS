@@ -37,22 +37,6 @@ struct HomeView: View {
                 HomeNavigationBar(viewModel: viewModel)
                 homeContent.frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-
-            // Side menu — always on top
-            SideMenuView(
-                userFullName: viewModel.currentUserFullName,
-                userEmail: viewModel.currentUserEmail,
-                userInitials: viewModel.userInitials,
-                userRoleDisplayName: viewModel.userRoleDisplayName,
-                isVisible: viewModel.isMenuVisible,
-                onDismiss:           { viewModel.closeMenu() },
-                onSettings:          { viewModel.navigateToSettings() },
-                onMyAccount:         { viewModel.navigateToMyAccount() },
-                onSupport:           { viewModel.navigateToSupport() },
-                onFAQ:               { viewModel.navigateToFAQ() },
-                onIndicationsForUse: { viewModel.navigateToIndicationsForUse() },
-                onLogout:            { viewModel.confirmLogout() }
-            )
         }
         .onAppear {
             viewModel.activate()
@@ -140,7 +124,7 @@ private struct HomeNavigationBar: View {
                         .padding(.vertical, 6)
                         .background(AppColors.brandPrimary.opacity(0.1))
                         .cornerRadius(AppMetrics.radiusMedium)
-                        .buttonStyle(.plain)
+                        .buttonStyle(.hapticPlain)
                 }
                 DeviceConnectButton(
                     state: viewModel.deviceState,
@@ -194,7 +178,7 @@ private struct HomeNavigationBar: View {
             .background(AppColors.statusCritical.opacity(0.08))
             .cornerRadius(AppMetrics.radiusMedium)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 }
 

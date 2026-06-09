@@ -12,7 +12,7 @@ struct ESecureField: View {
 
     // MARK: - Properties
 
-    let label: String
+    var label: String? = nil
     let placeholder: String
     @Binding var text: String
     var errorMessage: String?
@@ -26,11 +26,13 @@ struct ESecureField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             // Label
-            Text(label)
-                .font(AppTypography.captionBold)
-                .foregroundStyle(AppColors.textSecondary)
-                .textCase(.uppercase)
-                .tracking(0.5)
+            if let label {
+                Text(label)
+                    .font(AppTypography.captionBold)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+            }
 
             // Input container
             HStack(spacing: AppMetrics.spacing12) {

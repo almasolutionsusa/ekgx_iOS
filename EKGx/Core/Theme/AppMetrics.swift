@@ -38,8 +38,8 @@ struct AppMetrics {
 
     // MARK: - Component Sizes — iPad-optimised touch targets
 
-    static let buttonHeight:    CGFloat = 64
-    static let textFieldHeight: CGFloat = 64
+    static let buttonHeight:    CGFloat = 55
+    static let textFieldHeight: CGFloat = 55
     static let iconSizeSmall:   CGFloat = 20
     static let iconSizeMedium:  CGFloat = 28
     static let iconSizeLarge:   CGFloat = 38

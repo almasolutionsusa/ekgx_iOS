@@ -41,7 +41,7 @@ struct PrimaryButton: View {
             .frame(height: AppMetrics.buttonHeight)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
         .disabled(isDisabled || isLoading)
         .animation(.easeInOut(duration: 0.15), value: isLoading)
     }

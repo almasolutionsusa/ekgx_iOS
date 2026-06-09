@@ -48,6 +48,13 @@ final class DemoDeviceService: DeviceServiceProtocol {
         onConnectionStateChanged?(.disconnected)
     }
 
+    func stopScan() {
+        // Demo device has no real scan; treat same as disconnect if searching.
+        guard currentState == .searching else { return }
+        currentState = .disconnected
+        onConnectionStateChanged?(.disconnected)
+    }
+
     func reconfigureFilters() {
         guard currentState == .connected else { return }
         configureFilters()

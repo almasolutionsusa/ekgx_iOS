@@ -10,7 +10,7 @@ import SwiftUI
 
 struct DOBTextField: View {
 
-    let label: String
+    var label: String? = nil
     @Binding var date: Date?
     var errorMessage: String?
     var onComplete: (() -> Void)? = nil
@@ -22,9 +22,11 @@ struct DOBTextField: View {
     var body: some View {
         VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
 
-            Text(label)
-                .font(AppTypography.captionBold)
-                .foregroundStyle(isFocused ? AppColors.brandPrimary : AppColors.textSecondary)
+            if let label {
+                Text(label)
+                    .font(AppTypography.captionBold)
+                    .foregroundStyle(isFocused ? AppColors.brandPrimary : AppColors.textSecondary)
+            }
 
             HStack(spacing: AppMetrics.spacing10) {
                 Image(systemName: "calendar")

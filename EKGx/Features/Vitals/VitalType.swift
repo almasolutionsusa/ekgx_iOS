@@ -36,16 +36,16 @@ enum VitalType: String, CaseIterable, Identifiable {
     var icon: String {
         switch self {
         case .ekg:              return "waveform.path.ecg"
-        case .echo:             return "waveform.path.ecg.rectangle"
+        case .echo:             return "waveform.path.badge.plus"
         case .bloodPressure:    return "book.closed.fill"
         case .oxygenSaturation: return "lungs.fill"
         case .temperature:      return "thermometer.medium"
         case .bloodSugar:       return "drop.fill"
         case .heartRate:        return "waveform.path"
-        case .weight:           return "scalemass.fill"
+        case .weight:           return "scalemass"
         case .respirations:     return "lungs"
         case .height:           return "ruler.fill"
-        case .painLevel:        return "face.smiling"
+        case .painLevel:        return "face.dashed.fill"
         }
     }
 
@@ -53,7 +53,7 @@ enum VitalType: String, CaseIterable, Identifiable {
         switch self {
         case .ekg:              return AppColors.brandPrimary
         case .echo:             return Color(red: 0.18, green: 0.75, blue: 0.85)
-        case .bloodPressure:    return Color(red: 0.45, green: 0.45, blue: 0.90)
+        case .bloodPressure:    return AppColors.textPrimary
         case .oxygenSaturation: return Color(red: 0.18, green: 0.75, blue: 0.75)
         case .temperature:      return Color(red: 0.18, green: 0.80, blue: 0.65)
         case .bloodSugar:       return Color(red: 0.50, green: 0.40, blue: 0.90)
@@ -65,6 +65,37 @@ enum VitalType: String, CaseIterable, Identifiable {
         }
     }
 
+    // Short label shown in the card header (monitor-style)
+    var shortName: String {
+        switch self {
+        case .ekg:              return "EKG"
+        case .echo:             return "cho"
+        case .bloodPressure:    return "NIBP"
+        case .oxygenSaturation: return "SpO2"
+        case .temperature:      return "Temp"
+        case .bloodSugar:       return "Glucose"
+        case .heartRate:        return "PR"
+        case .weight:           return "Weight"
+        case .respirations:     return "RR"
+        case .height:           return "Height"
+        case .painLevel:        return "Pain"
+        }
+    }
+
+    // Unit label shown below the short name
+    var unitLabel: String {
+        switch self {
+        case .bloodPressure:    return "mmHg"
+        case .oxygenSaturation: return "%"
+        case .temperature:      return "°C"
+        case .bloodSugar:       return "mg/dL"
+        case .heartRate:        return "bpm"
+        case .respirations:     return "rpm"
+        case .weight:           return "kg"
+        default:                return ""
+        }
+    }
+
     var connectDescription: String {
         "Pair your \(title) device via Bluetooth"
     }
@@ -72,9 +103,21 @@ enum VitalType: String, CaseIterable, Identifiable {
     // First two vitals render as wide cards in a 2-column top row.
     var isWideCard: Bool { self == .ekg || self == .echo }
 
-    // EKG is the only active vital today; others are placeholders.
-    var isAvailable: Bool { self == .ekg }
+    var isAvailable: Bool {
+        switch self {
+        case .ekg, .bloodPressure, .oxygenSaturation, .temperature, .weight: return true
+        default: return false
+        }
+    }
 
     // EKG card replaces the text title with the app logo image.
     var usesLogoImage: Bool { self == .ekg }
+
+    // Manually-entered vitals — no Bluetooth device, no connect badge.
+    var requiresDevice: Bool {
+        switch self {
+        case .weight, .height, .painLevel, .heartRate, .respirations: return false
+        default: return true
+        }
+    }
 }

@@ -156,18 +156,26 @@ struct PatientExamsView: View {
         } else {
             ScrollView {
                 LazyVStack(spacing: AppMetrics.spacing12) {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { index, recording in
-                        ExamCard(
-                            recording:   recording,
-                            examNumber:  items.count - index,
-                            isUploading: viewModel.uploadingIds.contains(recording.id),
-                            isLocalMode: viewModel.isLocalMode,
-                            onTap:       { viewModel.openRecording(recording) },
-                            onUpload:    (!viewModel.isLocalMode && recording.status != .synced)
-                                             ? { viewModel.uploadRecording(recording) }
-                                             : nil,
-                            onDelete:    { viewModel.confirmDelete(recording) }
-                        )
+                    ForEach(Array(items.enumerated()), id: \.element.id) { index, record in
+                        switch record {
+                        case .ekg(let r):
+                            EKGExamCard(
+                                recording:   r,
+                                examNumber:  items.count - index,
+                                isUploading: viewModel.uploadingIds.contains(r.id),
+                                isLocalMode: viewModel.isLocalMode,
+                                onTap:       { viewModel.openRecording(r) },
+                                onUpload:    (!viewModel.isLocalMode && r.status != .synced)
+                                                 ? { viewModel.uploadRecording(r) }
+                                                 : nil,
+                                onDelete:    { viewModel.confirmDelete(r) }
+                            )
+                        case .bp(let r):
+                            BPExamCard(
+                                recording: r,
+                                onDelete:  { viewModel.confirmDeleteBP(r) }
+                            )
+                        }
                     }
                 }
                 .padding(.horizontal, AppMetrics.spacing32)
@@ -222,14 +230,14 @@ private struct FilterPill: View {
             .background(isSelected ? AppColors.brandPrimary : AppColors.borderSubtle.opacity(0.4))
             .clipShape(Capsule())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
         .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
 }
 
-// MARK: - Exam Card (mirrors CloudView's RecordingRow)
+// MARK: - EKG Exam Card
 
-private struct ExamCardButtonStyle: ButtonStyle {
+private struct EKGExamCardButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
@@ -237,7 +245,7 @@ private struct ExamCardButtonStyle: ButtonStyle {
     }
 }
 
-private struct ExamCard: View {
+private struct EKGExamCard: View {
 
     let recording: ECGRecording
     let examNumber: Int
@@ -303,7 +311,7 @@ private struct ExamCard: View {
                             HStack(spacing: 4) {
                                 Image(systemName: "cross.case.fill")
                                     .font(.system(size: 9, weight: .medium))
-                                Text("Emergency")
+                                Text("Rapid EKG")
                                     .font(.system(size: 10, weight: .medium))
                             }
                             .foregroundStyle(AppColors.statusCritical)
@@ -352,7 +360,7 @@ private struct ExamCard: View {
                                     .frame(width: 32, height: 32)
                             }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.hapticPlain)
                         .disabled(isUploading)
                     }
 
@@ -382,10 +390,141 @@ private struct ExamCard: View {
             .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
             .contentShape(Rectangle())
         }
-        .buttonStyle(ExamCardButtonStyle())
+        .buttonStyle(EKGExamCardButtonStyle())
         .contextMenu {
             Button(role: .destructive, action: onDelete) {
                 Label("Delete Recording", systemImage: "trash")
+            }
+        }
+    }
+}
+
+// MARK: - BP Exam Card
+
+private struct BPExamCard: View {
+
+    let recording: BPRecording
+    let onDelete:  () -> Void
+
+    private var riskColor: Color {
+        switch recording.riskLevel {
+        case .normal:      return AppColors.statusSuccess
+        case .elevated:    return Color(red: 0.86, green: 0.72, blue: 0.10)
+        case .highStage1:  return Color(red: 0.95, green: 0.50, blue: 0.10)
+        case .highStage2:  return AppColors.statusCritical
+        case .crisis:      return Color(red: 0.65, green: 0.05, blue: 0.05)
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: AppMetrics.spacing20) {
+
+            // Left: icon block with risk-tinted background
+            ZStack {
+                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                    .fill(riskColor.opacity(0.10))
+                    .frame(width: 52, height: 52)
+                VStack(spacing: 2) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(riskColor)
+                    Text("BP")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(riskColor.opacity(0.9))
+                }
+            }
+
+            // Center: readings
+            VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
+
+                // Main reading + risk badge
+                HStack(spacing: AppMetrics.spacing10) {
+                    HStack(alignment: .lastTextBaseline, spacing: 4) {
+                        Text(recording.displayValue)
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundStyle(AppColors.textPrimary)
+                            .contentTransition(.numericText())
+                        Text("mmHg")
+                            .font(AppTypography.caption)
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+
+                    HStack(spacing: AppMetrics.spacing4) {
+                        Image(systemName: recording.riskLevel.systemImage)
+                            .font(.system(size: 11, weight: .medium))
+                        Text(recording.riskLevel.label)
+                            .font(AppTypography.caption)
+                    }
+                    .foregroundStyle(riskColor)
+                    .padding(.horizontal, AppMetrics.spacing8)
+                    .padding(.vertical, 3)
+                    .background(riskColor.opacity(0.10))
+                    .clipShape(Capsule())
+                }
+
+                // Sys / Dia / PR row
+                HStack(spacing: AppMetrics.spacing16) {
+                    Label("Sys \(recording.systolic)", systemImage: "arrow.up.circle")
+                    Label("Dia \(recording.diastolic)", systemImage: "arrow.down.circle")
+                    if let pr = recording.pulseRate {
+                        Label("\(pr) bpm", systemImage: "waveform.path")
+                    }
+                }
+                .font(AppTypography.caption)
+                .foregroundStyle(AppColors.textSecondary)
+                .labelStyle(ExamsCompactLabelStyle())
+
+                // Arm / Position row
+                if recording.arm != nil || recording.position != nil {
+                    HStack(spacing: AppMetrics.spacing16) {
+                        if let arm = recording.arm {
+                            Label("\(arm.fullLabel) Arm", systemImage: "hand.raised")
+                        }
+                        if let pos = recording.position {
+                            Label(pos.label, systemImage: pos.icon)
+                        }
+                    }
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .labelStyle(ExamsCompactLabelStyle())
+                }
+
+                // Date / time / user
+                HStack(spacing: AppMetrics.spacing16) {
+                    Label(recording.formattedDate, systemImage: "calendar")
+                    Label(recording.formattedTime, systemImage: "clock")
+                    if let username = recording.username, !username.isEmpty {
+                        Label(username, systemImage: "person")
+                    }
+                }
+                .font(AppTypography.caption)
+                .foregroundStyle(AppColors.textSecondary)
+                .labelStyle(ExamsCompactLabelStyle())
+            }
+
+            Spacer()
+
+            // Right: delete
+            Button(action: onDelete) {
+                Image(systemName: "trash")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(AppColors.statusCritical.opacity(0.65))
+                    .frame(width: 32, height: 32)
+            }
+            .buttonStyle(.hapticPlain)
+        }
+        .padding(.horizontal, AppMetrics.spacing24)
+        .padding(.vertical, AppMetrics.spacing18)
+        .background(AppColors.surfaceCard)
+        .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
+        .overlay(
+            RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                .strokeBorder(AppColors.borderSubtle.opacity(0.6), lineWidth: AppMetrics.borderWidth)
+        )
+        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 2)
+        .contextMenu {
+            Button(role: .destructive, action: onDelete) {
+                Label("Delete BP Reading", systemImage: "trash")
             }
         }
     }

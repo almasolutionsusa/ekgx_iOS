@@ -31,7 +31,7 @@
 "auth.login.pinErrorEmpty"           = "Please enter your PIN code.";
 "auth.login.pinErrorInvalid"         = "Incorrect PIN. Please try again.";
 "auth.login.pinNotSetup"             = "No PIN set up. Please sign in with your email.";
-"auth.login.pinBackToEmail"          = "Sign in with Email instead";
+"auth.login.pinBackToEmail"          = "Sign In with Email";
 
 // MARK: - Authentication · Register
 "auth.register.title"                        = "Create Your Account";
@@ -68,6 +68,10 @@
 "auth.register.registerButton"               = "Create Account";
 "auth.register.haveAccount"                  = "Already have an account?";
 "auth.register.signInLink"                   = "Sign In";
+"auth.register.termsPrefix"                  = "By tapping Create account, I agree to EKGx ";
+"auth.register.termsLink"                    = "Terms";
+"auth.register.termsSeparator"               = " and ";
+"auth.register.privacyLink"                  = "Privacy Policy";
 "auth.register.errorEmailInUse"              = "This email address is already registered.";
 "auth.register.sectionPersonal"              = "Personal Information";
 "auth.register.sectionProfessional"          = "Professional Details";
@@ -96,7 +100,7 @@
 // MARK: - Branding
 "branding.appName"                   = "EKGx Pro";
 "branding.tagline"                   = "Cardiac Care. Made Precise.";
-"branding.poweredBy"                 = "Powered by Advanced ECG Analytics";
+"branding.poweredBy"                 = "Powered by Advanced EKG Analytics";
 
 // MARK: - Common
 "common.loading"                     = "Loading...";
@@ -112,7 +116,7 @@
 "common.open"                        = "Open";
 
 // MARK: - Home · Navigation Bar
-"home.nav.menuButton"                = "Menu";
+"home.nav.menuButton"                = "Settings";
 "home.greeting.morning"              = "Good Morning";
 "home.greeting.afternoon"            = "Good Afternoon";
 "home.greeting.evening"              = "Good Evening";
@@ -151,6 +155,15 @@
 "menu.logout"                        = "Logout";
 "menu.logoutConfirm"                 = "Are you sure you want to sign out?";
 "menu.logoutConfirmButton"           = "Sign Out";
+"menu.title"                         = "Settings";
+"menu.sectionSubtitle"               = "What do you need?";
+"menu.sectionAccount"                = "Account";
+"menu.sectionHelp"                   = "Help & Information";
+"menu.subtitleMyAccount"             = "Profile, PIN & security";
+"menu.subtitleSettings"              = "App preferences";
+"menu.subtitleFAQ"                   = "Common questions answered";
+"menu.subtitleIFU"                   = "How to use EKGx Pro";
+"menu.subtitleSupport"               = "Get in touch with our team";
 
 // MARK: - Cloud & Reports
 "cloud.nav.title"                    = "Cloud & Reports";
@@ -215,6 +228,7 @@
 "settings.display.sectionSubtitle"   = "Adjust the app appearance to suit your environment.";
 "settings.display.darkModeTitle"     = "Dark Mode";
 "settings.display.darkModeSubtitle"  = "Switch to a dark color scheme for low-light environments.";
+"settings.display.fontSizeTitle"     = "Font Size";
 "settings.privacy.sectionTitle"      = "Privacy";
 "settings.privacy.sectionSubtitle"   = "Control how your data is used and shared.";
 "settings.privacy.promoEmailTitle"   = "Allow Promotional Emails";
@@ -249,15 +263,16 @@
 "patientSelection.nav.subtitle"      = "Search for the patient to record an ECG for";
 "patientSelection.search.title"      = "Search Patient";
 "patientSelection.search.firstName"  = "First Name";
-"patientSelection.search.lastName"   = "Last Name (Optional)";
+"patientSelection.search.lastName"   = "Last Name";
 "patientSelection.search.dob"        = "Date of Birth";
 "patientSelection.search.mrn"            = "MRN";
 "patientSelection.search.mrnPlaceholder" = "Enter MRN";
-"patientSelection.search.nameSegment"    = "Name";
+"patientSelection.search.nameSegment"    = "Name & DOB";
 "patientSelection.search.mrnSegment"     = "MRN";
 "patientSelection.search.or"             = "OR";
 "patientSelection.search.button"         = "Search";
 "patientSelection.search.clearButton"    = "Clear Search";
+"patientSelection.search.scanQRCode"     = "Scan QR Code";
 "patientSelection.results.title"     = "Search Results";
 "patientSelection.results.empty"     = "No patients found";
 "patientSelection.results.emptySubtitle" = "Try different search criteria or check the spelling";
@@ -546,8 +561,75 @@
 "vitals.temp.title"                  = "Temperature";
 "vitals.temp.subtitle"               = "Body Temperature";
 
+// MARK: - Vitals · Device Connection
+"vitals.device.scanning"             = "Scanning...";
+"vitals.device.connecting"           = "Connecting...";
+"vitals.device.connectTitle"         = "Connect Device";
+"vitals.device.connectDevice"        = "Connect %@ Device";
+"vitals.device.useDemo"              = "Use Demo Device";
+"vitals.device.disconnect"           = "Disconnect";
+
+// MARK: - Vitals · SpO2 Card
+"vitals.spo2.saveReading"            = "Save Reading";
+"vitals.spo2.saved"                  = "Saved";
+
+// MARK: - Vitals · Temperature Card
+"vitals.temp.saveReading"            = "Save Reading";
+"vitals.temp.saved"                  = "Saved";
+
+// MARK: - Vitals · Blood Pressure Card
+"vitals.bp.sys"                      = "SYS";
+"vitals.bp.dia"                      = "DIA";
+"vitals.bp.bpm"                      = "bpm";
+"vitals.bp.unit"                     = "mmHg";
+"vitals.bp.sensorError"              = "Sensor Error";
+"vitals.bp.sensorErrorMessage"       = "Invalid reading — check device";
+"vitals.bp.saveReading"              = "Save Reading";
+"vitals.bp.saved"                    = "Saved";
+"vitals.bp.armRight"                 = "R";
+"vitals.bp.armLeft"                  = "L";
+"vitals.bp.armRightFull"             = "Right";
+"vitals.bp.armLeftFull"              = "Left";
+"vitals.bp.positionSitting"          = "Sitting";
+"vitals.bp.positionStanding"         = "Standing";
+"vitals.bp.positionLying"            = "Lying";
+"vitals.bp.positionSit"              = "Sit";
+"vitals.bp.positionStand"            = "Stand";
+"vitals.bp.positionLie"              = "Lie";
+
+// MARK: - Vitals · Pain Level
+"vitals.pain.title"                  = "Pain Level";
+"vitals.pain.save"                   = "Save Pain Level";
+"vitals.pain.noPain"                 = "No Pain";
+"vitals.pain.mild"                   = "Mild";
+"vitals.pain.moderate"               = "Moderate";
+"vitals.pain.uncomfortable"          = "Uncomfortable";
+"vitals.pain.severe"                 = "Severe";
+"vitals.pain.worst"                  = "Worst";
+
+// MARK: - Vitals · Height Sheet
+"vitals.height.title"                = "Height";
+"vitals.height.save"                 = "Save Height";
+"vitals.height.unitImperial"         = "ft / in";
+"vitals.height.unitMetric"           = "cm";
+
+// MARK: - Vitals · Weight Sheet
+"vitals.weight.title"                = "Weight";
+"vitals.weight.save"                 = "Save Weight";
+"vitals.weight.unitImperial"         = "lbs";
+"vitals.weight.unitMetric"           = "kg";
+
+// MARK: - Vitals · General
+"vitals.rr.saved"                    = "Saved";
+"vitals.source.manual"               = "Manual";
+"vitals.source.label"                = "source %@";
+"vitals.mrn.label"                   = "MRN %@";
+"vitals.rr.pickerTitle"              = "Respiratory Rate";
+"vitals.rr.bpm"                      = "%d bpm";
+
 // MARK: - Emergency Mode
-"emergency.buttonTitle"      = "EKG Emergency";
+"emergency.buttonTitle"      = "Rapid EKG";
+"emergency.buttonSubtitle"   = "Skip Registration - Immediate Acquisition";
 "emergency.pinTitle"         = "Verify Identity";
 "emergency.pinSubtitle"      = "Enter your 6-digit PIN to upload this ECG to EMR";
 "emergency.assignTitle"      = "Assign to Patient";
@@ -556,3 +638,31 @@
 "emergency.assignNoPatients" = "No patients found";
 "emergency.createNew"        = "+ New Patient";
 "emergency.createTitle"      = "New Patient";
+
+// MARK: - Common extras
+"common.done"                        = "Done";
+"common.edit"                        = "Edit";
+"common.remove"                      = "Remove";
+
+// MARK: - Waiting List
+"waitingList.title"                  = "Waiting List";
+"waitingList.emptyTitle"             = "Queue is empty";
+"waitingList.emptySubtitle"          = "Add patients from your local list to start managing the exam queue";
+"waitingList.addFirstPatient"        = "Add First Patient";
+"waitingList.addPatient"             = "Add Patient";
+"waitingList.addTitle"               = "Add Patient to Queue";
+"waitingList.addSubtitle"            = "Select a patient to add to the waiting list";
+"waitingList.clearDone"              = "Clear Done";
+"waitingList.startEKG"               = "Start";
+"waitingList.continueEKG"            = "Continue";
+"waitingList.markDone"               = "Mark Done";
+"waitingList.restore"                = "Restore";
+"waitingList.sectionActive"          = "Active Queue";
+"waitingList.sectionDone"            = "Completed";
+"waitingList.searchPlaceholder"      = "Search by name or MRN";
+"waitingList.alreadyInQueue"         = "In Queue";
+"waitingList.noPatients"             = "No patients found";
+"waitingList.add"                    = "Add";
+"waitingList.status.waiting"         = "Waiting";
+"waitingList.status.inProgress"      = "In Progress";
+"waitingList.status.done"            = "Done";

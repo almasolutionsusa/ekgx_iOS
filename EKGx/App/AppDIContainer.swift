@@ -43,6 +43,7 @@ final class AppDIContainer {
     let ordersService: OrdersService
     let appContentService: AppContentService
     let ekgUploadService: EKGUploadService
+    let vitalsUploadService: VitalsUploadService
     let autoLockManager: AutoLockManager
     let recordingStore: LocalRecordingStore
     let localPatientStore: LocalPatientStore
@@ -53,18 +54,31 @@ final class AppDIContainer {
 
     private(set) var deviceService: DeviceServiceProtocol = BLEDeviceService()
 
+    // MARK: - Vital Device Services (app-scoped so devices stay connected across navigation)
+
+    let bpVitalService     = BPVitalDeviceService()
+    let spo2VitalService   = OximeterVitalDeviceService()
+    let tempVitalService   = TemperatureVitalDeviceService()
+    let weightVitalService = WeightVitalDeviceService()
+    let bpStore            = LocalBPStore()
+    let spo2Store          = LocalSpO2Store()
+    let tempStore          = LocalTempStore()
+    let rrStore            = LocalRRStore()
+
     // MARK: - Init
 
     init(localMode: Bool = false) {
         self.isLocalMode      = localMode
-        self.authService      = AuthService()
+        let auth              = AuthService()
+        self.authService      = auth
         let checkin           = AppCheckinService()
         self.checkinService   = checkin
         self.appInfoService   = AppInfoService(checkinService: checkin)
         self.patientsService  = PatientsService()
         self.ordersService      = OrdersService(checkinService: checkin)
         self.appContentService  = AppContentService(checkinService: checkin)
-        self.ekgUploadService   = EKGUploadService()
+        self.ekgUploadService      = EKGUploadService()
+        self.vitalsUploadService   = VitalsUploadService(authService: auth)
         self.autoLockManager  = AutoLockManager()
         self.recordingStore      = LocalRecordingStore()
         self.localPatientStore   = LocalPatientStore()
@@ -196,8 +210,12 @@ final class AppDIContainer {
         return vm
     }
 
+    private var _settingsViewModel: SettingsViewModel?
     func makeSettingsViewModel(router: AppRouter) -> SettingsViewModel {
-        SettingsViewModel(router: router, authService: authService)
+        if let existing = _settingsViewModel { return existing }
+        let vm = SettingsViewModel(router: router, authService: authService)
+        _settingsViewModel = vm
+        return vm
     }
 
     func makeMyAccountViewModel(router: AppRouter) -> MyAccountViewModel {
@@ -244,6 +262,20 @@ final class AppDIContainer {
         recordingSessionStartedAt = nil
         lastRecordingTotalDuration = nil
         lastRecordingExistingId = nil
+    }
+
+    func makeMenuViewModel(router: AppRouter) -> MenuViewModel {
+        MenuViewModel(
+            router: router,
+            authService: authService,
+            appInfoService: appInfoService,
+            diContainer: self,
+            settings: makeSettingsViewModel(router: router)
+        )
+    }
+
+    func makeWaitingListViewModel(router: AppRouter) -> WaitingListViewModel {
+        WaitingListViewModel(repository: patientRepository, router: router, diContainer: self)
     }
 
     func makeAnalysisViewModel(router: AppRouter) -> AnalysisViewModel {

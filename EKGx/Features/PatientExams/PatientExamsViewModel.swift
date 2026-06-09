@@ -1,5 +1,28 @@
 import Foundation
 
+// MARK: - ExamRecord
+
+enum ExamRecord: Identifiable {
+    case ekg(ECGRecording)
+    case bp(BPRecording)
+
+    var id: String {
+        switch self {
+        case .ekg(let r): return r.id
+        case .bp(let r):  return r.id
+        }
+    }
+
+    var recordedAt: Date {
+        switch self {
+        case .ekg(let r): return r.recordedAt
+        case .bp(let r):  return r.recordedAt
+        }
+    }
+}
+
+// MARK: - PatientExamsViewModel
+
 @Observable
 @MainActor
 final class PatientExamsViewModel {
@@ -7,10 +30,12 @@ final class PatientExamsViewModel {
     // MARK: - State
 
     let patient: Patient
-    var recordings: [ECGRecording] = []
-    var selectedVitalType: VitalType? = nil   // nil = All
+    var recordings:  [ECGRecording] = []
+    var bpReadings:  [BPRecording]  = []
+    var selectedVitalType: VitalType? = nil
     var uploadingIds: Set<String> = []
-    var recordingToDelete: ECGRecording? = nil
+    var recordingToDelete:   ECGRecording? = nil
+    var bpReadingToDelete:   BPRecording?  = nil
     var showDeleteConfirm: Bool = false
 
     // MARK: - Dependencies
@@ -19,41 +44,53 @@ final class PatientExamsViewModel {
     private let router: AppRouter
     private let diContainer: AppDIContainer
 
-    init(patient: Patient, recordingStore: LocalRecordingStore, router: AppRouter, diContainer: AppDIContainer) {
-        self.patient       = patient
+    init(patient: Patient,
+         recordingStore: LocalRecordingStore,
+         router: AppRouter,
+         diContainer: AppDIContainer) {
+        self.patient        = patient
         self.recordingStore = recordingStore
-        self.router        = router
-        self.diContainer   = diContainer
+        self.router         = router
+        self.diContainer    = diContainer
     }
 
     // MARK: - Lifecycle
 
     func activate() { load() }
-
-    func refresh() { load() }
+    func refresh()  { load() }
 
     private func load() {
         let pid = patient.patientId ?? patient.uniqueId ?? ""
         recordings = pid.isEmpty ? [] : recordingStore.recordings(for: pid)
+        bpReadings = pid.isEmpty ? [] : diContainer.bpStore.readings(for: pid)
     }
 
     // MARK: - Computed
 
     var isLocalMode: Bool { diContainer.isLocalMode }
-    var examCount: Int { recordings.count }
+    var examCount: Int { recordings.count + bpReadings.count }
 
-    // Vital types that actually have recordings — drives the filter strip.
-    // When Echo recordings are added, extend this to read a vitalType field from ECGRecording.
     var availableVitalTypes: [VitalType] {
-        recordings.isEmpty ? [] : [.ekg]
+        var types: [VitalType] = []
+        if !recordings.isEmpty  { types.append(.ekg) }
+        if !bpReadings.isEmpty  { types.append(.bloodPressure) }
+        return types
     }
 
-    var filteredRecordings: [ECGRecording] {
-        guard let type = selectedVitalType else { return recordings }
-        return type == .ekg ? recordings : []
+    var filteredRecordings: [ExamRecord] {
+        let all: [ExamRecord] = recordings.map { .ekg($0) } + bpReadings.map { .bp($0) }
+        let sorted = all.sorted { $0.recordedAt > $1.recordedAt }
+        guard let type = selectedVitalType else { return sorted }
+        return sorted.filter {
+            switch ($0, type) {
+            case (.ekg,  .ekg):           return true
+            case (.bp,   .bloodPressure): return true
+            default:                      return false
+            }
+        }
     }
 
-    // MARK: - Open in Analysis (read-only)
+    // MARK: - Open EKG in Analysis (read-only)
 
     func openRecording(_ recording: ECGRecording) {
         let rawData = recordingStore.ecgFileData(for: recording.id)
@@ -72,7 +109,7 @@ final class PatientExamsViewModel {
         router.navigate(to: .ecgAnalysis(recordingId: recording.id))
     }
 
-    // MARK: - Upload
+    // MARK: - Upload EKG
 
     func uploadRecording(_ recording: ECGRecording) {
         guard recording.status != .synced, !uploadingIds.contains(recording.id) else { return }
@@ -119,23 +156,34 @@ final class PatientExamsViewModel {
         showDeleteConfirm  = true
     }
 
+    func confirmDeleteBP(_ reading: BPRecording) {
+        bpReadingToDelete = reading
+        showDeleteConfirm = true
+    }
+
     func deleteConfirmed() {
-        guard let recording = recordingToDelete else { return }
-        recordingStore.delete(id: recording.id)
-        recordings.removeAll { $0.id == recording.id }
-        recordingToDelete = nil
+        if let r = recordingToDelete {
+            recordingStore.delete(id: r.id)
+            recordings.removeAll { $0.id == r.id }
+            recordingToDelete = nil
+        } else if let r = bpReadingToDelete {
+            diContainer.bpStore.delete(id: r.id)
+            bpReadings.removeAll { $0.id == r.id }
+            bpReadingToDelete = nil
+        }
     }
 
     func cancelDelete() {
-        recordingToDelete = nil
-        showDeleteConfirm = false
+        recordingToDelete  = nil
+        bpReadingToDelete  = nil
+        showDeleteConfirm  = false
     }
 
     // MARK: - Navigation
 
     func navigateBack() {
         let destination = router.patientExamsReturnRoute
-        router.patientExamsReturnRoute = .vitals  // reset to default for next time
+        router.patientExamsReturnRoute = .vitals
         router.navigate(to: destination)
     }
 }

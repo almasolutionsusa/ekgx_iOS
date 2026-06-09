@@ -269,7 +269,7 @@ private struct ProfilePictureSection: View {
                             .foregroundStyle(.white)
                     }
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
                 .offset(x: 4, y: 4)
             }
 
@@ -315,7 +315,7 @@ private struct PersonalInfoSection: View {
                     systemImage: "person",
                     text: $viewModel.firstName,
                     errorMessage: viewModel.firstNameError,
-                    autocapitalization: .words
+                    autocapitalization: .characters
                 )
                 ETextField(
                     label: L10n.Account.Personal.lastName,
@@ -323,7 +323,7 @@ private struct PersonalInfoSection: View {
                     systemImage: "person",
                     text: $viewModel.lastName,
                     errorMessage: viewModel.lastNameError,
-                    autocapitalization: .words
+                    autocapitalization: .characters
                 )
             }
             ELockedField(
@@ -402,7 +402,7 @@ private struct SecurityActionButton: View {
             }
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
         .frame(maxWidth: .infinity)
     }
 }
@@ -461,7 +461,7 @@ private struct DangerZoneSection: View {
                         .background(AppColors.statusCritical)
                         .cornerRadius(AppMetrics.radiusMedium)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
             }
             .padding(.horizontal, AppMetrics.spacing24)
             .padding(.vertical, AppMetrics.spacing20)
@@ -506,7 +506,7 @@ private struct SetPinSheet: View {
                         .background(AppColors.borderSubtle.opacity(0.5))
                         .clipShape(Circle())
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
             }
             .padding(.horizontal, AppMetrics.spacing32)
             .padding(.top, AppMetrics.spacing28)
@@ -652,7 +652,7 @@ private struct ChangePasswordSheet: View {
                             .background(AppColors.borderSubtle.opacity(0.5))
                             .clipShape(Circle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.hapticPlain)
                 }
                 .padding(.horizontal, AppMetrics.spacing32)
                 .padding(.top, AppMetrics.spacing28)

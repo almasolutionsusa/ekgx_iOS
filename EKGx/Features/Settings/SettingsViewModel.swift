@@ -10,27 +10,69 @@ import SwiftUI
 @MainActor
 final class SettingsViewModel {
 
+    @ObservationIgnored private var isInitializing = true
+
     // MARK: - ECG Signal
 
-    var minnesotaCodeEnabled: Bool = false
-    var showLeadV5: Bool           = true
-    var emgFilter: EMGFilter       = .off
-    var highPass: HighPassFilter   = .hz005
-    var lowPass: LowPassFilter     = .hz100
-    var acNotch: ACNotch           = .hz060
+    var minnesotaCodeEnabled: Bool = false {
+        didSet { save(minnesotaCodeEnabled, forKey: "app.minnesotaCode") }
+    }
+    var showLeadV5: Bool = true {
+        didSet { save(showLeadV5, forKey: "app.showLeadV5") }
+    }
+    var emgFilter: EMGFilter = .off {
+        didSet { save(emgFilter.rawValue, forKey: "app.emgFilter") }
+    }
+    var highPass: HighPassFilter = .hz005 {
+        didSet { save(highPass.rawValue, forKey: "app.highPass") }
+    }
+    var lowPass: LowPassFilter = .hz100 {
+        didSet { save(lowPass.rawValue, forKey: "app.lowPass") }
+    }
+    var acNotch: ACNotch = .hz060 {
+        didSet { save(acNotch.rawValue, forKey: "app.acNotch") }
+    }
 
     // MARK: - Display
 
-    var darkModeEnabled: Bool = false
+    var darkModeEnabled: Bool = false {
+        didSet { save(darkModeEnabled, forKey: "app.darkMode") }
+    }
+    var tapSoundEnabled: Bool = true {
+        didSet { save(tapSoundEnabled, forKey: "app.tapSound") }
+    }
+    var fontSize: FontSize = {
+        if let saved = UserDefaults.standard.string(forKey: "app.fontSize"),
+           let size  = FontSize(rawValue: saved) { return size }
+        return .medium
+    }() {
+        didSet { UserDefaults.standard.set(fontSize.rawValue, forKey: "app.fontSize") }
+    }
+
+    // MARK: - Units
+
+    var weightUnit: WeightUnit = .imperial {
+        didSet { save(weightUnit.rawValue, forKey: "app.weightUnit") }
+    }
+
+    var temperatureUnit: TemperatureUnit = .fahrenheit {
+        didSet { save(temperatureUnit.rawValue, forKey: "app.temperatureUnit") }
+    }
 
     // MARK: - Privacy
 
-    var allowPromotionalEmails: Bool = false
+    var allowPromotionalEmails: Bool = false {
+        didSet { save(allowPromotionalEmails, forKey: "app.promoEmails") }
+    }
 
     // MARK: - Security
 
-    var demoDataEnabled: Bool  = false
-    var autoLock: AutoLock     = .threeMinutes  // minimum enforced — no "Disabled" option
+    var demoDataEnabled: Bool = false {
+        didSet { save(demoDataEnabled, forKey: "app.demoData") }
+    }
+    var autoLock: AutoLock = .threeMinutes {
+        didSet { save(autoLock.rawValue, forKey: "app.autoLock") }
+    }
 
     // MARK: - Demo code gate
     var showDemoCodeEntry: Bool   = false
@@ -54,7 +96,14 @@ final class SettingsViewModel {
         self.router      = router
         self.authService = authService
         applyServerSettings()
+        applyLocalSettings()
+        isInitializing = false
         savedState = currentSnapshot
+    }
+
+    private func save(_ value: some Any, forKey key: String) {
+        guard !isInitializing else { return }
+        UserDefaults.standard.set(value, forKey: key)
     }
 
     // MARK: - Server settings (from login response)
@@ -127,6 +176,25 @@ final class SettingsViewModel {
         }
     }
 
+    // MARK: - Local persistence (UserDefaults overrides server defaults)
+
+    private func applyLocalSettings() {
+        let ud = UserDefaults.standard
+        if let raw = ud.string(forKey: "app.emgFilter"),  let v = EMGFilter(rawValue: raw)      { emgFilter = v }
+        if let raw = ud.string(forKey: "app.highPass"),   let v = HighPassFilter(rawValue: raw) { highPass = v }
+        if let raw = ud.string(forKey: "app.lowPass"),    let v = LowPassFilter(rawValue: raw)  { lowPass = v }
+        if let raw = ud.string(forKey: "app.acNotch"),    let v = ACNotch(rawValue: raw)        { acNotch = v }
+        if let raw = ud.string(forKey: "app.autoLock"),   let v = AutoLock(rawValue: raw)       { autoLock = v }
+        if ud.object(forKey: "app.minnesotaCode") != nil { minnesotaCodeEnabled  = ud.bool(forKey: "app.minnesotaCode") }
+        if ud.object(forKey: "app.showLeadV5")    != nil { showLeadV5            = ud.bool(forKey: "app.showLeadV5") }
+        if ud.object(forKey: "app.darkMode")      != nil { darkModeEnabled       = ud.bool(forKey: "app.darkMode") }
+        if ud.object(forKey: "app.tapSound")      != nil { tapSoundEnabled       = ud.bool(forKey: "app.tapSound") }
+        if ud.object(forKey: "app.promoEmails")   != nil { allowPromotionalEmails = ud.bool(forKey: "app.promoEmails") }
+        if ud.object(forKey: "app.demoData")      != nil { demoDataEnabled       = ud.bool(forKey: "app.demoData") }
+        if let raw = ud.string(forKey: "app.weightUnit"),      let v = WeightUnit(rawValue: raw)      { weightUnit = v }
+        if let raw = ud.string(forKey: "app.temperatureUnit"), let v = TemperatureUnit(rawValue: raw) { temperatureUnit = v }
+    }
+
     // MARK: - Sections
 
     enum Section: String, CaseIterable, Identifiable {
@@ -150,7 +218,6 @@ final class SettingsViewModel {
 
     func saveChanges() {
         savedState = currentSnapshot
-        // Persist via @AppStorage or API call here
     }
 
     func discardChanges() {
@@ -201,9 +268,13 @@ final class SettingsViewModel {
             lowPass:                 lowPass,
             acNotch:                 acNotch,
             darkModeEnabled:         darkModeEnabled,
+            tapSoundEnabled:         tapSoundEnabled,
+            fontSize:                fontSize,
             allowPromotionalEmails:  allowPromotionalEmails,
             demoDataEnabled:         demoDataEnabled,
-            autoLock:                autoLock
+            autoLock:                autoLock,
+            weightUnit:              weightUnit,
+            temperatureUnit:         temperatureUnit
         )
     }
 
@@ -215,9 +286,13 @@ final class SettingsViewModel {
         lowPass                = snapshot.lowPass
         acNotch                = snapshot.acNotch
         darkModeEnabled        = snapshot.darkModeEnabled
+        tapSoundEnabled        = snapshot.tapSoundEnabled
+        fontSize               = snapshot.fontSize
         allowPromotionalEmails = snapshot.allowPromotionalEmails
         demoDataEnabled        = snapshot.demoDataEnabled
         autoLock               = snapshot.autoLock
+        weightUnit             = snapshot.weightUnit
+        temperatureUnit        = snapshot.temperatureUnit
     }
 }
 
@@ -231,9 +306,13 @@ private struct SettingsSnapshot: Equatable {
     var lowPass:                LowPassFilter   = .hz100
     var acNotch:                ACNotch         = .hz060
     var darkModeEnabled:        Bool            = false
+    var tapSoundEnabled:        Bool            = true
+    var fontSize:               FontSize        = .medium
     var allowPromotionalEmails: Bool            = false
     var demoDataEnabled:        Bool            = false
     var autoLock:               AutoLock        = .threeMinutes
+    var weightUnit:             WeightUnit      = .imperial
+    var temperatureUnit:        TemperatureUnit = .fahrenheit
 }
 
 // MARK: - Option Enums
@@ -272,4 +351,34 @@ enum AutoLock: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     case threeMinutes = "3 min"
     case fiveMinutes  = "5 min"
+}
+
+enum WeightUnit: String, CaseIterable, Identifiable {
+    var id: String { rawValue }
+    case imperial = "lb"
+    case metric   = "kg"
+    var label: String { self == .imperial ? "lbs" : "kg" }
+}
+
+enum TemperatureUnit: String, CaseIterable, Identifiable {
+    var id: String { rawValue }
+    case fahrenheit = "°F"
+    case celsius    = "°C"
+}
+
+enum FontSize: String, CaseIterable, Identifiable {
+    var id: String { rawValue }
+    case small  = "Small"
+    case medium = "Medium"
+    case large  = "Large"
+
+    /// Maps to a DynamicTypeSize so .dynamicTypeSize() at the root scales all relativeTo: fonts.
+    /// .large is the iOS system default (1×); small/large shift one step either way.
+    var dynamicTypeSize: DynamicTypeSize {
+        switch self {
+        case .small:  return .xSmall
+        case .medium: return .large
+        case .large:  return .xxLarge
+        }
+    }
 }

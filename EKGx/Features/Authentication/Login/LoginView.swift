@@ -36,7 +36,7 @@ struct LoginView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .ignoresSafeArea()
+        .ignoresSafeArea(.container)
         .background(AppColors.surfaceBackground)
         .onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
         .task {
@@ -328,23 +328,29 @@ private struct LoginFormPanel: View {
 
                         // EKG Emergency
                         Button { viewModel.startEmergency() } label: {
-                            HStack(spacing: AppMetrics.spacing10) {
-                                Image(systemName: "cross.case.fill")
-                                    .font(.system(size: 15, weight: .semibold))
-                                Text("EKG Emergency")
-                                    .font(AppTypography.bodyMedium)
+                            VStack(alignment: .center, spacing: 2) {
+                                
+                                HStack {
+                                    Image(systemName: "cross.case.fill")
+                                        .font(.system(size: 15, weight: .semibold))
+                                    Text(L10n.Emergency.buttonTitle)
+                                        .font(AppTypography.bodyMedium)
+                                }.foregroundStyle(AppColors.textPrimary)
+                                Text(L10n.Emergency.buttonSubtitle)
+                                    .font(AppTypography.caption)
+                                    .foregroundStyle(AppColors.textSecondary)
                             }
-                            .foregroundStyle(AppColors.statusCritical)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: AppMetrics.buttonHeight)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding(.horizontal, AppMetrics.spacing16)
+                            .frame(minHeight: AppMetrics.buttonHeight)
                             .background(AppColors.statusCritical.opacity(0.07))
                             .cornerRadius(AppMetrics.radiusMedium)
                             .overlay(
                                 RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                                    .strokeBorder(AppColors.statusCritical.opacity(0.25), lineWidth: AppMetrics.borderWidth)
+                                    .strokeBorder(AppColors.statusCritical.opacity(0.25), lineWidth: 4)
                             )
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.hapticPlain)
                         .padding(.bottom, AppMetrics.spacing24)
 
                         HStack {
@@ -355,6 +361,7 @@ private struct LoginFormPanel: View {
                             Button(L10n.Auth.Login.registerButton) {
                                 viewModel.navigateToRegister()
                             }
+                            .buttonStyle(.hapticPlain)
                             .font(AppTypography.footnote)
                             .fontWeight(.semibold)
                             .foregroundStyle(AppColors.brandPrimary)
@@ -391,6 +398,7 @@ private struct LoginFormPanel: View {
                     .clipShape(Circle())
                     .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
             }
+            .buttonStyle(.hapticPlain)
             .padding(.top, AppMetrics.spacing20)
             .padding(.trailing, AppMetrics.spacing24)
         }
@@ -401,13 +409,12 @@ private struct LoginFormPanel: View {
     private var pinSection: some View {
         VStack(spacing: 0) {
             VStack(spacing: AppMetrics.spacing8) {
-                Text(L10n.Auth.Login.pinTitle)
+                Text(L10n.Auth.Login.title)
                     .font(AppTypography.title1)
                     .foregroundStyle(AppColors.textPrimary)
-                Text(L10n.Auth.Login.pinSubtitle)
+                Text(L10n.Auth.Login.pinTitle)
                     .font(AppTypography.callout)
                     .foregroundStyle(AppColors.textSecondary)
-                    .multilineTextAlignment(.center)
             }
             .padding(.bottom, AppMetrics.spacing28)
 
@@ -417,14 +424,14 @@ private struct LoginFormPanel: View {
                         Circle()
                             .stroke(
                                 index < viewModel.pinInput.count
-                                    ? AppColors.brandPrimary
+                                    ? AppColors.brandSecondary
                                     : AppColors.borderSubtle,
                                 lineWidth: 2
                             )
                             .frame(width: 20, height: 20)
                         if index < viewModel.pinInput.count {
                             Circle()
-                                .fill(AppColors.brandPrimary)
+                                .fill(AppColors.brandSecondary)
                                 .frame(width: 12, height: 12)
                         }
                     }
@@ -457,7 +464,7 @@ private struct LoginFormPanel: View {
             )
             .disabled(viewModel.isLoading)
             .padding(.bottom, AppMetrics.spacing20)
-        }
+        }.padding(.horizontal, 40)
     }
 
     // MARK: - Email Section
@@ -527,7 +534,7 @@ private struct LoginFormPanel: View {
                                     .frame(maxWidth: .infinity)
                                     .contentShape(Rectangle())
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.hapticPlain)
                                 if suggestion != viewModel.suggestions.last {
                                     Divider().padding(.horizontal, AppMetrics.spacing16)
                                 }
@@ -567,8 +574,9 @@ private struct LoginFormPanel: View {
                     focusedField = nil
                     viewModel.openForgotPassword()
                 }
-                .font(AppTypography.subheadline)
-                .foregroundStyle(AppColors.brandPrimary)
+                .buttonStyle(.hapticPlain)
+                .font(AppTypography.subheadline2)
+                .foregroundStyle(AppColors.accentTeal)
             }
             .padding(.top, AppMetrics.spacing12)
             .padding(.bottom, AppMetrics.spacing28)
@@ -625,24 +633,26 @@ struct PinNumericKeypad: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(isDelete
-                          ? AppColors.brandPrimary.opacity(0.08)
+                          ? AppColors.surfaceCard.opacity(0.5)
                           : AppColors.surfaceCard)
                     .shadow(color: .black.opacity(0.06), radius: 3, x: 0, y: 2)
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(AppColors.borderSubtle.opacity(0.5), lineWidth: 3)
 
                 if isDelete {
-                    Image(systemName: "delete.left")
+                    Image(systemName: "delete.left.fill")
                         .font(.system(size: 22, weight: .medium))
-                        .foregroundStyle(AppColors.brandPrimary)
+                        .foregroundStyle(AppColors.textSecondary)
                 } else {
                     Text(key)
-                        .font(.custom("Roboto-Medium", size: 28))
+                        .font(.custom("Roboto-Medium", size: 34))
                         .foregroundStyle(AppColors.textPrimary)
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 72)
+            .frame(height: 65)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 }
 

@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		BE61EADC2FD871690045E98E /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = BE61EADB2FD871690045E98E /* libz.tbd */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		BE9735502F6367B000F5DA12 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -37,6 +41,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		BE61EADB2FD871690045E98E /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS26.4.sdk/usr/lib/libz.tbd; sourceTree = DEVELOPER_DIR; };
 		BE97353D2F6367AF00F5DA12 /* EKGx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = EKGx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE97354F2F6367B000F5DA12 /* EKGxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EKGxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		BE9735592F6367B000F5DA12 /* EKGxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EKGxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -64,6 +69,11 @@
 				SDKEKG/vhMedicalServices/vhECGSDKAnalysis.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 				SDKEKG/vhMedicalServices/vhEcgServiceRest.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 				SDKEKG/vhMedicalServices/vhMedicalServices.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKVITALS/AHDevicePlugin.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKVITALS/WeightSDK/ICBleProtocol.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKVITALS/WeightSDK/ICBodyFatAlgorithms.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKVITALS/WeightSDK/ICDeviceManager.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
+				SDKVITALS/WeightSDK/ICLogger.xcframework = (CodeSignOnCopy, RemoveHeadersOnCopy, );
 			};
 			buildPhase = BE18D7832F6CD82200E8CEE9 /* Embed Frameworks */;
 			membershipExceptions = (
@@ -75,6 +85,11 @@
 				SDKEKG/vhMedicalServices/vhECGSDKAnalysis.xcframework,
 				SDKEKG/vhMedicalServices/vhEcgServiceRest.xcframework,
 				SDKEKG/vhMedicalServices/vhMedicalServices.xcframework,
+				SDKVITALS/AHDevicePlugin.xcframework,
+				SDKVITALS/WeightSDK/ICBleProtocol.xcframework,
+				SDKVITALS/WeightSDK/ICBodyFatAlgorithms.xcframework,
+				SDKVITALS/WeightSDK/ICDeviceManager.xcframework,
+				SDKVITALS/WeightSDK/ICLogger.xcframework,
 			);
 		};
 /* End PBXFileSystemSynchronizedGroupBuildPhaseMembershipExceptionSet section */
@@ -106,6 +121,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BE61EADC2FD871690045E98E /* libz.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -129,6 +145,7 @@
 		BE18D7802F6CD82200E8CEE9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				BE61EADB2FD871690045E98E /* libz.tbd */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -454,7 +471,26 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*]" = (
+					VTBLEUtils.m,
+					VTDevice.m,
+					VTMProductURATUtils.mm,
+					CCRBlueToothManager.m,
+				);
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/BPSDK",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/ThermoSDK/ios-arm64_arm64e",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/ThermoSDK/ios-arm64_x86_64-simulator",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/AHDevicePlugin.xcframework/ios-arm64_arm64e",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/AHDevicePlugin.xcframework/ios-arm64_x86_64-simulator",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/BPSDK",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/OximaterSDK",
+				);
 				INFOPLIST_FILE = EKGx/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -471,8 +507,19 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/OximaterSDK",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					VTMProductLib,
+					"-llibCRAP20SDK",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ecgxpro.EKGx;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
@@ -503,7 +550,26 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
+				"EXCLUDED_SOURCE_FILE_NAMES[sdk=iphonesimulator*]" = (
+					VTBLEUtils.m,
+					VTDevice.m,
+					VTMProductURATUtils.mm,
+					CCRBlueToothManager.m,
+				);
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/BPSDK",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/ThermoSDK/ios-arm64_arm64e",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/ThermoSDK/ios-arm64_x86_64-simulator",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/AHDevicePlugin.xcframework/ios-arm64_arm64e",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/AHDevicePlugin.xcframework/ios-arm64_x86_64-simulator",
+				);
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/BPSDK",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/OximaterSDK",
+				);
 				INFOPLIST_FILE = EKGx/Info.plist;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphoneos*]" = YES;
 				"INFOPLIST_KEY_UIApplicationSceneManifest_Generation[sdk=iphonesimulator*]" = YES;
@@ -520,8 +586,19 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 18.6;
 				LD_RUNPATH_SEARCH_PATHS = "@executable_path/Frameworks";
 				"LD_RUNPATH_SEARCH_PATHS[sdk=macosx*]" = "@executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/EKGx/SDKVITALS/OximaterSDK",
+				);
 				MACOSX_DEPLOYMENT_TARGET = 15.6;
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = (
+					"$(inherited)",
+					"-ObjC",
+					"-framework",
+					VTMProductLib,
+					"-llibCRAP20SDK",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.ecgxpro.EKGx;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;

@@ -215,6 +215,6 @@ private struct SideMenuRow: View {
             )
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 }

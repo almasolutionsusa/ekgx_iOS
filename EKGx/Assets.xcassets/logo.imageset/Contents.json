@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "Final_LF logo Grey BG.png",
+      "filename" : "ekgx-logo-light.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
@@ -12,7 +12,7 @@
           "value" : "dark"
         }
       ],
-      "filename" : "Final_LF logo Black BG.png",
+      "filename" : "ekgx-logo-dark.png",
       "idiom" : "universal",
       "scale" : "1x"
     },

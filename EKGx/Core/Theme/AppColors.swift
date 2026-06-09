@@ -38,6 +38,7 @@ struct AppColors {
 
     /// App / scene background #0A1220.
     static let surfaceBackground = Color("SurfaceBackground")
+    static let surfaceElevatedOverride = Color("surfaceElevatedOverride")
 
     /// Card surface #111C2E.
     static let surfaceCard       = Color("SurfaceCard")

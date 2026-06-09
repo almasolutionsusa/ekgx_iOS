@@ -125,7 +125,7 @@ struct LockOverlayView: View {
                         .font(AppTypography.subheadline)
                         .foregroundStyle(AppColors.brandPrimary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.hapticPlain)
                 .padding(.top, AppMetrics.spacing4)
             }
             .padding(.horizontal, AppMetrics.spacing24)

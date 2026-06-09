@@ -157,7 +157,7 @@ private struct FAQRow: View {
                     )
             )
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
     }
 }
 

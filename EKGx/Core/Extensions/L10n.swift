@@ -92,6 +92,10 @@ enum L10n {
             static let registerButton           = "auth.register.registerButton".localized
             static let haveAccount              = "auth.register.haveAccount".localized
             static let signInLink               = "auth.register.signInLink".localized
+            static let termsPrefix              = "auth.register.termsPrefix".localized
+            static let termsLink                = "auth.register.termsLink".localized
+            static let termsSeparator           = "auth.register.termsSeparator".localized
+            static let privacyLink              = "auth.register.privacyLink".localized
             static let errorEmailInUse          = "auth.register.errorEmailInUse".localized
             static let sectionPersonal          = "auth.register.sectionPersonal".localized
             static let sectionProfessional      = "auth.register.sectionProfessional".localized
@@ -128,6 +132,7 @@ enum L10n {
 
     enum Emergency {
         static let buttonTitle      = "emergency.buttonTitle".localized
+        static let buttonSubtitle   = "emergency.buttonSubtitle".localized
         static let pinTitle         = "emergency.pinTitle".localized
         static let pinSubtitle      = "emergency.pinSubtitle".localized
         static let assignTitle      = "emergency.assignTitle".localized
@@ -160,6 +165,9 @@ enum L10n {
         static let success       = "common.success".localized
         static let back          = "common.back".localized
         static let open          = "common.open".localized
+        static let done          = "common.done".localized
+        static let edit          = "common.edit".localized
+        static let remove        = "common.remove".localized
     }
 
     // MARK: - Home
@@ -220,6 +228,16 @@ enum L10n {
         static let logout             = "menu.logout".localized
         static let logoutConfirm      = "menu.logoutConfirm".localized
         static let logoutConfirmButton = "menu.logoutConfirmButton".localized
+
+        // Full-screen menu
+        static let sectionSubtitle    = "menu.sectionSubtitle".localized
+        static let sectionAccount     = "menu.sectionAccount".localized
+        static let sectionHelp        = "menu.sectionHelp".localized
+        static let subtitleMyAccount  = "menu.subtitleMyAccount".localized
+        static let subtitleSettings   = "menu.subtitleSettings".localized
+        static let subtitleFAQ        = "menu.subtitleFAQ".localized
+        static let subtitleIFU        = "menu.subtitleIFU".localized
+        static let subtitleSupport    = "menu.subtitleSupport".localized
     }
 
     // MARK: - Cloud & Reports
@@ -318,6 +336,7 @@ enum L10n {
             static let sectionSubtitle = "settings.display.sectionSubtitle".localized
             static let darkModeTitle   = "settings.display.darkModeTitle".localized
             static let darkModeSubtitle = "settings.display.darkModeSubtitle".localized
+            static let fontSizeTitle   = "settings.display.fontSizeTitle".localized
         }
         enum Privacy {
             static let sectionTitle      = "settings.privacy.sectionTitle".localized
@@ -363,6 +382,7 @@ enum L10n {
             static let or             = "patientSelection.search.or".localized
             static let button         = "patientSelection.search.button".localized
             static let clearButton    = "patientSelection.search.clearButton".localized
+            static let scanQRCode     = "patientSelection.search.scanQRCode".localized
         }
         enum Results {
             static let title         = "patientSelection.results.title".localized
@@ -566,6 +586,32 @@ enum L10n {
             static let subtitle      = "waitingList.add.subtitle".localized
             static let confirmButton = "waitingList.add.confirmButton".localized
         }
+
+        // Queue feature
+        static let title            = "waitingList.title".localized
+        static let emptyTitle       = "waitingList.emptyTitle".localized
+        static let emptySubtitle    = "waitingList.emptySubtitle".localized
+        static let addFirstPatient  = "waitingList.addFirstPatient".localized
+        static let addPatient       = "waitingList.addPatient".localized
+        static let addTitle         = "waitingList.addTitle".localized
+        static let addSubtitle      = "waitingList.addSubtitle".localized
+        static let clearDone        = "waitingList.clearDone".localized
+        static let startEKG         = "waitingList.startEKG".localized
+        static let continueEKG      = "waitingList.continueEKG".localized
+        static let markDone         = "waitingList.markDone".localized
+        static let restore          = "waitingList.restore".localized
+        static let sectionActive    = "waitingList.sectionActive".localized
+        static let sectionDone      = "waitingList.sectionDone".localized
+        static let searchPlaceholder = "waitingList.searchPlaceholder".localized
+        static let alreadyInQueue   = "waitingList.alreadyInQueue".localized
+        static let noPatients       = "waitingList.noPatients".localized
+        static let add              = "waitingList.add".localized
+
+        enum Status {
+            static let waiting    = "waitingList.status.waiting".localized
+            static let inProgress = "waitingList.status.inProgress".localized
+            static let done       = "waitingList.status.done".localized
+        }
     }
 
     // MARK: - FAQ
@@ -753,23 +799,91 @@ enum L10n {
         enum Nav {
             static let title    = "vitals.nav.title".localized
         }
-        static let selectVital     = "vitals.selectVital".localized
-        static let comingSoon      = "vitals.comingSoon".localized
+        static let selectVital   = "vitals.selectVital".localized
+        static let comingSoon    = "vitals.comingSoon".localized
+        static let rrPickerTitle = "vitals.rr.pickerTitle".localized
+        static let rrSaved       = "vitals.rr.saved".localized
+        static let sourceManual  = "vitals.source.manual".localized
+        static func rrBpm(_ v: Int) -> String {
+            String(format: "vitals.rr.bpm".localized, v)
+        }
+        static func mrnLabel(_ mrn: String) -> String {
+            String(format: "vitals.mrn.label".localized, mrn)
+        }
+        static func sourceLabel(_ src: String) -> String {
+            String(format: "vitals.source.label".localized, src)
+        }
+
         enum EKG {
             static let title    = "vitals.ekg.title".localized
             static let subtitle = "vitals.ekg.subtitle".localized
         }
         enum SpO2 {
-            static let title    = "vitals.spo2.title".localized
-            static let subtitle = "vitals.spo2.subtitle".localized
+            static let title       = "vitals.spo2.title".localized
+            static let subtitle    = "vitals.spo2.subtitle".localized
+            static let saveReading = "vitals.spo2.saveReading".localized
+            static let saved       = "vitals.spo2.saved".localized
         }
         enum BP {
-            static let title    = "vitals.bp.title".localized
-            static let subtitle = "vitals.bp.subtitle".localized
+            static let title              = "vitals.bp.title".localized
+            static let subtitle           = "vitals.bp.subtitle".localized
+            static let sys                = "vitals.bp.sys".localized
+            static let dia                = "vitals.bp.dia".localized
+            static let bpm                = "vitals.bp.bpm".localized
+            static let unit               = "vitals.bp.unit".localized
+            static let sensorError        = "vitals.bp.sensorError".localized
+            static let sensorErrorMessage = "vitals.bp.sensorErrorMessage".localized
+            static let saveReading        = "vitals.bp.saveReading".localized
+            static let saved              = "vitals.bp.saved".localized
+            static let armRight           = "vitals.bp.armRight".localized
+            static let armLeft            = "vitals.bp.armLeft".localized
+            static let armRightFull       = "vitals.bp.armRightFull".localized
+            static let armLeftFull        = "vitals.bp.armLeftFull".localized
+            static let positionSitting    = "vitals.bp.positionSitting".localized
+            static let positionStanding   = "vitals.bp.positionStanding".localized
+            static let positionLying      = "vitals.bp.positionLying".localized
+            static let positionSit        = "vitals.bp.positionSit".localized
+            static let positionStand      = "vitals.bp.positionStand".localized
+            static let positionLie        = "vitals.bp.positionLie".localized
         }
         enum Temp {
-            static let title    = "vitals.temp.title".localized
-            static let subtitle = "vitals.temp.subtitle".localized
+            static let title       = "vitals.temp.title".localized
+            static let subtitle    = "vitals.temp.subtitle".localized
+            static let saveReading = "vitals.temp.saveReading".localized
+            static let saved       = "vitals.temp.saved".localized
+        }
+        enum Pain {
+            static let title         = "vitals.pain.title".localized
+            static let save          = "vitals.pain.save".localized
+            static let noPain        = "vitals.pain.noPain".localized
+            static let mild          = "vitals.pain.mild".localized
+            static let moderate      = "vitals.pain.moderate".localized
+            static let uncomfortable = "vitals.pain.uncomfortable".localized
+            static let severe        = "vitals.pain.severe".localized
+            static let worst         = "vitals.pain.worst".localized
+        }
+        enum Height {
+            static let title        = "vitals.height.title".localized
+            static let save         = "vitals.height.save".localized
+            static let unitImperial = "vitals.height.unitImperial".localized
+            static let unitMetric   = "vitals.height.unitMetric".localized
+        }
+        enum Weight {
+            static let title        = "vitals.weight.title".localized
+            static let save         = "vitals.weight.save".localized
+            static let unitImperial = "vitals.weight.unitImperial".localized
+            static let unitMetric   = "vitals.weight.unitMetric".localized
+        }
+        enum Device {
+            static let scanning     = "vitals.device.scanning".localized
+            static let connecting   = "vitals.device.connecting".localized
+            static let connectTitle = "vitals.device.connectTitle".localized
+            static let useDemo      = "vitals.device.useDemo".localized
+            static let disconnect   = "vitals.device.disconnect".localized
+            static func connectDevice(_ title: String) -> String {
+                String(format: "vitals.device.connectDevice".localized, title)
+            }
         }
     }
+
 }

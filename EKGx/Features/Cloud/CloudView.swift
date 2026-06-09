@@ -263,7 +263,7 @@ private struct PatientRow: View {
             .background(isSelected ? AppColors.brandPrimary.opacity(0.08) : Color.clear)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(.hapticPlain)
         .animation(.easeInOut(duration: 0.15), value: isSelected)
     }
 }
@@ -521,7 +521,7 @@ private struct RecordingRow: View {
                                     .frame(width: 32, height: 32)
                             }
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.hapticPlain)
                         .disabled(isUploading)
                     }
 

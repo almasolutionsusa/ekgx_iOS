@@ -21,6 +21,8 @@ protocol DeviceServiceProtocol: AnyObject {
 
     func connect()
     func disconnect()
+    /// Stops the BLE scan without fully disconnecting. No-op if not scanning.
+    func stopScan()
     /// Re-applies filter configuration when already connected (no reconnect needed).
     func reconfigureFilters()
 }

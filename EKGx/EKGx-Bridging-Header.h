@@ -16,3 +16,13 @@
 #import <vhECGCodes/vhECGCodes.h>
 #import <vhECGCodes/CodeGroup.h>
 #import <vhECGCodes/CodeItem.h>
+
+// BPSDK + OximeterSDK — device only (no simulator slice)
+#if !TARGET_OS_SIMULATOR
+#import "VTBLEUtils.h"
+#import <VTMProductLib/VTMProductLib.h>
+#import "VTMProductURATUtils.h"
+#import "CCRBlueToothManager.h"
+#import "CRAP20SDK.h"
+#import "CRBleDevice.h"
+#endif
