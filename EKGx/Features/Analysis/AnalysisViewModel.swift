@@ -97,11 +97,26 @@ final class AnalysisViewModel {
     /// True when the app is in offline mode — upload must be disabled regardless of sync state.
     let isLocalMode: Bool
 
+    var performedBy: String {
+        guard let id = localRecordingId else { return "" }
+        return patientExams.first(where: { $0.id == id })?.username ?? ""
+    }
+
+    // MARK: - Exam History
+
+    var patientExams: [ECGRecording] = []
+    var showExamHistory = false
+
+    // Compare
+    var compareRecording: ECGRecording?
+    var compareECGData: ECGLeads = []
+    var showCompareView = false
+
     // MARK: - Data
 
-    let patient: Patient
-    let ecgData: ECGLeads
-    let sampleRate: Int
+    private(set) var patient: Patient
+    var ecgData: ECGLeads
+    var sampleRate: Int
 
     private(set) var analysis: vhECGAnalysisObject?
     private(set) var measurements: vhMeasurements?
@@ -125,7 +140,7 @@ final class AnalysisViewModel {
     private let authService: AuthServiceProtocol
     private let patientRepository: PatientRepositoryProtocol?
     /// The locally persisted recording created when analysis starts.
-    private var localRecordingId: String? = nil
+    private(set) var localRecordingId: String? = nil
 
     // MARK: - Init
 
@@ -191,6 +206,7 @@ final class AnalysisViewModel {
                     self.copyMergeStrings(from: obj.measurementsResult)
                     self.state           = .success
                     self.saveLocalRecording()
+                    self.loadPatientExams()
                 } else {
                     self.state = .failed
                 }
@@ -337,7 +353,9 @@ final class AnalysisViewModel {
             patient: patient,
             sampleRate: sampleRate,
             measurements: measurements,
-            diagnosisLines: diagnosisLines
+            diagnosisLines: diagnosisLines,
+            performedBy: performedBy,
+            isEmergency: showEmergencyBanner
         )
     }
 
@@ -358,7 +376,11 @@ final class AnalysisViewModel {
             qtCorrected:    nilIfEmpty(m?.qTc),
             fileSize:       fileData.count,
             appVersion:     Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-            username:       authService.currentUser?.username,
+            username: {
+                let u = authService.currentUser
+                let full = [u?.firstName, u?.lastName].compactMap { $0 }.filter { !$0.isEmpty }.joined(separator: " ")
+                return full.isEmpty ? u?.username : full
+            }(),
             isEmergency:    isEmergencySession
         )
         recordingStore.save(recording: recording, ecgFileData: fileData, pdfData: pdf)
@@ -368,6 +390,46 @@ final class AnalysisViewModel {
     private func nilIfEmpty(_ s: String?) -> String? {
         guard let s, !s.isEmpty, s != "—" else { return nil }
         return s
+    }
+
+    // MARK: - Exam History & Compare
+
+    func loadPatientExams() {
+        let pid = patient.patientId ?? patient.uniqueId ?? ""
+        guard !pid.isEmpty else { return }
+        patientExams = recordingStore.recordings(for: pid)
+    }
+
+    func switchToExam(_ recording: ECGRecording) {
+        guard let raw = recordingStore.ecgFileData(for: recording.id) else { return }
+        let leads = EKGUploadService.deserialise(data: raw, leadCount: recording.leadCount)
+        guard !leads.isEmpty else { return }
+        ecgData          = leads
+        sampleRate       = recording.sampleRate
+        localRecordingId = recording.id
+        showExamHistory  = false
+        analysis         = nil
+        measurements     = nil
+        templateData     = []
+        leadParameters   = nil
+        diagnosisLines   = []
+        state            = .analyzing
+        runAnalysis()
+    }
+
+    func startCompare(with recording: ECGRecording) {
+        guard let raw = recordingStore.ecgFileData(for: recording.id) else { return }
+        let leads = EKGUploadService.deserialise(data: raw, leadCount: recording.leadCount)
+        guard !leads.isEmpty else { return }
+        compareECGData   = leads
+        compareRecording = recording
+        // showCompareView is set via onDismiss in AnalysisView after history sheet fully closes
+        showExamHistory  = false
+    }
+
+    func openCompareIfPending() {
+        guard compareRecording != nil else { return }
+        showCompareView = true
     }
 
     // MARK: - Navigation
@@ -503,7 +565,9 @@ final class AnalysisViewModel {
                 birthDate: dobStr,
                 gender:    ecGender,
                 mrn:       ecMRN.trimmingCharacters(in: .whitespacesAndNewlines),
-                createdBy: authService.currentUser?.username ?? "emergency"
+                createdBy: authService.currentUser?.displayName.isEmpty == false
+                    ? authService.currentUser!.displayName
+                    : authService.currentUser?.username ?? "emergency"
             )
             do {
                 let created = try await repo.add(input)

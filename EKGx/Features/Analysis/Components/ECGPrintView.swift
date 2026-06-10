@@ -163,7 +163,9 @@ func printECG(
     ecgData: ECGLeads,
     sampleRate: Int,
     measurements: vhMeasurements?,
-    diagnosisLines: [String]
+    diagnosisLines: [String],
+    performedBy: String = "",
+    isEmergency: Bool = false
 ) {
     // Render as multi-page PDF (1 page / 10 s at 25 mm/s — 30 s → 3 pages).
     guard let pdfData = ECGImageRenderer.renderPDF(
@@ -171,7 +173,9 @@ func printECG(
         patient: patient,
         sampleRate: sampleRate,
         measurements: measurements,
-        diagnosisLines: diagnosisLines
+        diagnosisLines: diagnosisLines,
+        performedBy: performedBy,
+        isEmergency: isEmergency
     ) else { return }
 
     let printInfo = UIPrintInfo(dictionary: nil)

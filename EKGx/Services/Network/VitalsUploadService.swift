@@ -96,6 +96,7 @@ final class VitalsUploadService {
         deviceName: String?,
         arm: BPArm? = nil,
         position: BPPosition? = nil,
+        methodOverride: String? = nil,
         recordedAt: Date = Date()
     ) async throws {
         let methodParts = [arm?.fullLabel, position?.label].compactMap { $0 }
@@ -103,7 +104,7 @@ final class VitalsUploadService {
         body.systolicValue = systolic
         body.diastolicValue = diastolic
         body.pulseRate = pulseRate
-        body.method = methodParts.isEmpty ? "Automatic cuff" : methodParts.joined(separator: ", ")
+        body.method = methodOverride ?? (methodParts.isEmpty ? "Automatic cuff" : methodParts.joined(separator: ", "))
         body.deviceName = deviceName
         try await post(body)
     }
@@ -115,12 +116,13 @@ final class VitalsUploadService {
         pulseRate: Int?,
         patient: Patient,
         deviceName: String?,
+        methodOverride: String? = nil,
         recordedAt: Date = Date()
     ) async throws {
         var body = base(patient: patient, type: "SPO2", unit: "%", recordedAt: recordedAt)
         body.val = Double(value)
         body.pulseRate = pulseRate
-        body.method = "Fingertip pulse oximeter"
+        body.method = methodOverride ?? "Fingertip pulse oximeter"
         body.deviceName = deviceName
         try await post(body)
     }
@@ -132,11 +134,12 @@ final class VitalsUploadService {
         unit: String,
         patient: Patient,
         deviceName: String?,
+        methodOverride: String? = nil,
         recordedAt: Date = Date()
     ) async throws {
         var body = base(patient: patient, type: "TEMPERATURE", unit: unit, recordedAt: recordedAt)
         body.val = value
-        body.method = "Oral"
+        body.method = methodOverride ?? "Oral"
         body.deviceName = deviceName
         try await post(body)
     }
@@ -156,6 +159,21 @@ final class VitalsUploadService {
         try await post(body)
     }
 
+    // MARK: - Pain Level
+
+    func uploadPain(
+        value: Int,
+        patient: Patient,
+        recordedAt: Date = Date()
+    ) async throws {
+        var body = base(patient: patient, type: "PAIN_LEVEL", unit: "/10", recordedAt: recordedAt)
+        body.val = Double(value)
+        body.method = "Patient reported"
+        body.deviceName = "Manual"
+        body.deviceUuid = "manual-001"
+        try await post(body)
+    }
+
     // MARK: - Weight
 
     func uploadWeight(
@@ -169,6 +187,21 @@ final class VitalsUploadService {
         body.val = value
         body.method = "Standing scale"
         body.deviceName = deviceName
+        try await post(body)
+    }
+
+    // MARK: - Height
+
+    func uploadHeight(
+        valueCm: Double,
+        patient: Patient,
+        recordedAt: Date = Date()
+    ) async throws {
+        var body = base(patient: patient, type: "HEIGHT", unit: "cm", recordedAt: recordedAt)
+        body.val = valueCm
+        body.method = "Manual"
+        body.deviceName = "Manual"
+        body.deviceUuid = "manual-001"
         try await post(body)
     }
 
@@ -206,10 +239,17 @@ final class VitalsUploadService {
 
     private func post(_ body: VitalUploadBody) async throws {
         try await ensureAuthenticated()
-        let _: APIResponse<AnyCodable> = try await client.post(
-            path: APIEndpoints.Vitals.upload,
-            body: body
-        )
+        print("📤 Uploading vital: type=\(body.type) unit=\(body.unit) val=\(body.val.map { String($0) } ?? "\(body.systolicValue ?? 0)/\(body.diastolicValue ?? 0)") patient=\(body.patientUuid)")
+        do {
+            let _: APIResponse<AnyCodable> = try await client.post(
+                path: APIEndpoints.Vitals.upload,
+                body: body
+            )
+            print("✅ Vital uploaded: \(body.type)")
+        } catch {
+            print("❌ Vital upload failed: \(body.type) — \(error)")
+            throw error
+        }
     }
 
     /// Silently re-login with stored credentials if no access token is present.

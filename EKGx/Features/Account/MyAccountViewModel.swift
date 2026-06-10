@@ -219,6 +219,10 @@ final class MyAccountViewModel {
             defer { isChangingPassword = false }
             do {
                 try await authService.changePassword(oldPassword: currentPassword, newPassword: newPassword)
+                let store = LocalUserStore.shared
+                let storedEmail = authService.loginData?.user.email ?? store.email ?? ""
+                store.savePasswordHash(newPassword, for: storedEmail)
+                store.savePasswordUnderAllKeys(newPassword, typedInput: storedEmail)
                 showChangePasswordSheet = false
                 currentPassword = ""
                 newPassword     = ""

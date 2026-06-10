@@ -113,6 +113,6 @@ final class AppContentViewModel {
     // MARK: - Navigation
 
     func navigateBack() {
-        router.navigate(to: .patientSelection)
+        router.navigate(to: .menu)
     }
 }

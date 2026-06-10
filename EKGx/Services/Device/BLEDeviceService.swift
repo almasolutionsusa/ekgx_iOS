@@ -47,6 +47,10 @@ final class BLEDeviceService: NSObject, DeviceServiceProtocol {
     func reconfigureFilters() {
         guard currentState == .connected else { return }
         configureFilters()
+        // Clear stale internal buffer so the filter produces output immediately
+        // on the first frame. Without this, filtersECGsData returns nil for
+        // frames processed while onECGData was nil (e.g. during VitalsView).
+        vhECGFiltersLib.shared().clearBuffer()
     }
 
     func connect() {

@@ -5,18 +5,36 @@ import Foundation
 enum ExamRecord: Identifiable {
     case ekg(ECGRecording)
     case bp(BPRecording)
+    case spo2(SpO2Reading)
+    case temp(TempReading)
+    case rr(RRReading)
+    case pain(PainReading)
+    case weight(WeightReading)
+    case height(HeightReading)
 
     var id: String {
         switch self {
-        case .ekg(let r): return r.id
-        case .bp(let r):  return r.id
+        case .ekg(let r):  return r.id
+        case .bp(let r):   return r.id
+        case .spo2(let r): return r.id
+        case .temp(let r): return r.id
+        case .rr(let r):   return r.id
+        case .pain(let r):   return r.id
+        case .weight(let r): return r.id
+        case .height(let r): return r.id
         }
     }
 
     var recordedAt: Date {
         switch self {
-        case .ekg(let r): return r.recordedAt
-        case .bp(let r):  return r.recordedAt
+        case .ekg(let r):    return r.recordedAt
+        case .bp(let r):     return r.recordedAt
+        case .spo2(let r):   return r.recordedAt
+        case .temp(let r):   return r.recordedAt
+        case .rr(let r):     return r.recordedAt
+        case .pain(let r):   return r.recordedAt
+        case .weight(let r): return r.recordedAt
+        case .height(let r): return r.recordedAt
         }
     }
 }
@@ -30,12 +48,22 @@ final class PatientExamsViewModel {
     // MARK: - State
 
     let patient: Patient
-    var recordings:  [ECGRecording] = []
-    var bpReadings:  [BPRecording]  = []
+    var recordings:    [ECGRecording] = []
+    var bpReadings:    [BPRecording]  = []
+    var spo2Readings:  [SpO2Reading]  = []
+    var tempReadings:  [TempReading]  = []
+    var rrReadings:    [RRReading]    = []
+    var painReadings:   [PainReading]   = []
+    var weightReadings: [WeightReading] = []
+    var heightReadings: [HeightReading] = []
     var selectedVitalType: VitalType? = nil
     var uploadingIds: Set<String> = []
-    var recordingToDelete:   ECGRecording? = nil
-    var bpReadingToDelete:   BPRecording?  = nil
+    var recordingToDelete:  ECGRecording? = nil
+    var bpReadingToDelete:  BPRecording?  = nil
+    var rrReadingToDelete:  RRReading?    = nil
+    var painReadingToDelete:   PainReading?   = nil
+    var weightReadingToDelete: WeightReading? = nil
+    var heightReadingToDelete: HeightReading? = nil
     var showDeleteConfirm: Bool = false
 
     // MARK: - Dependencies
@@ -61,31 +89,62 @@ final class PatientExamsViewModel {
 
     private func load() {
         let pid = patient.patientId ?? patient.uniqueId ?? ""
-        recordings = pid.isEmpty ? [] : recordingStore.recordings(for: pid)
-        bpReadings = pid.isEmpty ? [] : diContainer.bpStore.readings(for: pid)
+        guard !pid.isEmpty else { return }
+        recordings   = recordingStore.recordings(for: pid)
+        bpReadings   = diContainer.bpStore.readings(for: pid)
+        spo2Readings = diContainer.spo2Store.readings(for: pid)
+        tempReadings = diContainer.tempStore.readings(for: pid)
+        rrReadings   = diContainer.rrStore.readings(for: pid)
+        painReadings   = diContainer.painStore.readings(for: pid)
+        weightReadings = diContainer.weightStore.readings(for: pid)
+        heightReadings = diContainer.heightStore.readings(for: pid)
     }
 
     // MARK: - Computed
 
     var isLocalMode: Bool { diContainer.isLocalMode }
-    var examCount: Int { recordings.count + bpReadings.count }
+    var examCount: Int {
+        recordings.count + bpReadings.count + spo2Readings.count +
+        tempReadings.count + rrReadings.count + painReadings.count +
+        weightReadings.count + heightReadings.count
+    }
 
     var availableVitalTypes: [VitalType] {
         var types: [VitalType] = []
-        if !recordings.isEmpty  { types.append(.ekg) }
-        if !bpReadings.isEmpty  { types.append(.bloodPressure) }
+        if !recordings.isEmpty   { types.append(.ekg) }
+        if !bpReadings.isEmpty   { types.append(.bloodPressure) }
+        if !spo2Readings.isEmpty { types.append(.oxygenSaturation) }
+        if !tempReadings.isEmpty { types.append(.temperature) }
+        if !rrReadings.isEmpty   { types.append(.respirations) }
+        if !painReadings.isEmpty   { types.append(.painLevel) }
+        if !weightReadings.isEmpty { types.append(.weight) }
+        if !heightReadings.isEmpty { types.append(.height) }
         return types
     }
 
     var filteredRecordings: [ExamRecord] {
-        let all: [ExamRecord] = recordings.map { .ekg($0) } + bpReadings.map { .bp($0) }
+        let all: [ExamRecord] =
+            recordings.map    { .ekg($0)    } +
+            bpReadings.map    { .bp($0)     } +
+            spo2Readings.map  { .spo2($0)   } +
+            tempReadings.map  { .temp($0)   } +
+            rrReadings.map    { .rr($0)     } +
+            painReadings.map  { .pain($0)   } +
+            weightReadings.map { .weight($0) } +
+            heightReadings.map { .height($0) }
         let sorted = all.sorted { $0.recordedAt > $1.recordedAt }
         guard let type = selectedVitalType else { return sorted }
         return sorted.filter {
             switch ($0, type) {
-            case (.ekg,  .ekg):           return true
-            case (.bp,   .bloodPressure): return true
-            default:                      return false
+            case (.ekg,  .ekg):              return true
+            case (.bp,   .bloodPressure):    return true
+            case (.spo2, .oxygenSaturation): return true
+            case (.temp, .temperature):      return true
+            case (.rr,   .respirations):     return true
+            case (.pain,   .painLevel):  return true
+            case (.weight, .weight):     return true
+            case (.height, .height):     return true
+            default:                     return false
             }
         }
     }
@@ -156,10 +215,11 @@ final class PatientExamsViewModel {
         showDeleteConfirm  = true
     }
 
-    func confirmDeleteBP(_ reading: BPRecording) {
-        bpReadingToDelete = reading
-        showDeleteConfirm = true
-    }
+    func confirmDeleteBP(_ reading: BPRecording)     { bpReadingToDelete  = reading; showDeleteConfirm = true }
+    func confirmDeleteRR(_ reading: RRReading)         { rrReadingToDelete     = reading; showDeleteConfirm = true }
+    func confirmDeletePain(_ reading: PainReading)     { painReadingToDelete   = reading; showDeleteConfirm = true }
+    func confirmDeleteWeight(_ reading: WeightReading) { weightReadingToDelete = reading; showDeleteConfirm = true }
+    func confirmDeleteHeight(_ reading: HeightReading) { heightReadingToDelete = reading; showDeleteConfirm = true }
 
     func deleteConfirmed() {
         if let r = recordingToDelete {
@@ -170,13 +230,34 @@ final class PatientExamsViewModel {
             diContainer.bpStore.delete(id: r.id)
             bpReadings.removeAll { $0.id == r.id }
             bpReadingToDelete = nil
+        } else if let r = rrReadingToDelete {
+            diContainer.rrStore.delete(id: r.id)
+            rrReadings.removeAll { $0.id == r.id }
+            rrReadingToDelete = nil
+        } else if let r = painReadingToDelete {
+            diContainer.painStore.delete(id: r.id)
+            painReadings.removeAll { $0.id == r.id }
+            painReadingToDelete = nil
+        } else if let r = weightReadingToDelete {
+            diContainer.weightStore.delete(id: r.id)
+            weightReadings.removeAll { $0.id == r.id }
+            weightReadingToDelete = nil
+        } else if let r = heightReadingToDelete {
+            diContainer.heightStore.delete(id: r.id)
+            heightReadings.removeAll { $0.id == r.id }
+            heightReadingToDelete = nil
         }
+        showDeleteConfirm = false
     }
 
     func cancelDelete() {
-        recordingToDelete  = nil
-        bpReadingToDelete  = nil
-        showDeleteConfirm  = false
+        recordingToDelete    = nil
+        bpReadingToDelete    = nil
+        rrReadingToDelete    = nil
+        painReadingToDelete  = nil
+        weightReadingToDelete = nil
+        heightReadingToDelete = nil
+        showDeleteConfirm    = false
     }
 
     // MARK: - Navigation

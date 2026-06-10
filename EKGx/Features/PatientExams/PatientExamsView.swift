@@ -175,6 +175,66 @@ struct PatientExamsView: View {
                                 recording: r,
                                 onDelete:  { viewModel.confirmDeleteBP(r) }
                             )
+                        case .spo2(let r):
+                            SimpleVitalExamCard(
+                                icon: VitalType.oxygenSaturation.icon,
+                                color: VitalType.oxygenSaturation.iconColor,
+                                title: VitalType.oxygenSaturation.title,
+                                value: r.displayValue,
+                                date: r.formattedDate,
+                                time: r.formattedTime,
+                                onDelete: nil
+                            )
+                        case .temp(let r):
+                            SimpleVitalExamCard(
+                                icon: VitalType.temperature.icon,
+                                color: VitalType.temperature.iconColor,
+                                title: VitalType.temperature.title,
+                                value: r.displayValue,
+                                date: r.formattedDate,
+                                time: r.formattedTime,
+                                onDelete: nil
+                            )
+                        case .rr(let r):
+                            SimpleVitalExamCard(
+                                icon: VitalType.respirations.icon,
+                                color: VitalType.respirations.iconColor,
+                                title: VitalType.respirations.title,
+                                value: r.displayValue,
+                                date: r.formattedDate,
+                                time: r.formattedTime,
+                                onDelete: { viewModel.confirmDeleteRR(r) }
+                            )
+                        case .pain(let r):
+                            SimpleVitalExamCard(
+                                icon: VitalType.painLevel.icon,
+                                color: VitalType.painLevel.iconColor,
+                                title: VitalType.painLevel.title,
+                                value: r.displayValue,
+                                date: r.formattedDate,
+                                time: r.formattedTime,
+                                onDelete: { viewModel.confirmDeletePain(r) }
+                            )
+                        case .weight(let r):
+                            SimpleVitalExamCard(
+                                icon: VitalType.weight.icon,
+                                color: VitalType.weight.iconColor,
+                                title: VitalType.weight.title,
+                                value: r.displayValue,
+                                date: r.formattedDate,
+                                time: r.formattedTime,
+                                onDelete: { viewModel.confirmDeleteWeight(r) }
+                            )
+                        case .height(let r):
+                            SimpleVitalExamCard(
+                                icon: VitalType.height.icon,
+                                color: VitalType.height.iconColor,
+                                title: VitalType.height.title,
+                                value: r.displayValue,
+                                date: r.formattedDate,
+                                time: r.formattedTime,
+                                onDelete: { viewModel.confirmDeleteHeight(r) }
+                            )
                         }
                     }
                 }
@@ -538,6 +598,71 @@ private struct ExamsCompactLabelStyle: LabelStyle {
             configuration.icon
             configuration.title
         }
+    }
+}
+
+// MARK: - Simple Vital Exam Card (SpO2, Temp, RR, Pain)
+
+private struct SimpleVitalExamCard: View {
+    let icon: String
+    let color: Color
+    let title: String
+    let value: String
+    let date: String
+    let time: String
+    let onDelete: (() -> Void)?
+
+    var body: some View {
+        HStack(spacing: AppMetrics.spacing20) {
+            ZStack {
+                RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                    .fill(color.opacity(0.10))
+                    .frame(width: 52, height: 52)
+                Image(systemName: icon)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundStyle(color)
+            }
+
+            VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
+                Text(title)
+                    .font(AppTypography.bodySemibold)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text(value)
+                    .font(AppTypography.title3)
+                    .foregroundStyle(color)
+            }
+
+            Spacer()
+
+            VStack(alignment: .trailing, spacing: AppMetrics.spacing4) {
+                Text(date)
+                    .font(AppTypography.captionBold)
+                    .foregroundStyle(AppColors.textPrimary)
+                Text(time)
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+
+            if let onDelete {
+                Button(action: onDelete) {
+                    Image(systemName: "trash")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(AppColors.statusCritical)
+                        .padding(AppMetrics.spacing8)
+                        .background(AppColors.statusCritical.opacity(0.08))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.hapticPlain)
+            }
+        }
+        .padding(.horizontal, AppMetrics.spacing20)
+        .padding(.vertical, AppMetrics.spacing14)
+        .background(AppColors.surfaceCard)
+        .cornerRadius(AppMetrics.radiusLarge)
+        .overlay(
+            RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                .stroke(AppColors.borderSubtle.opacity(0.4), lineWidth: 1)
+        )
     }
 }
 

@@ -34,6 +34,23 @@ struct ECGImageRenderer {
     // Width of 1-mV calibration pulse (flat + up + hold + down + flat ≈ 4.5 mm)
     private static let calibrationWidth: CGFloat = pixPerMm * 4.5
 
+    // MARK: - Filter label (mirrors EKGStaticView.activeFilterLabel)
+
+    private static var activeFilterLabel: String {
+        let ud = UserDefaults.standard
+        var parts: [String] = []
+        if let lp = ud.string(forKey: "app.lowPass"), lp != "0 Hz" {
+            parts.append("LowPass: \(lp)")
+        }
+        if let ac = ud.string(forKey: "app.acNotch"), ac != "Off" {
+            parts.append("AcNotch: \(ac)")
+        }
+        if let emg = ud.string(forKey: "app.emgFilter"), emg != "Off" {
+            parts.append("EMG: \(emg)")
+        }
+        return parts.joined(separator: " - ")
+    }
+
     // MARK: - Public
 
     /// Renders a multi-page PDF — one page per 10 s of recording at 25 mm/s.
@@ -43,7 +60,9 @@ struct ECGImageRenderer {
         patient: Patient,
         sampleRate: Int,
         measurements: vhMeasurements?,
-        diagnosisLines: [String]
+        diagnosisLines: [String],
+        performedBy: String = "",
+        isEmergency: Bool = false
     ) -> Data? {
         guard ecgData.count == 12, !ecgData[0].isEmpty, sampleRate > 0 else { return nil }
 
@@ -74,7 +93,9 @@ struct ECGImageRenderer {
                     in: pageRect,
                     context: cgCtx,
                     pageNum: numPages > 1 ? page + 1 : nil,
-                    totalPages: numPages > 1 ? numPages : nil
+                    totalPages: numPages > 1 ? numPages : nil,
+                    performedBy: performedBy,
+                    isEmergency: isEmergency
                 )
 
                 draw3x4(
@@ -96,7 +117,9 @@ struct ECGImageRenderer {
                 measurements: measurements,
                 diagnosisLines: diagnosisLines,
                 in: pageRect,
-                context: ctx.cgContext
+                context: ctx.cgContext,
+                performedBy: performedBy,
+                isEmergency: isEmergency
             )
         }
     }
@@ -108,7 +131,9 @@ struct ECGImageRenderer {
         sampleRate: Int,
         measurements: vhMeasurements?,
         diagnosisLines: [String],
-        scale: CGFloat = 2.0
+        scale: CGFloat = 2.0,
+        performedBy: String = "",
+        isEmergency: Bool = false
     ) -> UIImage? {
         guard ecgData.count == 12, !ecgData[0].isEmpty, sampleRate > 0 else { return nil }
 
@@ -127,7 +152,9 @@ struct ECGImageRenderer {
                 patient: patient,
                 measurements: measurements,
                 in: CGRect(origin: .zero, size: size),
-                context: context
+                context: context,
+                performedBy: performedBy,
+                isEmergency: isEmergency
             )
 
             draw3x4(
@@ -150,7 +177,9 @@ struct ECGImageRenderer {
         in rect: CGRect,
         context: CGContext,
         pageNum: Int? = nil,
-        totalPages: Int? = nil
+        totalPages: Int? = nil,
+        performedBy: String = "",
+        isEmergency: Bool = false
     ) -> CGFloat {
         var y = margin
 
@@ -197,6 +226,21 @@ struct ECGImageRenderer {
             withAttributes: redAttrs
         )
         y += 11
+
+        // Line 2b (right): Rapid EKG or Performed by
+        if isEmergency {
+            let tag     = "Rapid EKG"
+            let tagAttrs: [NSAttributedString.Key: Any] = [.font: UIFont.boldSystemFont(ofSize: 8), .foregroundColor: UIColor.red]
+            let tagSize = (tag as NSString).size(withAttributes: tagAttrs)
+            (tag as NSString).draw(at: CGPoint(x: rect.width - margin - tagSize.width, y: y), withAttributes: tagAttrs)
+            y += 11
+        } else if !performedBy.isEmpty {
+            let tag     = "Performed by: \(performedBy)"
+            let tagAttrs: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 8), .foregroundColor: UIColor.darkGray]
+            let tagSize = (tag as NSString).size(withAttributes: tagAttrs)
+            (tag as NSString).draw(at: CGPoint(x: rect.width - margin - tagSize.width, y: y), withAttributes: tagAttrs)
+            y += 11
+        }
 
         // Line 3: Measurements row
         if let m = measurements?.merge {
@@ -436,6 +480,23 @@ struct ECGImageRenderer {
         }
         context.strokePath()
 
+        // ── Filter label — bottom-right of rhythm strip ───────────────────────
+        let filterLabel = activeFilterLabel
+        if !filterLabel.isEmpty {
+            let filterAttrs: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 6.5),
+                .foregroundColor: UIColor.darkGray,
+            ]
+            let filterSize = (filterLabel as NSString).size(withAttributes: filterAttrs)
+            (filterLabel as NSString).draw(
+                at: CGPoint(
+                    x: margin + drawableWidth - filterSize.width - 4,
+                    y: topOffset + drawableHeight - filterSize.height - 4
+                ),
+                withAttributes: filterAttrs
+            )
+        }
+
         // ── Footer ────────────────────────────────────────────────────────────
 
         let footerFont  = UIFont.systemFont(ofSize: 7)
@@ -471,7 +532,9 @@ struct ECGImageRenderer {
         measurements: vhMeasurements?,
         diagnosisLines: [String],
         in pageRect: CGRect,
-        context: CGContext
+        context: CGContext,
+        performedBy: String = "",
+        isEmergency: Bool = false
     ) {
         // ── Watermark (drawn first so it sits behind all text) ────────────────
         context.saveGState()
@@ -535,6 +598,19 @@ struct ECGImageRenderer {
             at: CGPoint(x: pageRect.width - margin - unconfSize.width, y: y),
             withAttributes: redAttrs
         )
+
+        if isEmergency {
+            let tag     = "Rapid EKG"
+            let tagAttrs: [NSAttributedString.Key: Any] = [.font: UIFont.boldSystemFont(ofSize: 9), .foregroundColor: UIColor.red]
+            let tagSize = (tag as NSString).size(withAttributes: tagAttrs)
+            (tag as NSString).draw(at: CGPoint(x: pageRect.width - margin - tagSize.width, y: y + 13), withAttributes: tagAttrs)
+        } else if !performedBy.isEmpty {
+            let tag     = "Performed by: \(performedBy)"
+            let tagAttrs: [NSAttributedString.Key: Any] = [.font: UIFont.systemFont(ofSize: 9), .foregroundColor: UIColor.darkGray]
+            let tagSize = (tag as NSString).size(withAttributes: tagAttrs)
+            (tag as NSString).draw(at: CGPoint(x: pageRect.width - margin - tagSize.width, y: y + 13), withAttributes: tagAttrs)
+        }
+
         y += 14
 
         func drawSeparator() {

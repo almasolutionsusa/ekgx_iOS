@@ -52,6 +52,8 @@ struct BPHistoryItem: Identifiable {
 struct VitalsView: View {
 
     @State var viewModel: VitalsViewModel
+    @State private var pendingRR: Int? = nil
+    @State private var savedRR: Int? = nil
 
     var body: some View {
         @Bindable var vm = viewModel
@@ -63,19 +65,45 @@ struct VitalsView: View {
                 content
             }
         }
-        .sheet(isPresented: $vm.showConnectSheet) {
-            if let vital = viewModel.selectedVital {
-                DeviceConnectSheet(vital: vital, viewModel: viewModel)
+//        .sheet(isPresented: $vm.showConnectSheet) {
+//            if let vital = viewModel.selectedVital {
+//                DeviceConnectSheet(vital: vital, viewModel: viewModel)
+//            }
+//        }
+        .sheet(isPresented: $vm.showManualBPEntry) {
+            ManualBPSheet(arm: viewModel.bpArm, position: viewModel.bpPosition) { sys, dia, pr in
+                viewModel.saveManualBP(systolic: sys, diastolic: dia, pulseRate: pr)
             }
-        }
-        .sheet(isPresented: $vm.showPainLevelPicker) {
-            PainLevelSheet(current: viewModel.painLevel) { level in
-                viewModel.savePainLevel(level)
-            }
-            .presentationDetents([.height(600)])
             .presentationBackground(AppColors.surfaceBackground)
+            .presentationDetents([.large])
         }
-        .onAppear { viewModel.activate() }
+        .sheet(isPresented: $vm.showManualSpO2Entry) {
+            ManualSpO2Sheet { spo2, pr in
+                viewModel.saveManualSpO2(value: spo2, pulseRate: pr)
+            }
+            .presentationBackground(AppColors.surfaceBackground)
+            .presentationDetents([.large])
+        }
+        .sheet(isPresented: $vm.showManualTempEntry) {
+            ManualTempSheet { value, unit in
+                viewModel.saveManualTemp(value: value, unit: unit)
+            }
+            .presentationBackground(AppColors.surfaceBackground)
+            .presentationDetents([.large])
+        }
+        .sheet(isPresented: $vm.showManualPREntry) {
+            ManualPRSheet { bpm in
+                viewModel.saveManualPR(bpm: bpm)
+            }
+            .presentationBackground(AppColors.surfaceBackground)
+            .presentationDetents([.large])
+        }
+        .onAppear {
+            viewModel.activate()
+            let saved = viewModel.measurements[.respirations].flatMap { Int($0.displayValue) }
+            savedRR   = saved
+            pendingRR = saved
+        }
         .onDisappear { viewModel.deactivate() }
     }
 
@@ -283,7 +311,8 @@ struct VitalsView: View {
                 bpPosition: viewModel.bpPosition,
                 onArmChange: { viewModel.bpArm = $0 },
                 onPositionChange: { viewModel.bpPosition = $0 },
-                bpPulseRate: viewModel.measurements[.bloodPressure]?.pulseRate
+                bpPulseRate: viewModel.measurements[.bloodPressure]?.pulseRate,
+                onManualEntry: { viewModel.openManualEntry(for: .bloodPressure) }
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 
@@ -307,7 +336,9 @@ struct VitalsView: View {
                             spo2HasReading: type == .oxygenSaturation && viewModel.hasCompleteSpO2Reading,
                             onSaveTemp:    type == .temperature ? { viewModel.saveTempReading() } : nil,
                             tempSaveState: viewModel.tempSaveState,
-                            tempHasReading: type == .temperature && viewModel.hasCompleteTempReading
+                            tempHasReading: type == .temperature && viewModel.hasCompleteTempReading,
+                            onManualEntry: [.oxygenSaturation, .temperature, .heartRate].contains(type)
+                                ? { viewModel.openManualEntry(for: type) } : nil
                         )
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                         .overlay {
@@ -316,8 +347,8 @@ struct VitalsView: View {
                                     Picker(
                                         L10n.Vitals.rrPickerTitle,
                                         selection: Binding(
-                                            get: { viewModel.measurements[.respirations].flatMap { Int($0.displayValue) } ?? 16 },
-                                            set: { viewModel.saveRR($0) }
+                                            get: { pendingRR ?? viewModel.measurements[.respirations].flatMap { Int($0.displayValue) } ?? 16 },
+                                            set: { pendingRR = $0 }
                                         )
                                     ) {
                                         ForEach(4...60, id: \.self) { v in
@@ -330,11 +361,38 @@ struct VitalsView: View {
                             }
                         }
                         .overlay {
-                            if type == .respirations, viewModel.rrSaveState == .saved {
-                                rrSavedFlash
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                                    .allowsHitTesting(false)
-                                    .animation(.spring(duration: 0.35), value: viewModel.rrSaveState)
+                            if type == .respirations, let pending = pendingRR {
+                                let isSaved = pending == savedRR
+                                let bgColor = isSaved ? AppColors.statusSuccess : AppColors.brandPrimary
+                                Button {
+                                    viewModel.saveRR(pending)
+                                    savedRR = pending
+                                } label: {
+                                    HStack(spacing: 5) {
+                                        Image(systemName: isSaved
+                                              ? "checkmark.circle.fill"
+                                              : "arrow.down.circle.fill")
+                                            .font(.system(size: 13, weight: .semibold))
+                                        Text(isSaved ? L10n.Vitals.rrSaved : L10n.Vitals.rrSave)
+                                            .font(.system(size: 15, weight: .bold))
+                                    }
+                                    .foregroundStyle(AppColors.ecgBackground)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 10)
+                                    .background(Capsule().fill(bgColor))
+                                    .shadow(color: bgColor.opacity(0.40), radius: 6, x: 0, y: 3)
+                                    .animation(.easeInOut(duration: 0.2), value: isSaved)
+                                }
+                                .buttonStyle(.hapticPlain)
+                                .disabled(isSaved)
+                                .padding(.bottom, 12)
+                                .padding(.trailing, 12)
+                                .transition(.asymmetric(
+                                    insertion: .scale(scale: 0.6, anchor: .bottomTrailing).combined(with: .opacity),
+                                    removal:   .scale(scale: 0.6, anchor: .bottomTrailing).combined(with: .opacity)
+                                ))
+                                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                                .animation(.easeInOut(duration: 0.2), value: isSaved)
                             }
                         }
                     }
@@ -372,7 +430,7 @@ struct VitalsView: View {
     private func handleTap(_ type: VitalType) {
         switch type {
         case .ekg:          viewModel.startEKG()
-        case .painLevel:    viewModel.openPainLevel()
+        case .painLevel:    break
         case .height:       viewModel.openHeight()
         case .weight:       break  // weight is not in the grid; pill uses openWeightScanSheet
         default:
@@ -398,8 +456,8 @@ struct VitalsView: View {
         case .respirations:
             return viewModel.measurements[.respirations] != nil ? L10n.Vitals.sourceManual : nil
         case .heartRate:
-            // PR is derived from BP or SpO2 device — show which one
             if viewModel.measurements[.heartRate] == nil { return nil }
+            if viewModel.manualEntryVitals.contains(.heartRate) { return L10n.Vitals.sourceManual }
             if viewModel.connectedDeviceName(for: .bloodPressure) != nil { return "BP" }
             if viewModel.connectedDeviceName(for: .oxygenSaturation) != nil { return "SpO2" }
             return nil
@@ -411,6 +469,7 @@ struct VitalsView: View {
             return viewModel.connectedDeviceName(for: .weight) ?? "Scale"
         default:
             guard viewModel.measurements[type] != nil else { return nil }
+            if viewModel.manualEntryVitals.contains(type) { return L10n.Vitals.sourceManual }
             return type.shortName
         }
     }
@@ -444,6 +503,8 @@ private struct VitalCard: View {
     let onConnectTap: () -> Void
     var onSelectPainLevel: ((Int) -> Void)? = nil
     var onLongPress: (() -> Void)? = nil
+    @State private var pendingPainLevel: Int? = nil
+    @State private var savedPainLevel: Int? = nil
     // Weight
     var bodyFatPercent: Double? = nil
     // BP save
@@ -467,6 +528,8 @@ private struct VitalCard: View {
     var onSaveTemp: (() -> Void)? = nil
     var tempSaveState: TempSaveState = .idle
     var tempHasReading: Bool = false
+    // Manual entry
+    var onManualEntry: (() -> Void)? = nil
 
     // Parsed SYS/DIA from "120/80"
     private var bpParsed: (sys: Int, dia: Int)? {
@@ -580,20 +643,20 @@ private struct VitalCard: View {
                     }
 
                     // Arm: R / L circles
-                    HStack(spacing: 5) {
+                    HStack(spacing: 10) {
                         ForEach(BPArm.allCases, id: \.self) { arm in
                             Button { onArmChange?(arm) } label: {
                                 Text(arm.label)
-                                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                                    .font(.system(size: 16, weight: .bold, design: .rounded))
                                     .foregroundStyle(bpArm == arm ? .white : AppColors.textSecondary)
-                                    .frame(width: 28, height: 28)
+                                    .frame(width: 40, height: 40)
                                     .background(Circle().fill(bpArm == arm ? AppColors.textPrimary.opacity(0.25) : Color.clear))
                                     .overlay(Circle().stroke(bpArm == arm ? AppColors.textPrimary.opacity(0.6) : AppColors.borderSubtle, lineWidth: 1.5))
                             }
                             .buttonStyle(.hapticPlain)
                             .animation(.easeInOut(duration: 0.15), value: bpArm)
                         }
-                    }
+                    }.padding(.leading)
 
                     // Divider
                     Rectangle()
@@ -601,20 +664,30 @@ private struct VitalCard: View {
                         .frame(width: 1, height: 20)
 
                     // Position: Sit / Stand / Lie circles
-                    HStack(spacing: 5) {
+                    HStack(spacing: 10) {
                         ForEach(BPPosition.allCases, id: \.self) { pos in
                             Button { onPositionChange?(pos) } label: {
-                                Image(systemName: pos.icon)
-                                    .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(bpPosition == pos ? .white : AppColors.textSecondary)
-                                    .frame(width: 28, height: 28)
-                                    .background(Circle().fill(bpPosition == pos ? AppColors.textPrimary.opacity(0.25) : Color.clear))
-                                    .overlay(Circle().stroke(bpPosition == pos ? AppColors.textPrimary.opacity(0.6) : AppColors.borderSubtle, lineWidth: 1.5))
+                                Group {
+                                    if pos == .lying {
+                                        Image("layingPerson")
+                                            .renderingMode(.template)
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 22, height: 22)
+                                    } else {
+                                        Image(systemName: pos.icon)
+                                            .font(.system(size: 17, weight: .medium))
+                                    }
+                                }
+                                .foregroundStyle(bpPosition == pos ? .white : AppColors.textSecondary)
+                                .frame(width: 40, height: 40)
+                                .background(Circle().fill(bpPosition == pos ? AppColors.textPrimary.opacity(0.25) : Color.clear))
+                                .overlay(Circle().stroke(bpPosition == pos ? AppColors.textPrimary.opacity(0.6) : AppColors.borderSubtle, lineWidth: 1.5))
                             }
                             .buttonStyle(.hapticPlain)
                             .animation(.easeInOut(duration: 0.15), value: bpPosition)
                         }
-                    }
+                    }.padding(.trailing)
 
                     Spacer()
                 }
@@ -962,6 +1035,10 @@ private struct VitalCard: View {
                             Text(state == .searching ? L10n.Vitals.Device.scanning : L10n.Vitals.Device.connecting)
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(badgeColor)
+                        } else if state == .disconnected {
+                            Text("Tap to connect")
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundStyle(AppColors.textSecondary)
                         }
                         Circle()
                             .fill(badgeColor)
@@ -995,6 +1072,20 @@ private struct VitalCard: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
                     .animation(.spring(response: 0.45, dampingFraction: 0.65), value: tempHasReading || tempSaveState == .saved)
                     .animation(.spring(duration: 0.35), value: tempSaveState)
+            }
+
+            // Manual entry pencil — bottom-left on BP/SpO2/Temp/HR
+            if let onManualEntry {
+                Button(action: onManualEntry) {
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.system(size: 25, weight: .medium))
+                        .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+                        .frame(width: 50, height: 50)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.hapticPlain)
+                .padding(4)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             }
         }
         .background(AppColors.surfaceCard)
@@ -1175,10 +1266,12 @@ private struct VitalCard: View {
             Spacer(minLength: 0)
 
             // Selected state summary
-            if let score = selectedPainLevel {
+            if let score = pendingPainLevel {
                 let s = painStep(for: score)
                 HStack(spacing: 6) {
-                    Text(s.emoji).font(.system(size: 28))
+                    Image("painLevel\(s.score)")
+                        .resizable().scaledToFit()
+                        .frame(width: 64, height: 64)
                     VStack(alignment: .leading, spacing: 1) {
                         Text("\(score) / 10")
                             .font(.system(size: 15, weight: .bold))
@@ -1194,28 +1287,25 @@ private struct VitalCard: View {
 
             Spacer(minLength: 0)
 
-            // Inline emoji picker — all 6 states
+            // Inline image picker — all 6 levels
             HStack(spacing: 0) {
                 ForEach(painScale, id: \.score) { s in
-                    let isSel = s.score == selectedPainLevel
+                    let isSel = s.score == pendingPainLevel
                     Button {
                         withAnimation(.spring(duration: 0.25)) {
-                            onSelectPainLevel?(s.score)
+                            pendingPainLevel = s.score
                         }
                     } label: {
                         VStack(spacing: 3) {
-                            Text(s.emoji)
-                                .font(.system(size: isSel ? 26 : 20))
-                                .frame(width: 36, height: 36)
-                                .background(
-                                    Circle().fill(isSel ? s.color.opacity(0.15) : Color.clear)
-                                )
-                                .overlay(
-                                    Circle().stroke(isSel ? s.color.opacity(0.5) : Color.clear, lineWidth: 1.5)
-                                )
+                            Image("painLevel\(s.score)")
+                                .resizable().scaledToFit()
+                                .frame(width: isSel ? 52 : 40, height: isSel ? 52 : 40)
+                                .frame(width: 64, height: 64)
+                                .background(Circle().fill(isSel ? s.color.opacity(0.15) : Color.clear))
+                                .overlay(Circle().stroke(isSel ? s.color.opacity(0.5) : Color.clear, lineWidth: 1.5))
                                 .animation(.spring(duration: 0.25), value: isSel)
                             Text("\(s.score)")
-                                .font(.system(size: 9, weight: isSel ? .bold : .regular))
+                                .font(.system(size: 14, weight: isSel ? .bold : .regular))
                                 .foregroundStyle(isSel ? s.color : AppColors.textSecondary)
                         }
                     }
@@ -1224,130 +1314,46 @@ private struct VitalCard: View {
                 }
             }
             .padding(.horizontal, 4)
-            .padding(.bottom, 8)
-        }
-    }
-}
+            .padding(.top, 4)
+            .padding(.bottom,12)
 
-// MARK: - Pain Level Sheet
-
-private struct PainLevelSheet: View {
-
-    @State private var selected: Int
-    @Environment(\.dismiss) private var dismiss
-    let onSave: (Int) -> Void
-
-    init(current: Int?, onSave: @escaping (Int) -> Void) {
-        _selected = State(wrappedValue: current ?? 0)
-        self.onSave = onSave
-    }
-
-    private var step: (score: Int, emoji: String, label: String, color: Color) {
-        painStep(for: selected)
-    }
-
-    var body: some View {
-        ZStack {
-            AppColors.surfaceBackground.ignoresSafeArea()
-
-            VStack(spacing: 0) {
-
-                // Header
-                HStack {
-                    Text(L10n.Vitals.Pain.title)
-                        .font(AppTypography.title2)
-                        .foregroundStyle(AppColors.textPrimary)
-                    Spacer()
-                    Button { dismiss() } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(AppColors.textSecondary)
-                            .frame(width: 32, height: 32)
-                            .background(AppColors.borderSubtle.opacity(0.5))
-                            .clipShape(Circle())
-                    }
-                    .buttonStyle(.hapticPlain)
-                }
-                .padding(.horizontal, 36)
-                .padding(.top, 32)
-                .padding(.bottom, 28)
-
-                // Large animated face
-                ZStack {
-                    Circle()
-                        .fill(step.color.opacity(0.10))
-                        .frame(width: 148, height: 148)
-                    Circle()
-                        .stroke(step.color.opacity(0.22), lineWidth: 2)
-                        .frame(width: 148, height: 148)
-                    Text(step.emoji)
-                        .font(.system(size: 74))
-                }
-                .animation(.spring(duration: 0.4), value: selected)
-
-                // Score + label
-                VStack(spacing: 6) {
-                    HStack(alignment: .lastTextBaseline, spacing: 4) {
-                        Text("\(selected)")
-                            .font(AppTypography.title1)
-                            .foregroundStyle(AppColors.textPrimary)
-                            .contentTransition(.numericText())
-                        Text("/ 10")
-                            .font(AppTypography.callout)
-                            .foregroundStyle(AppColors.textSecondary)
-                    }
-                    Text(step.label)
-                        .font(AppTypography.bodySemibold)
-                        .foregroundStyle(step.color)
-                }
-                .animation(.easeInOut(duration: 0.2), value: selected)
-                .padding(.top, 18)
-                .padding(.bottom, 28)
-
-                // Face picker row
-                HStack(spacing: 0) {
-                    ForEach(painScale, id: \.score) { s in
-                        let isSel = s.score == selected
-                        Button {
-                            withAnimation(.spring(duration: 0.3)) { selected = s.score }
-                        } label: {
-                            VStack(spacing: 8) {
-                                Text(s.emoji)
-                                    .font(.system(size: isSel ? 44 : 32))
-                                    .frame(width: 58, height: 58)
-                                    .background(Circle().fill(isSel ? s.color.opacity(0.12) : Color.clear))
-                                    .overlay(Circle().stroke(isSel ? s.color.opacity(0.45) : Color.clear, lineWidth: 2))
-                                    .animation(.spring(duration: 0.3), value: isSel)
-                                Text("\(s.score)")
-                                    .font(AppTypography.captionBold)
-                                    .foregroundStyle(isSel ? s.color : AppColors.textSecondary)
-                            }
-                        }
-                        .buttonStyle(.hapticPlain)
-                        .frame(maxWidth: .infinity)
-                    }
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 28)
-
-                // Save button
+            // Save button
+            if let pending = pendingPainLevel {
+                let isSaved = pending == savedPainLevel
+                let color   = isSaved ? AppColors.statusSuccess : painStep(for: pending).color
                 Button {
-                    onSave(selected)
-                    dismiss()
+                    onSelectPainLevel?(pending)
+                    savedPainLevel = pending
                 } label: {
-                    Text(L10n.Vitals.Pain.save)
-                        .font(AppTypography.bodyMedium)
-                        .foregroundStyle(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: AppMetrics.buttonHeight)
-                        .background(step.color)
-                        .cornerRadius(AppMetrics.radiusMedium)
-                        .animation(.easeInOut(duration: 0.2), value: selected)
+                    HStack(spacing: 5) {
+                        if isSaved {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.system(size: 13, weight: .semibold))
+                        }
+                        Text(isSaved ? L10n.Vitals.Pain.saved : L10n.Vitals.Pain.save)
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 34)
+                    .background(color)
+                    .cornerRadius(AppMetrics.radiusMedium)
+                    .animation(.easeInOut(duration: 0.2), value: isSaved)
                 }
                 .buttonStyle(.hapticPlain)
-                .padding(.horizontal, 36)
-                .padding(.bottom, 32)
+                .disabled(isSaved)
+                .padding(.horizontal, 10)
+                .padding(.bottom, 10)
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
+        }
+        .onAppear {
+            pendingPainLevel = selectedPainLevel
+            savedPainLevel   = selectedPainLevel
+        }
+        .onChange(of: selectedPainLevel) {
+            pendingPainLevel = selectedPainLevel
+            savedPainLevel   = selectedPainLevel
         }
     }
 }
@@ -1754,114 +1760,450 @@ private struct WeightScanSheet: View {
     }
 }
 
-// MARK: - Device Connect Sheet
+// MARK: - Manual BP Sheet
 
-private struct DeviceConnectSheet: View {
-
-    let vital: VitalType
-    @State var viewModel: VitalsViewModel
+private struct ManualBPSheet: View {
+    @State private var systolic:  Int = 120
+    @State private var diastolic: Int = 80
+    @State private var includePR: Bool = false
+    @State private var pulseRate: Int = 72
+    @State private var arm: BPArm
+    @State private var position: BPPosition
     @Environment(\.dismiss) private var dismiss
+    let onSave: (Int, Int, Int?) -> Void
 
-    private var state: DeviceConnectionState { viewModel.connectionState(for: vital) }
+    init(arm: BPArm, position: BPPosition, onSave: @escaping (Int, Int, Int?) -> Void) {
+        _arm = State(wrappedValue: arm)
+        _position = State(wrappedValue: position)
+        self.onSave = onSave
+    }
 
     var body: some View {
         ZStack {
             AppColors.surfaceBackground.ignoresSafeArea()
+            VStack(spacing: 0) {
+                sheetHeader(title: "Blood Pressure", icon: VitalType.bloodPressure.icon,
+                            color: VitalType.bloodPressure.iconColor, onClose: { dismiss() })
 
-            VStack(spacing: AppMetrics.spacing32) {
-                header
-                statusBlock
-                actionButtons
-                Spacer()
-            }
-            .padding(AppMetrics.spacing32)
-        }
-        .onAppear {
-            if state == .disconnected { viewModel.connect() }
-        }
-    }
-
-    private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(L10n.Vitals.Device.connectTitle)
-                    .font(AppTypography.title2)
-                    .foregroundStyle(AppColors.textPrimary)
-                Text(vital.connectDescription)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.textSecondary)
-            }
-            Spacer()
-            Button { dismiss() } label: {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(AppColors.textSecondary)
-            }
-            .buttonStyle(.hapticPlain)
-        }
-    }
-
-    private var statusBlock: some View {
-        VStack(spacing: AppMetrics.spacing16) {
-            DeviceConnectButton(state: state) {
-                state == .disconnected ? viewModel.connect() : viewModel.disconnect()
-            }
-            .frame(maxWidth: .infinity)
-
-            if let name = viewModel.connectedDeviceName(for: vital) {
-                Label(name, systemImage: "checkmark.seal.fill")
-                    .font(AppTypography.callout)
-                    .foregroundStyle(AppColors.statusSuccess)
-            }
-        }
-    }
-
-    private var isBusy: Bool { state == .searching || state == .connecting }
-
-    private var actionButtons: some View {
-        VStack(spacing: AppMetrics.spacing12) {
-            Button(action: viewModel.connect) {
-                HStack(spacing: AppMetrics.spacing10) {
-                    Image(systemName: "antenna.radiowaves.left.and.right")
-                        .font(.system(size: 16, weight: .semibold))
-                    Text(L10n.Vitals.Device.connectDevice(vital.title))
-                        .font(AppTypography.bodyMedium)
+                // Live preview
+                HStack(spacing: 4) {
+                    Text("\(systolic)")
+                        .font(.system(size: 52, weight: .semibold))
+                        .foregroundStyle(VitalType.bloodPressure.iconColor)
+                        .contentTransition(.numericText())
+                    Text("/")
+                        .font(.system(size: 36, weight: .medium))
+                        .foregroundStyle(VitalType.bloodPressure.iconColor.opacity(0.6))
+                    Text("\(diastolic)")
+                        .font(.system(size: 52, weight: .semibold))
+                        .foregroundStyle(VitalType.bloodPressure.iconColor)
+                        .contentTransition(.numericText())
+                    Text("mmHg")
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundStyle(AppColors.textSecondary)
+                        .padding(.leading, 4)
+                        .alignmentGuide(.bottom) { d in d[.bottom] }
                 }
-                .foregroundStyle(.white)
-                .frame(maxWidth: .infinity)
-                .frame(height: AppMetrics.buttonHeight)
-                .background(isBusy ? AppColors.brandPrimary.opacity(0.4) : AppColors.brandPrimary)
-                .cornerRadius(AppMetrics.radiusMedium)
-            }
-            .buttonStyle(.hapticPlain)
-            .disabled(isBusy)
+                .animation(.easeInOut(duration: 0.15), value: systolic)
+                .animation(.easeInOut(duration: 0.15), value: diastolic)
+                .padding(.vertical, 10)
 
-            Button(action: viewModel.connectDemo) {
-                HStack(spacing: AppMetrics.spacing10) {
-                    Image(systemName: "waveform.path.ecg")
-                        .font(.system(size: 16, weight: .semibold))
-                    Text(L10n.Vitals.Device.useDemo)
-                        .font(AppTypography.bodyMedium)
+                // Arm & position
+                HStack(spacing: 12) {
+                    ForEach(BPArm.allCases, id: \.self) { a in
+                        Button { arm = a } label: {
+                            Text(a.label)
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundStyle(arm == a ? .white : AppColors.textSecondary)
+                                .frame(width: 44, height: 36)
+                                .background(arm == a ? VitalType.bloodPressure.iconColor.opacity(0.8) : AppColors.borderSubtle.opacity(0.4))
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.hapticPlain)
+                    }
+                    Divider().frame(height: 24)
+                    ForEach(BPPosition.allCases, id: \.self) { p in
+                        Button { position = p } label: {
+                            Text(p.shortLabel)
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(position == p ? .white : AppColors.textSecondary)
+                                .padding(.horizontal, 10)
+                                .frame(height: 36)
+                                .background(position == p ? VitalType.bloodPressure.iconColor.opacity(0.8) : AppColors.borderSubtle.opacity(0.4))
+                                .cornerRadius(8)
+                        }
+                        .buttonStyle(.hapticPlain)
+                    }
                 }
-                .foregroundStyle(AppColors.brandPrimary)
-                .frame(maxWidth: .infinity)
-                .frame(height: AppMetrics.buttonHeight)
-                .background(AppColors.brandPrimary.opacity(0.10))
-                .cornerRadius(AppMetrics.radiusMedium)
-                .overlay(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
-                    .strokeBorder(AppColors.brandPrimary.opacity(0.3), lineWidth: 1))
-            }
-            .buttonStyle(.hapticPlain)
-            .disabled(isBusy)
+                .animation(.easeInOut(duration: 0.15), value: arm)
+                .animation(.easeInOut(duration: 0.15), value: position)
+                .padding(.bottom, 10)
 
-            if state != .disconnected {
-                Button(action: { viewModel.disconnect(); dismiss() }) {
-                    Text(L10n.Vitals.Device.disconnect)
-                        .font(AppTypography.bodyMedium)
-                        .foregroundStyle(AppColors.statusCritical)
+                // Pickers
+                HStack(spacing: 0) {
+                    VStack(spacing: 2) {
+                        Text("SYS").font(.system(size: 11, weight: .bold)).foregroundStyle(AppColors.textSecondary).tracking(1)
+                        Picker("SYS", selection: $systolic) {
+                            ForEach(60...250, id: \.self) { Text("\($0)").tag($0) }
+                        }
+                        .pickerStyle(.wheel)
+                    }
+                    VStack(spacing: 2) {
+                        Text("DIA").font(.system(size: 11, weight: .bold)).foregroundStyle(AppColors.textSecondary).tracking(1)
+                        Picker("DIA", selection: $diastolic) {
+                            ForEach(40...150, id: \.self) { Text("\($0)").tag($0) }
+                        }
+                        .pickerStyle(.wheel)
+                    }
                 }
-                .buttonStyle(.hapticPlain)
+                .frame(height: 150)
+                .background(AppColors.surfaceCard)
+                .cornerRadius(AppMetrics.radiusLarge)
+                .padding(.horizontal, 24)
+
+                // Optional PR toggle
+                Toggle(isOn: $includePR.animation()) {
+                    Label("Include Pulse Rate", systemImage: "heart.fill")
+                        .font(AppTypography.callout)
+                        .foregroundStyle(AppColors.textPrimary)
+                }
+                .tint(AppColors.brandPrimary)
+                .padding(.horizontal, 36)
+                .padding(.top, 12)
+
+                if includePR {
+                    HStack(spacing: 0) {
+                        Picker("PR", selection: $pulseRate) {
+                            ForEach(30...200, id: \.self) { Text("\($0) bpm").tag($0) }
+                        }
+                        .pickerStyle(.wheel)
+                        .frame(maxWidth: .infinity)
+                    }
+                    .frame(height: 120)
+                    .background(AppColors.surfaceCard)
+                    .cornerRadius(AppMetrics.radiusLarge)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 4)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                Spacer(minLength: 16)
+                saveButton(label: "Save BP") {
+                    onSave(systolic, diastolic, includePR ? pulseRate : nil)
+                }
             }
         }
     }
 }
+
+// MARK: - Manual SpO2 Sheet
+
+private struct ManualSpO2Sheet: View {
+    @State private var spo2:      Int = 98
+    @State private var includePR: Bool = false
+    @State private var pulseRate: Int = 72
+    @Environment(\.dismiss) private var dismiss
+    let onSave: (Int, Int?) -> Void
+
+    var body: some View {
+        ZStack {
+            AppColors.surfaceBackground.ignoresSafeArea()
+            VStack(spacing: 0) {
+                sheetHeader(title: "SpO2", icon: VitalType.oxygenSaturation.icon,
+                            color: VitalType.oxygenSaturation.iconColor, onClose: { dismiss() })
+
+                Text("\(spo2)%")
+                    .font(.system(size: 52, weight: .semibold))
+                    .foregroundStyle(VitalType.oxygenSaturation.iconColor)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.15), value: spo2)
+                    .padding(.vertical, 10)
+
+                Picker("SpO2", selection: $spo2) {
+                    ForEach(50...100, id: \.self) { Text("\($0) %").font(.system(size: 33)).tag($0) }
+                }
+                .pickerStyle(.wheel)
+                .frame(height: 140)
+                .background(AppColors.surfaceCard)
+                .cornerRadius(AppMetrics.radiusLarge)
+                .padding(.horizontal, 24)
+
+                Toggle(isOn: $includePR.animation()) {
+                    Label("Include Pulse Rate", systemImage: "heart.fill")
+                        .font(AppTypography.callout)
+                        .foregroundStyle(AppColors.textPrimary)
+                }
+                .tint(AppColors.brandPrimary)
+                .padding(.horizontal, 36)
+                .padding(.top, 12)
+
+                if includePR {
+                    Picker("PR", selection: $pulseRate) {
+                        ForEach(30...200, id: \.self) { Text("\($0) bpm").tag($0) }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(height: 110)
+                    .background(AppColors.surfaceCard)
+                    .cornerRadius(AppMetrics.radiusLarge)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 4)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                Spacer(minLength: 16)
+                saveButton(label: "Save SpO2") {
+                    onSave(spo2, includePR ? pulseRate : nil)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Manual Temp Sheet
+
+private struct ManualTempSheet: View {
+
+    private let isFahrenheit: Bool = {
+        (UserDefaults.standard.string(forKey: "app.temperatureUnit") ?? "°F") == "°F"
+    }()
+
+    @State private var whole: Int
+    @State private var tenth: Int = 6
+    @Environment(\.dismiss) private var dismiss
+    let onSave: (Double, String) -> Void
+
+    init(onSave: @escaping (Double, String) -> Void) {
+        let isFahrenheit = (UserDefaults.standard.string(forKey: "app.temperatureUnit") ?? "°F") == "°F"
+        _whole = State(wrappedValue: isFahrenheit ? 98 : 36)
+        self.onSave = onSave
+    }
+
+    private var displayValue: Double { Double(whole) + Double(tenth) / 10 }
+    private var displayUnit: String  { isFahrenheit ? "°F" : "°C" }
+    private var wholeRange: ClosedRange<Int> { isFahrenheit ? 95...110 : 34...42 }
+
+    var body: some View {
+        ZStack {
+            AppColors.surfaceBackground.ignoresSafeArea()
+            VStack(spacing: 0) {
+                sheetHeader(title: "Temperature", icon: VitalType.temperature.icon,
+                            color: VitalType.temperature.iconColor, onClose: { dismiss() })
+
+                Text(String(format: "%.1f %@", displayValue, displayUnit))
+                    .font(.system(size: 52, weight: .semibold))
+                    .foregroundStyle(VitalType.temperature.iconColor)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.15), value: displayValue)
+                    .padding(.vertical, 10)
+
+                HStack(spacing: 0) {
+                    Picker(displayUnit, selection: $whole) {
+                        ForEach(wholeRange, id: \.self) { Text("\($0)").font(.system(size: 30)).tag($0) }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(maxWidth: .infinity)
+
+                    Text(".")
+                        .font(.system(size: 30, weight: .bold))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .frame(width: 20)
+
+                    Picker("tenths", selection: $tenth) {
+                        ForEach(0...9, id: \.self) { Text("\($0)").font(.system(size: 30)).tag($0) }
+                    }
+                    .pickerStyle(.wheel)
+                    .frame(maxWidth: .infinity)
+                }
+                .frame(height: 140)
+                .background(AppColors.surfaceCard)
+                .cornerRadius(AppMetrics.radiusLarge)
+                .padding(.horizontal, 24)
+
+                Spacer(minLength: 16)
+                saveButton(label: "Save Temperature") {
+                    onSave(displayValue, displayUnit)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Manual PR Sheet
+
+private struct ManualPRSheet: View {
+    @State private var bpm: Int = 72
+    @Environment(\.dismiss) private var dismiss
+    let onSave: (Int) -> Void
+
+    var body: some View {
+        ZStack {
+            AppColors.surfaceBackground.ignoresSafeArea()
+            VStack(spacing: 0) {
+                sheetHeader(title: "Pulse Rate", icon: VitalType.heartRate.icon,
+                            color: VitalType.heartRate.iconColor, onClose: { dismiss() })
+
+                HStack(spacing: 6) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(.red)
+                    Text("\(bpm)")
+                        .font(.system(size: 52, weight: .semibold))
+                        .foregroundStyle(VitalType.heartRate.iconColor)
+                        .contentTransition(.numericText())
+                        .animation(.easeInOut(duration: 0.15), value: bpm)
+                    Text("BPM")
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundStyle(AppColors.textSecondary)
+                }
+                .padding(.vertical, 10)
+
+                Picker("BPM", selection: $bpm) {
+                    ForEach(30...250, id: \.self) { Text("\($0) bpm").font(.system(size: 33)).tag($0) }
+                }
+                .pickerStyle(.wheel)
+                .frame(height: 150)
+                .background(AppColors.surfaceCard)
+                .cornerRadius(AppMetrics.radiusLarge)
+                .padding(.horizontal, 24)
+
+                Spacer(minLength: 16)
+                saveButton(label: "Save Pulse Rate") {
+                    onSave(bpm)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Device Connect Sheet
+
+//private struct DeviceConnectSheet: View {
+//
+//    let vital: VitalType
+//    @State var viewModel: VitalsViewModel
+//    @Environment(\.dismiss) private var dismiss
+//
+//    private var supportsManualEntry: Bool {
+//        [VitalType.bloodPressure, .oxygenSaturation, .temperature, .heartRate].contains(vital)
+//    }
+//
+//    private var state: DeviceConnectionState { viewModel.connectionState(for: vital) }
+//
+//    var body: some View {
+//        ZStack {
+//            AppColors.surfaceBackground.ignoresSafeArea()
+//
+//            VStack(spacing: AppMetrics.spacing32) {
+//                header
+//                statusBlock
+//                actionButtons
+//                Spacer()
+//            }
+//            .padding(AppMetrics.spacing32)
+//        }
+//        .onAppear {
+//            if state == .disconnected { viewModel.connect() }
+//        }
+//    }
+//
+//    private var header: some View {
+//        HStack(alignment: .top) {
+//            VStack(alignment: .leading, spacing: 4) {
+//                Text(L10n.Vitals.Device.connectTitle)
+//                    .font(AppTypography.title2)
+//                    .foregroundStyle(AppColors.textPrimary)
+//                Text(vital.connectDescription)
+//                    .font(AppTypography.caption)
+//                    .foregroundStyle(AppColors.textSecondary)
+//            }
+//            Spacer()
+//            Button { dismiss() } label: {
+//                Image(systemName: "xmark.circle.fill")
+//                    .font(.system(size: 28))
+//                    .foregroundStyle(AppColors.textSecondary)
+//            }
+//            .buttonStyle(.hapticPlain)
+//        }
+//    }
+//
+//    private var statusBlock: some View {
+//        VStack(spacing: AppMetrics.spacing16) {
+//            DeviceConnectButton(state: state) {
+//                state == .disconnected ? viewModel.connect() : viewModel.disconnect()
+//            }
+//            .frame(maxWidth: .infinity)
+//
+//            if let name = viewModel.connectedDeviceName(for: vital) {
+//                Label(name, systemImage: "checkmark.seal.fill")
+//                    .font(AppTypography.callout)
+//                    .foregroundStyle(AppColors.statusSuccess)
+//            }
+//        }
+//    }
+//
+//    private var isBusy: Bool { state == .searching || state == .connecting }
+//
+//    private var actionButtons: some View {
+//        VStack(spacing: AppMetrics.spacing12) {
+//            Button(action: viewModel.connect) {
+//                HStack(spacing: AppMetrics.spacing10) {
+//                    Image(systemName: "antenna.radiowaves.left.and.right")
+//                        .font(.system(size: 16, weight: .semibold))
+//                    Text(L10n.Vitals.Device.connectDevice(vital.title))
+//                        .font(AppTypography.bodyMedium)
+//                }
+//                .foregroundStyle(.white)
+//                .frame(maxWidth: .infinity)
+//                .frame(height: AppMetrics.buttonHeight)
+//                .background(isBusy ? AppColors.brandPrimary.opacity(0.4) : AppColors.brandPrimary)
+//                .cornerRadius(AppMetrics.radiusMedium)
+//            }
+//            .buttonStyle(.hapticPlain)
+//            .disabled(isBusy)
+//
+//            Button(action: viewModel.connectDemo) {
+//                HStack(spacing: AppMetrics.spacing10) {
+//                    Image(systemName: "waveform.path.ecg")
+//                        .font(.system(size: 16, weight: .semibold))
+//                    Text(L10n.Vitals.Device.useDemo)
+//                        .font(AppTypography.bodyMedium)
+//                }
+//                .foregroundStyle(AppColors.brandPrimary)
+//                .frame(maxWidth: .infinity)
+//                .frame(height: AppMetrics.buttonHeight)
+//                .background(AppColors.brandPrimary.opacity(0.10))
+//                .cornerRadius(AppMetrics.radiusMedium)
+//                .overlay(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+//                    .strokeBorder(AppColors.brandPrimary.opacity(0.3), lineWidth: 1))
+//            }
+//            .buttonStyle(.hapticPlain)
+//            .disabled(isBusy)
+//
+//            if supportsManualEntry {
+//                Button(action: { viewModel.openManualEntry(for: vital); dismiss() }) {
+//                    HStack(spacing: AppMetrics.spacing10) {
+//                        Image(systemName: "pencil.circle.fill")
+//                            .font(.system(size: 20, weight: .semibold))
+//                        Text("Enter Manually")
+//                            .font(AppTypography.bodyMedium)
+//                    }
+//                    .foregroundStyle(AppColors.textPrimary)
+//                    .frame(maxWidth: .infinity)
+//                    .frame(height: AppMetrics.buttonHeight)
+//                    .background(AppColors.borderSubtle.opacity(0.4))
+//                    .cornerRadius(AppMetrics.radiusMedium)
+//                }
+//                .buttonStyle(.hapticPlain)
+//            }
+//
+//            if state != .disconnected {
+//                Button(action: { viewModel.disconnect(); dismiss() }) {
+//                    Text(L10n.Vitals.Device.disconnect)
+//                        .font(AppTypography.bodyMedium)
+//                        .foregroundStyle(AppColors.statusCritical)
+//                }
+//                .buttonStyle(.hapticPlain)
+//            }
+//        }
+//    }
+//}

@@ -64,6 +64,9 @@ final class AppDIContainer {
     let spo2Store          = LocalSpO2Store()
     let tempStore          = LocalTempStore()
     let rrStore            = LocalRRStore()
+    let painStore          = LocalPainStore()
+    let weightStore        = LocalWeightStore()
+    let heightStore        = LocalHeightStore()
 
     // MARK: - Init
 
@@ -91,15 +94,14 @@ final class AppDIContainer {
 
     // MARK: - Session Expiry
 
-    /// Wire this up from EKGxApp with the router so any 302 forces logout + login redirect.
+    /// Wire this up from EKGxApp with the router so any 302 silently falls back to local mode.
     func configureSessionExpiry(router: AppRouter) {
         APIClient.shared.onSessionExpired = { [weak self] in
-            guard let self, !self.isLocalMode else { return }
+            guard let self, !self.isLocalMode, self.authService.isAuthenticated else { return }
             Task { @MainActor in
                 try? await self.authService.logout()
-                self.autoLockManager.stop()
-                self.clearRecordingSession()
-                router.navigate(to: .login)
+                self.isLocalMode = true
+                // Stay on the current screen — data continues to save locally
             }
         }
     }

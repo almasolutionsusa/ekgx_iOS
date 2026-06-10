@@ -600,6 +600,7 @@
 // MARK: - Vitals · Pain Level
 "vitals.pain.title"                  = "Pain Level";
 "vitals.pain.save"                   = "Save Pain Level";
+"vitals.pain.saved"                  = "Saved";
 "vitals.pain.noPain"                 = "No Pain";
 "vitals.pain.mild"                   = "Mild";
 "vitals.pain.moderate"               = "Moderate";
@@ -621,6 +622,7 @@
 
 // MARK: - Vitals · General
 "vitals.rr.saved"                    = "Saved";
+"vitals.rr.save"                     = "Save RR";
 "vitals.source.manual"               = "Manual";
 "vitals.source.label"                = "source %@";
 "vitals.mrn.label"                   = "MRN %@";
@@ -666,3 +668,10 @@
 "waitingList.status.waiting"         = "Waiting";
 "waitingList.status.inProgress"      = "In Progress";
 "waitingList.status.done"            = "Done";
+
+// MARK: - Exam Compare
+"compare.title"              = "Exam Compare";
+"compare.currentExam"        = "Current Exam";
+"compare.compareExam"        = "Compare Exam";
+"compare.noChange"           = "No change";
+"compare.noInterpretation"   = "No interpretation";

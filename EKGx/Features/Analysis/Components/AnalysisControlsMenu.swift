@@ -14,42 +14,78 @@ struct AnalysisControlsMenu: View {
 
     var body: some View {
         ZStack {
-            // Dim background — tap to close
-            Color.black.opacity(0.35)
+            Color.black.opacity(0.4)
                 .ignoresSafeArea()
                 .onTapGesture { viewModel.showControlsMenu = false }
 
-            HStack(spacing: 0) {
-                Spacer()
+            VStack(spacing: 0) {
 
-                VStack(spacing: 0) {
-                    menuItem(
-                        icon: viewModel.isAlreadySynced ? "checkmark.circle" : "arrow.up.circle",
+                // ── Header ─────────────────────────────────────────
+                HStack {
+                    Text("Actions")
+                        .font(AppTypography.bodyMedium)
+                        .foregroundStyle(AppColors.textPrimary)
+                    Spacer()
+                    Button { viewModel.showControlsMenu = false } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(AppColors.textSecondary)
+                            .frame(width: 28, height: 28)
+                            .background(Color(UIColor.systemGray5))
+                            .clipShape(Circle())
+                    }
+                    .buttonStyle(.hapticPlain)
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+
+                Divider()
+
+                // ── 2 × 2 action grid ──────────────────────────────
+                LazyVGrid(
+                    columns: [GridItem(.flexible()), GridItem(.flexible())],
+                    spacing: 12
+                ) {
+                    let emrDisabled = viewModel.isLocalMode || viewModel.isAlreadySynced
+                    let diagDisabled = viewModel.isLocalMode || viewModel.isAlreadySynced
+
+                    actionTile(
+                        icon: viewModel.isAlreadySynced ? "checkmark.seal.fill" : "arrow.up.to.line.circle.fill",
                         title: "Send to EMR",
-                        subtitle: viewModel.isLocalMode ? "Offline" : (viewModel.isAlreadySynced ? "Sent" : nil),
-                        disabled: viewModel.isLocalMode || viewModel.isAlreadySynced,
-                        action: {
-                            viewModel.showControlsMenu = false
-                            viewModel.uploadEKG()
-                        }
-                    )
-                    Divider()
-                    menuItem(
-                        icon: "book",
+                        subtitle: viewModel.isAlreadySynced ? "Already sent"
+                                  : viewModel.isLocalMode   ? "Offline mode" : nil,
+                        color: AppColors.brandPrimary,
+                        filled: !emrDisabled,
+                        disabled: emrDisabled
+                    ) {
+                        viewModel.showControlsMenu = false
+                        viewModel.uploadEKG()
+                    }
+
+                    actionTile(
+                        icon: "stethoscope",
                         title: "Diagnosis",
-                        disabled: viewModel.isLocalMode || viewModel.isAlreadySynced,
-                        action: {
-                            viewModel.showControlsMenu = false
-                            viewModel.showDiagnosisPanel = true
-                        }
-                    )
-                    Divider()
-                    menuItem(icon: "eye",             title: "Visualization", action: {
+                        color: Color(red: 0.48, green: 0.36, blue: 0.90),
+                        disabled: diagDisabled
+                    ) {
+                        viewModel.showControlsMenu = false
+                        viewModel.showDiagnosisPanel = true
+                    }
+
+                    actionTile(
+                        icon: "eye.circle.fill",
+                        title: "Visualization",
+                        color: AppColors.accentTeal
+                    ) {
                         viewModel.showControlsMenu = false
                         viewModel.showVisualizationMenu = true
-                    })
-                    Divider()
-                    menuItem(icon: "printer",         title: "Print",        action: {
+                    }
+
+                    actionTile(
+                        icon: "printer.fill",
+                        title: "Print",
+                        color: Color.orange
+                    ) {
                         viewModel.showControlsMenu = false
                         printECG(
                             patient: viewModel.patient,
@@ -59,40 +95,70 @@ struct AnalysisControlsMenu: View {
                             measurements: viewModel.measurements,
                             diagnosisLines: viewModel.diagnosisLines
                         )
-                    })
+                    }
                 }
-                .frame(width: 110)
-                .background(Color.white)
-                .cornerRadius(12, corners: [.topLeft, .bottomLeft])
-                .shadow(color: .black.opacity(0.15), radius: 12, x: -4, y: 0)
+                .padding(16)
             }
+            .frame(width: 360)
+            .background(Color.white)
+            .cornerRadius(22)
+            .shadow(color: .black.opacity(0.22), radius: 40, x: 0, y: 12)
         }
     }
 
-    private func menuItem(
+    // MARK: - Tile
+
+    private func actionTile(
         icon: String,
         title: String,
         subtitle: String? = nil,
+        color: Color,
+        filled: Bool = false,
         disabled: Bool = false,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: disabled ? {} : action) {
-            VStack(spacing: 4) {
-                Image(systemName: icon)
-                    .font(.system(size: 22))
-                    .foregroundStyle(disabled ? Color.gray.opacity(0.5) : AppColors.brandPrimary)
+            VStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 18)
+                        .fill(disabled
+                              ? Color(UIColor.systemGray5)
+                              : filled ? color : color.opacity(0.13))
+                        .frame(width: 60, height: 60)
+                    Image(systemName: icon)
+                        .font(.system(size: 28))
+                        .foregroundStyle(disabled
+                                         ? Color.gray.opacity(0.4)
+                                         : filled ? Color.white : color)
+                }
+
                 Text(title)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(disabled ? Color.gray.opacity(0.5) : Color.primary)
+                    .font(AppTypography.captionBold)
+                    .foregroundStyle(disabled ? AppColors.textSecondary : AppColors.textPrimary)
                     .multilineTextAlignment(.center)
+
                 if let subtitle {
                     Text(subtitle)
-                        .font(.system(size: 9, weight: .medium))
-                        .foregroundStyle(AppColors.statusSuccess)
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(subtitle == "Already sent"
+                                         ? AppColors.statusSuccess
+                                         : AppColors.textSecondary)
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
+            .padding(.vertical, 22)
+            .background(
+                disabled ? Color(UIColor.systemGray6)
+                : filled ? color.opacity(0.07) : color.opacity(0.04)
+            )
+            .cornerRadius(18)
+            .overlay(
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(
+                        disabled ? Color(UIColor.systemGray4) : color.opacity(0.18),
+                        lineWidth: 1
+                    )
+            )
         }
         .buttonStyle(.hapticPlain)
         .disabled(disabled)

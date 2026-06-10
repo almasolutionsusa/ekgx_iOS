@@ -327,7 +327,9 @@ final class PatientSelectionViewModel {
             birthDate: dobStr,
             gender:    createGender,
             mrn:       createMRN.trimmingCharacters(in: .whitespacesAndNewlines),
-            createdBy: diContainer.authService.loginData?.user.username ?? ""
+            createdBy: diContainer.authService.currentUser?.displayName.isEmpty == false
+                ? diContainer.authService.currentUser!.displayName
+                : diContainer.authService.currentUser?.username ?? ""
         )
 
         isCreating = true

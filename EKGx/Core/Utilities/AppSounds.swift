@@ -13,19 +13,21 @@ final class AppSounds {
         guard let asset = NSDataAsset(name: "TapSound") else { return }
         do {
             try AVAudioSession.sharedInstance().setCategory(
-                .ambient, mode: .default, options: [.mixWithOthers]
+                .playback, mode: .default, options: [.mixWithOthers]
             )
+            try AVAudioSession.sharedInstance().setActive(true)
             tapPlayer = try AVAudioPlayer(data: asset.data)
             tapPlayer?.numberOfLoops = 0
             tapPlayer?.volume = 0.03
             tapPlayer?.prepareToPlay()
         } catch {
-            print("TapSound not found")
+            print("TapSound setup failed")
         }
     }
 
     func tap() {
         guard let p = tapPlayer else { return }
+        try? AVAudioSession.sharedInstance().setActive(true)
         if p.isPlaying { p.stop() }
         p.currentTime = 0
         p.play()

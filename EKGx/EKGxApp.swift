@@ -49,9 +49,10 @@ struct EKGxApp: App {
                     diContainer.configureSessionExpiry(router: router)
                     // Wire global API error toast — every failed request auto-surfaces a message.
                     // Session-expired errors are handled by configureSessionExpiry instead.
-                    APIClient.shared.onError = { [weak diContainer] message in
+                    APIClient.shared.onError = { [weak diContainer, weak router] message in
                         guard message != L10n.Auth.Login.errorSessionExpired else { return }
-                        guard !(diContainer?.isLocalMode ?? false) else { return }
+                        guard message != L10n.Auth.Login.errorInvalidCredentials else { return }
+                        guard router?.currentRoute != .vitals else { return }
                         diContainer?.errorToast.show(message)
                     }
                     // Fire-and-forget: registers the app install with the server.

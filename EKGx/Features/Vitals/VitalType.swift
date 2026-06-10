@@ -87,7 +87,7 @@ enum VitalType: String, CaseIterable, Identifiable {
         switch self {
         case .bloodPressure:    return "mmHg"
         case .oxygenSaturation: return "%"
-        case .temperature:      return "°C"
+        case .temperature:      return UserDefaults.standard.string(forKey: "app.temperatureUnit") ?? "°F"
         case .bloodSugar:       return "mg/dL"
         case .heartRate:        return "bpm"
         case .respirations:     return "rpm"

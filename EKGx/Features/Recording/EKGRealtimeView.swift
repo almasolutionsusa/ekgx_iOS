@@ -63,7 +63,7 @@ private struct ECGRealTimeRepresentable: UIViewRepresentable {
         ecgView.background_weak_line_color    = UIColor.systemGray.withAlphaComponent(0.2)
         ecgView.paperSpeed                    = .normal
         ecgView.sensitivity                   = .normal
-        ecgView.standard_text_color           = UIColor(named: "BrandPrimary") ?? .systemBlue
+        ecgView.standard_text_color           = UIColor.white.withAlphaComponent(0.8)
         ecgView.pix_per_mm                    = 6.2
         ecgView.standard_style                = .hidden
         ecgView.leadDisplay                   = layout.sdkType

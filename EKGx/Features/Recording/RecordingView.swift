@@ -454,7 +454,7 @@ private struct RecordingControlsPanel: View {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(createFillColor)
                         .frame(width: g.size.width * createFillFraction)
-                        .animation(.linear(duration: 0.3), value: createFillFraction)
+                        .animation(.linear(duration: 1.0), value: viewModel.elapsedSeconds)
                 }
                 .clipShape(RoundedRectangle(cornerRadius: 12))
 
@@ -469,7 +469,10 @@ private struct RecordingControlsPanel: View {
             .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.hapticPlain)
+        .disabled(!viewModel.canStopOrView)
+        .opacity(viewModel.canStopOrView ? 1 : 0.45)
         .animation(.easeInOut(duration: 0.2), value: viewModel.recordingState)
+        .animation(.easeInOut(duration: 0.3), value: viewModel.canStopOrView)
     }
 
     // MARK: - Icon button helper
@@ -515,7 +518,9 @@ private struct RecordingControlsPanel: View {
     private var createLabel: String {
         switch viewModel.recordingState {
         case .idle:      return L10n.Recording.Controls.record
-        case .recording: return viewModel.isBufferReady ? L10n.Recording.Controls.viewResult : L10n.Recording.Controls.stop
+        case .recording:
+            if !viewModel.canStopOrView { return "\(viewModel.secondsUntilCanStop)s" }
+            return viewModel.isBufferReady ? L10n.Recording.Controls.viewResult : L10n.Recording.Controls.stop
         case .done:      return L10n.Recording.Controls.viewResult
         }
     }

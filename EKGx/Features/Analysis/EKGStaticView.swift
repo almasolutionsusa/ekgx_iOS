@@ -602,6 +602,21 @@ struct EKGStaticView: View {
     @State private var lineModel = ECGLineModel()
     @State private var yRate: CGFloat = 10
 
+    private var activeFilterLabel: String {
+        let ud = UserDefaults.standard
+        var parts: [String] = []
+        if let lp = ud.string(forKey: "app.lowPass"), lp != "0 Hz" {
+            parts.append("LowPass: \(lp)")
+        }
+       let ac = ud.string(forKey: "app.acNotch")
+            parts.append("AcNotch: \(ac ?? "60 Hz")")
+        
+        if let emg = ud.string(forKey: "app.emgFilter"), emg != "Off" {
+            parts.append("EMG: \(emg)")
+        }
+        return parts.joined(separator: " - ")
+    }
+
     var body: some View {
         GeometryReader { geo in
             let totalSamples     = fullData.first?.count ?? 0
@@ -623,6 +638,7 @@ struct EKGStaticView: View {
                     // Single ScrollView for grid + rhythm strip — they scroll together
                     ScrollView(.horizontal, showsIndicators: true) {
                         ZStack(alignment: .topLeading) {
+                            // tap is on the outer ZStack (below) so it isn't blocked by the PinchZoom overlay
                             // One background spanning full height
                             EcgBackgroundView(showSmallLines: true, pixPerMm: Float(lineModel.pixPermm))
                                 .frame(width: totalGridWidth, height: geo.size.height)
@@ -674,21 +690,46 @@ struct EKGStaticView: View {
                                             )
                                         }
                                     }
-                                    Text("25 mm/s  ·  \(Int(yRate)) mm/mV")
-                                        .font(.system(size: 11))
-                                        .foregroundColor(.black.opacity(0.7))
-                                        .padding(.leading, 50)
-                                        .padding(.bottom, 4)
+                                    
+                                    HStack {
+                                        Text("25 mm/s  ·  \(Int(yRate)) mm/mV")
+                                            .font(.system(size: 15))
+                                            .foregroundColor(.black.opacity(0.8))
+                                            .padding(.horizontal, 50)
+                                            .padding(.bottom, 4)
+                                        
+                                        let label = activeFilterLabel
+                                        if !label.isEmpty {
+                                            Text(label)
+                                                .font(.system(size: 15))
+                                                .foregroundColor(.black.opacity(0.8))
+                                                .padding(.trailing, 10)
+                                                .padding(.bottom, 4)
+                                        }
+                                    }
                                 }
-                                .frame(width: totalGridWidth, height: longLeadHeight)
+//                                .overlay(alignment: .bottomTrailing) {
+//                                    let label = activeFilterLabel
+//                                    if !label.isEmpty {
+//                                        Text(label)
+//                                            .font(.system(size: 15))
+//                                            .foregroundColor(.black.opacity(0.8))
+//                                            .padding(.trailing, 10)
+//                                            .padding(.bottom, 4)
+//                                    }
+//                                }
+//                                .frame(width: totalGridWidth, height: longLeadHeight)
                             }
                         }
                         .contentShape(Rectangle())
-                        .onTapGesture { cycleYRate() }
+                        .pinchToZoom()
+                        .clipped()
                         .frame(width: totalGridWidth, height: geo.size.height)
                     }
                 }
             }
+            .contentShape(Rectangle())
+            .onTapGesture { cycleYRate() }
         }
         .onChange(of: yRate) { _, v in lineModel.yRate = v }
     }

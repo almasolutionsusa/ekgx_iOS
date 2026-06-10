@@ -39,16 +39,6 @@ struct AnalysisView: View {
             }
 
             // Overlays
-            if viewModel.showControlsMenu {
-                AnalysisControlsMenu(viewModel: viewModel)
-                    .transition(.opacity)
-                    .zIndex(10)
-            }
-            if viewModel.showVisualizationMenu {
-                VisualizationMenuSheet(viewModel: viewModel)
-                    .transition(.opacity)
-                    .zIndex(10)
-            }
             if viewModel.showDiagnosisPanel {
                 AnalysisDiagnosisPanel(viewModel: viewModel)
                     .transition(.opacity)
@@ -84,6 +74,15 @@ struct AnalysisView: View {
             EmergencyAssignPatientSheet(viewModel: viewModel)
                 .interactiveDismissDisabled()
         }
+        .sheet(isPresented: $viewModel.showExamHistory, onDismiss: {
+            viewModel.openCompareIfPending()
+        }) {
+            ExamHistorySheet(viewModel: viewModel)
+                .presentationDetents([.medium, .large])
+        }
+        .fullScreenCover(isPresented: $viewModel.showCompareView) {
+            ExamCompareView(viewModel: viewModel)
+        }
     }
 
     // MARK: - Analyzing
@@ -104,7 +103,12 @@ struct AnalysisView: View {
         VStack(spacing: 0) {
             // Compact info strip
             if let m = viewModel.measurements {
-                InfoStrip(measurements: m, diagnosisLines: viewModel.diagnosisLines)
+                InfoStrip(
+                    measurements: m,
+                    diagnosisLines: viewModel.diagnosisLines,
+                    isEmergency: viewModel.showEmergencyBanner,
+                    performedBy: viewModel.performedBy
+                )
             }
             Divider()
 
@@ -125,6 +129,7 @@ struct AnalysisView: View {
                         leadParams: viewModel.orderedLeadParams
                     )
                 }
+
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -160,6 +165,8 @@ private struct InfoStrip: View {
 
     let measurements: vhMeasurements
     let diagnosisLines: [String]
+    var isEmergency: Bool = false
+    var performedBy: String = ""
 
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
@@ -197,12 +204,35 @@ private struct InfoStrip: View {
                 Text("INTERPRETATION")
                     .font(.system(size: 9, weight: .semibold)).foregroundColor(.gray).tracking(0.5)
                 Text(diagnosisLines.isEmpty ? "—" : diagnosisLines.joined(separator: " · "))
-                    .font(.system(size: 12)).foregroundColor(.black)
+                    .font(.system(size: 14,weight: .medium)).foregroundColor(.black)
                     .lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 14)
             .padding(.vertical, 8)
+
+            // Rapid EKG badge / Performed by
+            if isEmergency {
+                separator()
+                Text("Rapid EKG")
+                    .font(AppTypography.calloutBold)
+                    .foregroundStyle(AppColors.statusCritical)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
+                            .stroke(AppColors.statusCritical, lineWidth: 1.5)
+                    )
+                    .padding(.horizontal, 14)
+            } else if !performedBy.isEmpty {
+                separator()
+                HStack(spacing: 8) {
+                    Text("By " + performedBy)
+                        .font(AppTypography.caption)
+                }
+                .foregroundStyle(Color.gray)
+                .padding(.horizontal, 14)
+            }
         }
         .background(Color.white)
         .overlay(Rectangle().fill(Color(UIColor.systemGray5)).frame(height: 1), alignment: .bottom)
@@ -317,34 +347,104 @@ private struct AnalysisNavBar: View {
     var body: some View {
         HStack(alignment: .center, spacing: 0) {
             backButton
-            Spacer()
             patientInfo
             Spacer()
             titleBlock
             Spacer()
             VStack(spacing: 4) {
                 LiveClockView()
-                if viewModel.showEmergencyBanner {
-                    EmergencyChip(
-                        assignedPatient: viewModel.assignedPatient,
-                        isPinVerified: viewModel.isPinVerified
-                    )
-                }
             }
 
-            // Controls toggle
-            Button {
-                viewModel.showControlsMenu.toggle()
-            } label: {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(AppColors.brandPrimary)
-                    .frame(width: 36, height: 36)
-                    .background(AppColors.brandPrimary.opacity(0.1))
-                    .clipShape(Circle())
+            // Exam history
+            if viewModel.state == .success && !viewModel.patientExams.isEmpty {
+                Button { viewModel.showExamHistory.toggle() } label: {
+                    ZStack(alignment: .topTrailing) {
+                        HStack(spacing: 6) {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .font(.system(size: 23, weight: .semibold))
+                            if viewModel.patientExams.count > 1 {
+                                Text("\(viewModel.patientExams.count)")
+                                    .font(AppTypography.captionBold)
+                            }
+                        }
+                        .foregroundStyle(AppColors.textPrimary)
+                        .padding(.horizontal, 12).padding(.vertical, 6)
+                        .background(Color(UIColor.systemGray5))
+                        .cornerRadius(AppMetrics.radiusMedium)
+                    }
+                }
+                .buttonStyle(.hapticPlain)
+                .padding(.leading, 8)
             }
-            .buttonStyle(.hapticPlain)
-            .padding(.leading, 12)
+
+            // Controls menu
+            Menu {
+                Button {
+                    viewModel.uploadEKG()
+                } label: {
+                    Label(
+                        viewModel.isAlreadySynced ? "Already Sent" : "Send to EMR",
+                        systemImage: viewModel.isAlreadySynced ? "checkmark.circle" : "arrow.up.circle"
+                    )
+                }
+                .disabled(viewModel.isLocalMode || viewModel.isAlreadySynced)
+
+                Button {
+                    viewModel.showDiagnosisPanel = true
+                } label: {
+                    Label("Diagnosis", systemImage: "stethoscope")
+                }
+                .disabled(viewModel.isLocalMode || viewModel.isAlreadySynced)
+
+                if viewModel.visualizationMode != .standard {
+                    Button { viewModel.visualizationMode = .standard } label: {
+                        Label("Standard", systemImage: "arrow.left.arrow.right")
+                    }
+                    Button { viewModel.visualizationMode = .layers } label: {
+                        Label("Layers", systemImage: viewModel.visualizationMode == .layers ? "checkmark" : "square.3.layers.3d")
+                    }
+                    Button { viewModel.visualizationMode = .table } label: {
+                        Label("Table View", systemImage: viewModel.visualizationMode == .table ? "checkmark" : "chart.bar.doc.horizontal")
+                    }
+                } else {
+                    Menu {
+                        Button { viewModel.visualizationMode = .standard } label: {
+                            Label("Standard", systemImage: "checkmark")
+                        }
+                        Button { viewModel.visualizationMode = .layers } label: {
+                            Label("Layers", systemImage: "square.3.layers.3d")
+                        }
+                        Button { viewModel.visualizationMode = .table } label: {
+                            Label("Table View", systemImage: "chart.bar.doc.horizontal")
+                        }
+                    } label: {
+                        Label("Visualization", systemImage: "eye")
+                    }
+                }
+
+                Button {
+                    printECG(
+                        patient: viewModel.patient,
+                        templateData: viewModel.templateData,
+                        ecgData: viewModel.ecgData,
+                        sampleRate: viewModel.sampleRate,
+                        measurements: viewModel.measurements,
+                        diagnosisLines: viewModel.diagnosisLines,
+                        performedBy: viewModel.performedBy,
+                        isEmergency: viewModel.showEmergencyBanner
+                    )
+                } label: {
+                    Label("Print", systemImage: "printer")
+                }
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 25, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .padding(.horizontal, 12).padding(.vertical, 6)
+                    .background(Color(UIColor.systemGray5))
+                    .cornerRadius(AppMetrics.radiusMedium)
+            }
+            .padding(.leading, 8)
         }
         .padding(.horizontal, AppMetrics.spacing24)
         .frame(height: AppMetrics.navBarHeight)
@@ -356,11 +456,11 @@ private struct AnalysisNavBar: View {
         Button { viewModel.goBack() } label: {
             HStack(spacing: 6) {
                 Image(systemName: "chevron.left").font(.system(size: 13, weight: .semibold))
-                Text(L10n.Analysis.Nav.backButton).font(AppTypography.callout)
+                Text(L10n.Common.back).font(AppTypography.callout)
             }
-            .foregroundStyle(AppColors.brandPrimary)
+            .foregroundStyle(AppColors.textPrimary)
             .padding(.horizontal, 12).padding(.vertical, 6)
-            .background(AppColors.brandPrimary.opacity(0.1))
+            .background(Color(UIColor.systemGray5))
             .cornerRadius(AppMetrics.radiusMedium)
         }
         .buttonStyle(.hapticPlain)
@@ -368,10 +468,6 @@ private struct AnalysisNavBar: View {
 
     private var patientInfo: some View {
         HStack(spacing: 10) {
-            ZStack {
-                Circle().fill(AppColors.brandPrimary.opacity(0.12)).frame(width: 34, height: 34)
-                Text(viewModel.patient.initials).font(AppTypography.captionBold).foregroundStyle(AppColors.brandPrimary)
-            }
             VStack(alignment: .leading, spacing: 1) {
                 Text(viewModel.patient.fullName).font(AppTypography.bodyMedium).foregroundStyle(.black)
                 HStack(spacing: 4) {
@@ -381,8 +477,9 @@ private struct AnalysisNavBar: View {
                 }
                 .font(AppTypography.caption).foregroundStyle(.gray)
             }
-        }
+        }.padding(.leading, 8)
     }
+    
 
     private var titleBlock: some View {
         VStack(spacing: 3) {
@@ -490,33 +587,6 @@ private struct UploadStatusOverlay: View {
             .shadow(color: .black.opacity(0.2), radius: 24)
             .padding(.horizontal, AppMetrics.spacing48)
         }
-    }
-}
-
-// MARK: - Emergency Chip (compact, sits inside the nav bar below the clock)
-
-private struct EmergencyChip: View {
-    let assignedPatient: Patient?
-    let isPinVerified: Bool
-
-    var body: some View {
-        HStack(spacing: 4) {
-            Image(systemName: assignedPatient != nil ? "checkmark.circle.fill" : "cross.case.fill")
-                .font(.system(size: 9, weight: .semibold))
-            Text(label)
-                .font(.system(size: 10, weight: .semibold))
-                .lineLimit(1)
-        }
-        .foregroundStyle(.white)
-        .padding(.horizontal, 7)
-        .padding(.vertical, 3)
-        .background(assignedPatient != nil ? AppColors.statusSuccess : AppColors.statusCritical)
-        .cornerRadius(20)
-    }
-
-    private var label: String {
-        if let p = assignedPatient { return p.firstName + " " + p.lastName }
-        return "Rapid EKG"
     }
 }
 

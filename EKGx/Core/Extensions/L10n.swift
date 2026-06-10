@@ -665,6 +665,16 @@ enum L10n {
         }
     }
 
+    // MARK: - Exam Compare
+
+    enum Compare {
+        static let title             = "compare.title".localized
+        static let currentExam       = "compare.currentExam".localized
+        static let compareExam       = "compare.compareExam".localized
+        static let noChange          = "compare.noChange".localized
+        static let noInterpretation  = "compare.noInterpretation".localized
+    }
+
     // MARK: - Placeholder
 
     enum Placeholder {
@@ -803,6 +813,7 @@ enum L10n {
         static let comingSoon    = "vitals.comingSoon".localized
         static let rrPickerTitle = "vitals.rr.pickerTitle".localized
         static let rrSaved       = "vitals.rr.saved".localized
+        static let rrSave        = "vitals.rr.save".localized
         static let sourceManual  = "vitals.source.manual".localized
         static func rrBpm(_ v: Int) -> String {
             String(format: "vitals.rr.bpm".localized, v)
@@ -855,6 +866,7 @@ enum L10n {
         enum Pain {
             static let title         = "vitals.pain.title".localized
             static let save          = "vitals.pain.save".localized
+            static let saved         = "vitals.pain.saved".localized
             static let noPain        = "vitals.pain.noPain".localized
             static let mild          = "vitals.pain.mild".localized
             static let moderate      = "vitals.pain.moderate".localized

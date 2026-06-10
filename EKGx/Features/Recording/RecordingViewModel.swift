@@ -113,9 +113,6 @@ final class RecordingViewModel {
         print("🟢 [Recording] activate() — deviceState=\(deviceService.currentState)")
         #endif
         setupDeviceCallbacks()
-        // If the device was already connected before this screen opened,
-        // the .connected event never fires, so configureFilters() was never called.
-        // Re-applying it ensures filtersECGsData callbacks work immediately.
         deviceService.reconfigureFilters()
         #if DEBUG
         print("🟢 [Recording] reconfigureFilters() called — deviceState=\(deviceService.currentState)")
@@ -280,6 +277,18 @@ final class RecordingViewModel {
         return elapsedSeconds >= selectedDuration.seconds
     }
 
+    static let minimumRecordingSeconds = 10
+
+    // Stop / View Result button is locked for the first 10 s of every recording
+    var canStopOrView: Bool {
+        guard recordingState == .recording else { return true }
+        return elapsedSeconds >= Self.minimumRecordingSeconds
+    }
+
+    var secondsUntilCanStop: Int {
+        max(0, Self.minimumRecordingSeconds - elapsedSeconds)
+    }
+
     var connectedDeviceName: String? {
         deviceService.connectedDeviceName
     }
@@ -305,6 +314,13 @@ final class RecordingViewModel {
         signalWatchdog?.invalidate()
         signalWatchdog = Timer.scheduledTimer(withTimeInterval: 3, repeats: false) { [weak self] _ in
             guard let self, self.recordingState == .recording, !self.isReconnecting else { return }
+            // Device still connected but data is momentarily absent (e.g. filter re-init after
+            // reconfigureFilters()). Calling connect() on a connected device forces a disconnect
+            // + rescan which breaks the recording. Reschedule the watchdog and wait instead.
+            guard self.deviceService.currentState != .connected else {
+                self.resetWatchdog()
+                return
+            }
             self.stopTimers()
             self.startReconnectFlow()
         }
@@ -326,6 +342,12 @@ final class RecordingViewModel {
 
     private func scheduleReconnectAttempt() {
         reconnectAttempt += 1
+        // If device is already connected, calling connect() would force a disconnect + rescan.
+        // Treat this as an instant success instead.
+        if deviceService.currentState == .connected {
+            handleReconnectSuccess()
+            return
+        }
         deviceService.connect()
         reconnectTimer?.invalidate()
         reconnectTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: false) { [weak self] _ in
@@ -343,14 +365,8 @@ final class RecordingViewModel {
     private func handleReconnectSuccess() {
         reconnectTimer?.invalidate()
         reconnectTimer = nil
-        isReconnecting = false
-        reconnectAttempt = 0
-        if recordingState == .recording {
-            countTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-                guard let self else { return }
-                self.elapsedSeconds += 1
-            }
-        }
+        resetRecording()
+        startRecording()
     }
 
     private func handleReconnectFailure() {
