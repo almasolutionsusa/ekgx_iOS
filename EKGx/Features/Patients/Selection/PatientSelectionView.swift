@@ -602,7 +602,7 @@ private struct PatientRow: View {
                 if examCount > 0 {
                     Button(action: onHistoryTap) {
                         VStack(spacing: 3) {
-                            Image(systemName: "clock.arrow.circlepath")
+                            Image(systemName: "doc.on.doc")
                                 .font(.system(size: 16, weight: .medium))
                             Text("\(examCount)")
                                 .font(.system(size: 11, weight: .bold))

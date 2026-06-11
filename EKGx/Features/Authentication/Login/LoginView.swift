@@ -513,7 +513,7 @@ private struct LoginFormPanel: View {
                                     focusedField = .password
                                 } label: {
                                     HStack(spacing: AppMetrics.spacing12) {
-                                        Image(systemName: "clock.arrow.circlepath")
+                                        Image(systemName: "doc.on.doc")
                                             .font(.system(size: 14))
                                             .foregroundStyle(AppColors.textSecondary)
                                         Text(suggestion)
