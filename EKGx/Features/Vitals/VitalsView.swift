@@ -83,7 +83,7 @@ struct VitalsView: View {
 
                 Button(action: viewModel.openExams) {
                     ZStack(alignment: .topTrailing) {
-                        Image(systemName: "clock.arrow.circlepath")
+                        Image(systemName: "doc.on.doc")
                             .font(.system(size: 24, weight: .medium))
                             .foregroundStyle(AppColors.textPrimary)
                             .frame(width: 54, height: 54)
@@ -372,6 +372,7 @@ struct VitalsView: View {
         case .height:            return viewModel.heightDisplay
         case .weight:            return viewModel.measurements[.weight]?.displayValue
         case .oxygenSaturation:  return viewModel.measurements[.oxygenSaturation].map { $0.displayValue + "%" }
+        case .respirations:      return pendingRR.map { "\($0)" } ?? viewModel.measurements[.respirations]?.displayValue
         default:                 return viewModel.measurements[type]?.displayValue
         }
     }

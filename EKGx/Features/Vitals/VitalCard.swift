@@ -410,6 +410,28 @@ struct VitalCard: View {
                 }
                 Spacer(minLength: 0)
             }
+
+            // Source text + manual entry pencil
+            if let source, selectedValue != nil {
+                VStack(spacing: 0) {
+                    Spacer()
+                    HStack(spacing: 5) {
+                        Text(L10n.Vitals.sourceLabel(source))
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundStyle(type.iconColor.opacity(0.7))
+                        if let onManualEntry {
+                            Button(action: onManualEntry) {
+                                Image(systemName: "pencil.circle.fill")
+                                    .font(.system(size: 18, weight: .medium))
+                                    .foregroundStyle(AppColors.textSecondary.opacity(0.5))
+                            }
+                            .buttonStyle(.hapticPlain)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.bottom, AppMetrics.spacing8)
+                }
+            }
         }
     }
 
@@ -694,7 +716,7 @@ struct VitalCard: View {
 
             HStack(alignment: .bottom, spacing: 3) {
                 Image("ELogo").resizable().scaledToFit().frame(height: 30)
-                Text(type.shortName)
+                Text(type.shortName.dropFirst())
                     .font(AppTypography.title1)
                     .foregroundStyle(AppColors.textPrimary)
                     .offset(y: 10)

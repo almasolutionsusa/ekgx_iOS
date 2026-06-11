@@ -117,6 +117,7 @@ private struct LoginBrandingPanel: View {
                             .font(AppTypography.callout)
                             .foregroundStyle(AppColors.textOnDark.opacity(0.7))
                             .lineLimit(2)
+                            .offset(x: 4)
                     }
                 }
 

@@ -256,6 +256,7 @@ struct PatientSelectionView: View {
                     .font(AppTypography.bodyMedium)
                     .foregroundStyle(AppColors.textSecondary)
                     .lineLimit(2)
+                    .offset(x: 4)
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, AppMetrics.spacing16)

@@ -369,7 +369,7 @@ private struct AnalysisNavBar: View {
             if viewModel.state == .success && !viewModel.patientExams.isEmpty {
                 Button { viewModel.showExamHistory.toggle() } label: {
                     HStack(spacing: AppMetrics.spacing6) {
-                        Image(systemName: "clock.arrow.circlepath")
+                        Image(systemName: "doc.on.doc")
                             .font(.system(size: 23, weight: .semibold))
                         if viewModel.patientExams.count > 1 {
                             Text("\(viewModel.patientExams.count)")
