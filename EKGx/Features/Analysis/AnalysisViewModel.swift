@@ -111,6 +111,7 @@ final class AnalysisViewModel {
     var compareRecording: ECGRecording?
     var compareECGData: ECGLeads = []
     var showCompareView = false
+    private var pendingCompare = false
 
     // MARK: - Data
 
@@ -423,12 +424,14 @@ final class AnalysisViewModel {
         guard !leads.isEmpty else { return }
         compareECGData   = leads
         compareRecording = recording
+        pendingCompare   = true
         // showCompareView is set via onDismiss in AnalysisView after history sheet fully closes
         showExamHistory  = false
     }
 
     func openCompareIfPending() {
-        guard compareRecording != nil else { return }
+        guard pendingCompare else { return }
+        pendingCompare  = false
         showCompareView = true
     }
 

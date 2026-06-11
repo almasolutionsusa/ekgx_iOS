@@ -80,6 +80,9 @@
 "auth.register.successTitle"                 = "Check your email";
 "auth.register.successMessage"               = "We've sent a verification link to %@. Please verify your account before signing in.";
 "auth.register.successBackToLogin"           = "Back to Login";
+"auth.register.noInternetTitle"              = "No Internet Connection";
+"auth.register.noInternetMessage"            = "An internet connection is required to create your account for the first time.\n\nOnce your account is set up, you can use the app fully offline — no internet needed for future logins.";
+"auth.register.noInternetOpenWifi"           = "Open Wi-Fi Settings";
 
 // MARK: - Validation
 "validation.email.empty"             = "Email address is required";
@@ -315,6 +318,24 @@
 "patientExams.delete.confirm"        = "Delete";
 "patientExams.delete.message"        = "This exam will be permanently deleted from this device and cannot be recovered.";
 "patientExams.delete.contextMenu"    = "Delete Recording";
+"patientExams.delete.bpReading"      = "Delete BP Reading";
+"patientExams.patient.mrn"           = "MRN %@";
+"patientExams.ekg.rapidEkg"          = "Rapid EKG";
+"patientExams.ekg.version"           = "v%@";
+"patientExams.bp.unit"               = "mmHg";
+"patientExams.bp.systolic"           = "Sys %d";
+"patientExams.bp.diastolic"          = "Dia %d";
+"patientExams.bp.pulseRate"          = "%d bpm";
+"patientExams.bp.arm"                = "%@ Arm";
+"patientExams.filter.custom"         = "Custom";
+"patientExams.date.selectRange"      = "Select Date Range";
+"patientExams.date.from"             = "From";
+"patientExams.date.to"               = "To";
+"patientExams.date.apply"            = "Apply";
+"patientExams.date.allDates"         = "All Dates";
+"patientExams.date.today"            = "Today";
+"patientExams.date.last7Days"        = "Last 7 Days";
+"patientExams.date.last30Days"       = "Last 30 Days";
 
 // MARK: - Recording
 "recording.nav.backButton"           = "Back";
@@ -345,6 +366,15 @@
 "analysis.nav.backButton"            = "Recording";
 "analysis.nav.title"                 = "EKG Analysis";
 "analysis.nav.unconfirmed"           = "Unconfirmed — Review Required";
+"analysis.nav.sendToEmr"             = "Send to EMR";
+"analysis.nav.alreadySent"           = "Already Sent";
+"analysis.nav.diagnosis"             = "Diagnosis";
+"analysis.nav.print"                 = "Print";
+"analysis.nav.performedBy"           = "By %@";
+"analysis.viz.standard"              = "Standard";
+"analysis.viz.layers"                = "Layers";
+"analysis.viz.table"                 = "Table View";
+"analysis.viz.visualization"         = "Visualization";
 "analysis.section.measurements"      = "Measurements";
 "analysis.section.interpretation"    = "Interpretation";
 "analysis.section.leadParams"        = "Lead Parameters";
@@ -564,6 +594,9 @@
 // MARK: - Vitals · Device Connection
 "vitals.device.scanning"             = "Scanning...";
 "vitals.device.connecting"           = "Connecting...";
+"vitals.device.connected"            = "Connected";
+"vitals.device.tapToConnect"         = "Tap to connect";
+"vitals.device.searchingScale"       = "Searching for scale...";
 "vitals.device.connectTitle"         = "Connect Device";
 "vitals.device.connectDevice"        = "Connect %@ Device";
 "vitals.device.useDemo"              = "Use Demo Device";
@@ -619,6 +652,15 @@
 "vitals.weight.save"                 = "Save Weight";
 "vitals.weight.unitImperial"         = "lbs";
 "vitals.weight.unitMetric"           = "kg";
+"vitals.weight.bodyFat"              = "%.1f%% fat";
+
+// MARK: - Vitals · BP Manual Entry
+"vitals.bp.includePulseRate"         = "Include Pulse Rate";
+
+// MARK: - Vitals · Pulse Rate (HR Manual Entry)
+"vitals.hr.title"                    = "Pulse Rate";
+"vitals.hr.saveReading"              = "Save Pulse Rate";
+"vitals.hr.saved"                    = "Saved";
 
 // MARK: - Vitals · General
 "vitals.rr.saved"                    = "Saved";
@@ -675,3 +717,6 @@
 "compare.compareExam"        = "Compare Exam";
 "compare.noChange"           = "No change";
 "compare.noInterpretation"   = "No interpretation";
+"compare.selectExam"         = "Select Exam to Compare";
+"compare.noExams"            = "No other exams available";
+"compare.hrBpm"              = "HR %@ bpm";

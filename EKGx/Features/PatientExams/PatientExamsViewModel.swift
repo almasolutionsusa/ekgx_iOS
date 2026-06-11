@@ -1,5 +1,50 @@
 import Foundation
 
+// MARK: - DateRangeFilter
+
+enum DateRangeFilter: Equatable {
+    case all
+    case today
+    case last7Days
+    case last30Days
+    case custom(from: Date, to: Date)
+
+    var label: String {
+        switch self {
+        case .all:        return L10n.PatientExams.Date.allDates
+        case .today:      return L10n.PatientExams.Date.today
+        case .last7Days:  return L10n.PatientExams.Date.last7Days
+        case .last30Days: return L10n.PatientExams.Date.last30Days
+        case .custom:     return L10n.PatientExams.filterCustom
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .all:        return "calendar"
+        case .today:      return "sun.max"
+        case .last7Days:  return "calendar.badge.clock"
+        case .last30Days: return "calendar.badge.clock"
+        case .custom:     return "slider.horizontal.3"
+        }
+    }
+
+    func includes(_ date: Date) -> Bool {
+        let cal = Calendar.current
+        let now = Date()
+        switch self {
+        case .all:        return true
+        case .today:      return cal.isDateInToday(date)
+        case .last7Days:  return date >= cal.date(byAdding: .day, value: -7, to: now)!
+        case .last30Days: return date >= cal.date(byAdding: .day, value: -30, to: now)!
+        case .custom(let from, let to):
+            let start = cal.startOfDay(for: from)
+            let end   = cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: to))!
+            return date >= start && date < end
+        }
+    }
+}
+
 // MARK: - ExamRecord
 
 enum ExamRecord: Identifiable {
@@ -57,10 +102,15 @@ final class PatientExamsViewModel {
     var weightReadings: [WeightReading] = []
     var heightReadings: [HeightReading] = []
     var selectedVitalType: VitalType? = nil
+    var dateFilter: DateRangeFilter = .all
+    var customFromDate: Date = Calendar.current.startOfDay(for: Date())
+    var customToDate: Date = Date()
     var uploadingIds: Set<String> = []
-    var recordingToDelete:  ECGRecording? = nil
-    var bpReadingToDelete:  BPRecording?  = nil
-    var rrReadingToDelete:  RRReading?    = nil
+    var recordingToDelete:   ECGRecording? = nil
+    var bpReadingToDelete:   BPRecording?  = nil
+    var spo2ReadingToDelete: SpO2Reading?  = nil
+    var tempReadingToDelete: TempReading?  = nil
+    var rrReadingToDelete:   RRReading?    = nil
     var painReadingToDelete:   PainReading?   = nil
     var weightReadingToDelete: WeightReading? = nil
     var heightReadingToDelete: HeightReading? = nil
@@ -132,7 +182,17 @@ final class PatientExamsViewModel {
             painReadings.map  { .pain($0)   } +
             weightReadings.map { .weight($0) } +
             heightReadings.map { .height($0) }
-        let sorted = all.sorted { $0.recordedAt > $1.recordedAt }
+        let activeDate: DateRangeFilter
+        if case .custom = dateFilter {
+            activeDate = .custom(from: customFromDate, to: customToDate)
+        } else {
+            activeDate = dateFilter
+        }
+
+        let sorted = all
+            .filter { activeDate.includes($0.recordedAt) }
+            .sorted { $0.recordedAt > $1.recordedAt }
+
         guard let type = selectedVitalType else { return sorted }
         return sorted.filter {
             switch ($0, type) {
@@ -215,8 +275,10 @@ final class PatientExamsViewModel {
         showDeleteConfirm  = true
     }
 
-    func confirmDeleteBP(_ reading: BPRecording)     { bpReadingToDelete  = reading; showDeleteConfirm = true }
-    func confirmDeleteRR(_ reading: RRReading)         { rrReadingToDelete     = reading; showDeleteConfirm = true }
+    func confirmDeleteBP(_ reading: BPRecording)       { bpReadingToDelete   = reading; showDeleteConfirm = true }
+    func confirmDeleteSpO2(_ reading: SpO2Reading)     { spo2ReadingToDelete = reading; showDeleteConfirm = true }
+    func confirmDeleteTemp(_ reading: TempReading)     { tempReadingToDelete = reading; showDeleteConfirm = true }
+    func confirmDeleteRR(_ reading: RRReading)         { rrReadingToDelete   = reading; showDeleteConfirm = true }
     func confirmDeletePain(_ reading: PainReading)     { painReadingToDelete   = reading; showDeleteConfirm = true }
     func confirmDeleteWeight(_ reading: WeightReading) { weightReadingToDelete = reading; showDeleteConfirm = true }
     func confirmDeleteHeight(_ reading: HeightReading) { heightReadingToDelete = reading; showDeleteConfirm = true }
@@ -230,6 +292,14 @@ final class PatientExamsViewModel {
             diContainer.bpStore.delete(id: r.id)
             bpReadings.removeAll { $0.id == r.id }
             bpReadingToDelete = nil
+        } else if let r = spo2ReadingToDelete {
+            diContainer.spo2Store.delete(id: r.id)
+            spo2Readings.removeAll { $0.id == r.id }
+            spo2ReadingToDelete = nil
+        } else if let r = tempReadingToDelete {
+            diContainer.tempStore.delete(id: r.id)
+            tempReadings.removeAll { $0.id == r.id }
+            tempReadingToDelete = nil
         } else if let r = rrReadingToDelete {
             diContainer.rrStore.delete(id: r.id)
             rrReadings.removeAll { $0.id == r.id }
@@ -253,6 +323,8 @@ final class PatientExamsViewModel {
     func cancelDelete() {
         recordingToDelete    = nil
         bpReadingToDelete    = nil
+        spo2ReadingToDelete  = nil
+        tempReadingToDelete  = nil
         rrReadingToDelete    = nil
         painReadingToDelete  = nil
         weightReadingToDelete = nil

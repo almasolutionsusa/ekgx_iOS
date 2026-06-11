@@ -137,6 +137,7 @@ typedef NS_ENUM(Byte, CRPC_60FCommanMessureStage)
 @end
 
 @protocol CRAP20SDKDelegate <NSObject>
+@optional
 #pragma mark -  General callback
 /** Blood oxygen waveform data */
 - (void)ap_20SDK:(CRAP20SDK *)ap_20SDK GetSpo2Wave:(struct waveData*)wave FromDevice:(CRBleDevice *)device;

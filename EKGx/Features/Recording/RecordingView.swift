@@ -557,6 +557,7 @@ private struct RecordingControlsPanel: View {
             try session.setActive(true)
             let player = try AVAudioPlayer(data: asset.data)
             player.numberOfLoops = 0
+            player.volume = 0.5
             player.prepareToPlay()
             return player
         } catch {

@@ -69,7 +69,7 @@ enum VitalType: String, CaseIterable, Identifiable {
     var shortName: String {
         switch self {
         case .ekg:              return "EKG"
-        case .echo:             return "cho"
+        case .echo:             return "Echo"
         case .bloodPressure:    return "NIBP"
         case .oxygenSaturation: return "SpO2"
         case .temperature:      return "Temp"
@@ -78,7 +78,7 @@ enum VitalType: String, CaseIterable, Identifiable {
         case .weight:           return "Weight"
         case .respirations:     return "RR"
         case .height:           return "Height"
-        case .painLevel:        return "Pain"
+        case .painLevel:        return "Pain Level"
         }
     }
 

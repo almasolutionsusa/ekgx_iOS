@@ -106,6 +106,9 @@ enum L10n {
             static func successMessage(_ email: String) -> String {
                 String(format: "auth.register.successMessage".localized, email)
             }
+            static let noInternetTitle          = "auth.register.noInternetTitle".localized
+            static let noInternetMessage        = "auth.register.noInternetMessage".localized
+            static let noInternetOpenWifi       = "auth.register.noInternetOpenWifi".localized
         }
     }
 
@@ -437,11 +440,33 @@ enum L10n {
         static let statusLocal   = "patientExams.status.local".localized
         static let emptyTitle    = "patientExams.empty.title".localized
         static let emptySubtitle = "patientExams.empty.subtitle".localized
+        static let filterCustom  = "patientExams.filter.custom".localized
+        static let rapidEkg      = "patientExams.ekg.rapidEkg".localized
+        static func mrnLabel(_ mrn: String) -> String { String(format: "patientExams.patient.mrn".localized, mrn) }
+        static func ekgVersion(_ v: String) -> String { String(format: "patientExams.ekg.version".localized, v) }
         enum Delete {
             static let alertTitle   = "patientExams.delete.alertTitle".localized
             static let confirm      = "patientExams.delete.confirm".localized
             static let message      = "patientExams.delete.message".localized
             static let contextMenu  = "patientExams.delete.contextMenu".localized
+            static let bpReading    = "patientExams.delete.bpReading".localized
+        }
+        enum BP {
+            static let unit                    = "patientExams.bp.unit".localized
+            static func systolic(_ v: Int)  -> String { String(format: "patientExams.bp.systolic".localized, v) }
+            static func diastolic(_ v: Int) -> String { String(format: "patientExams.bp.diastolic".localized, v) }
+            static func pulseRate(_ v: Int) -> String { String(format: "patientExams.bp.pulseRate".localized, v) }
+            static func arm(_ s: String)    -> String { String(format: "patientExams.bp.arm".localized, s) }
+        }
+        enum Date {
+            static let selectRange = "patientExams.date.selectRange".localized
+            static let from        = "patientExams.date.from".localized
+            static let to          = "patientExams.date.to".localized
+            static let apply       = "patientExams.date.apply".localized
+            static let allDates    = "patientExams.date.allDates".localized
+            static let today       = "patientExams.date.today".localized
+            static let last7Days   = "patientExams.date.last7Days".localized
+            static let last30Days  = "patientExams.date.last30Days".localized
         }
         static func examNumber(_ n: Int) -> String {
             String(format: "patientExams.card.examNumber".localized, n)
@@ -504,6 +529,17 @@ enum L10n {
             static let backButton   = "analysis.nav.backButton".localized
             static let title        = "analysis.nav.title".localized
             static let unconfirmed  = "analysis.nav.unconfirmed".localized
+            static let sendToEmr    = "analysis.nav.sendToEmr".localized
+            static let alreadySent  = "analysis.nav.alreadySent".localized
+            static let diagnosis    = "analysis.nav.diagnosis".localized
+            static let print        = "analysis.nav.print".localized
+            static func performedBy(_ name: String) -> String { String(format: "analysis.nav.performedBy".localized, name) }
+        }
+        enum Viz {
+            static let standard     = "analysis.viz.standard".localized
+            static let layers       = "analysis.viz.layers".localized
+            static let table        = "analysis.viz.table".localized
+            static let visualization = "analysis.viz.visualization".localized
         }
         enum Section {
             static let measurements  = "analysis.section.measurements".localized
@@ -673,6 +709,9 @@ enum L10n {
         static let compareExam       = "compare.compareExam".localized
         static let noChange          = "compare.noChange".localized
         static let noInterpretation  = "compare.noInterpretation".localized
+        static let selectExam        = "compare.selectExam".localized
+        static let noExams           = "compare.noExams".localized
+        static func hrBpm(_ hr: String) -> String { String(format: "compare.hrBpm".localized, hr) }
     }
 
     // MARK: - Placeholder
@@ -846,6 +885,7 @@ enum L10n {
             static let sensorErrorMessage = "vitals.bp.sensorErrorMessage".localized
             static let saveReading        = "vitals.bp.saveReading".localized
             static let saved              = "vitals.bp.saved".localized
+            static let includePulseRate   = "vitals.bp.includePulseRate".localized
             static let armRight           = "vitals.bp.armRight".localized
             static let armLeft            = "vitals.bp.armLeft".localized
             static let armRightFull       = "vitals.bp.armRightFull".localized
@@ -885,13 +925,24 @@ enum L10n {
             static let save         = "vitals.weight.save".localized
             static let unitImperial = "vitals.weight.unitImperial".localized
             static let unitMetric   = "vitals.weight.unitMetric".localized
+            static func bodyFat(_ pct: Double) -> String {
+                String(format: "vitals.weight.bodyFat".localized, pct)
+            }
+        }
+        enum HR {
+            static let title       = "vitals.hr.title".localized
+            static let saveReading = "vitals.hr.saveReading".localized
+            static let saved       = "vitals.hr.saved".localized
         }
         enum Device {
-            static let scanning     = "vitals.device.scanning".localized
-            static let connecting   = "vitals.device.connecting".localized
-            static let connectTitle = "vitals.device.connectTitle".localized
-            static let useDemo      = "vitals.device.useDemo".localized
-            static let disconnect   = "vitals.device.disconnect".localized
+            static let scanning      = "vitals.device.scanning".localized
+            static let connecting    = "vitals.device.connecting".localized
+            static let connected     = "vitals.device.connected".localized
+            static let tapToConnect  = "vitals.device.tapToConnect".localized
+            static let searchingScale = "vitals.device.searchingScale".localized
+            static let connectTitle  = "vitals.device.connectTitle".localized
+            static let useDemo       = "vitals.device.useDemo".localized
+            static let disconnect    = "vitals.device.disconnect".localized
             static func connectDevice(_ title: String) -> String {
                 String(format: "vitals.device.connectDevice".localized, title)
             }

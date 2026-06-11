@@ -26,7 +26,7 @@ struct AnalysisView: View {
 
     var body: some View {
         ZStack {
-            Color.white.ignoresSafeArea()
+            AppColors.surfaceCard.ignoresSafeArea()
 
             VStack(spacing: 0) {
                 AnalysisNavBar(viewModel: viewModel)
@@ -38,7 +38,6 @@ struct AnalysisView: View {
                 }
             }
 
-            // Overlays
             if viewModel.showDiagnosisPanel {
                 AnalysisDiagnosisPanel(viewModel: viewModel)
                     .transition(.opacity)
@@ -54,7 +53,6 @@ struct AnalysisView: View {
                     .transition(.opacity)
                     .zIndex(20)
             }
-            // Emergency PIN gate — shown above everything when unauthenticated user taps upload
             if viewModel.showEmergencyPinSheet {
                 EmergencyPinOverlay(viewModel: viewModel)
                     .transition(.opacity)
@@ -78,7 +76,7 @@ struct AnalysisView: View {
             viewModel.openCompareIfPending()
         }) {
             ExamHistorySheet(viewModel: viewModel)
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.large])
         }
         .fullScreenCover(isPresented: $viewModel.showCompareView) {
             ExamCompareView(viewModel: viewModel)
@@ -88,10 +86,10 @@ struct AnalysisView: View {
     // MARK: - Analyzing
 
     private var analyzingBody: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: AppMetrics.spacing16) {
             Spacer()
             ProgressView().scaleEffect(1.4).tint(AppColors.brandPrimary)
-            Text(L10n.Common.loading).font(AppTypography.callout).foregroundStyle(.secondary)
+            Text(L10n.Common.loading).font(AppTypography.callout).foregroundStyle(AppColors.textSecondary)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -101,7 +99,6 @@ struct AnalysisView: View {
 
     private var successBody: some View {
         VStack(spacing: 0) {
-            // Compact info strip
             if let m = viewModel.measurements {
                 InfoStrip(
                     measurements: m,
@@ -112,7 +109,6 @@ struct AnalysisView: View {
             }
             Divider()
 
-            // ECG area
             ZStack {
                 switch viewModel.visualizationMode {
                 case .standard:
@@ -129,7 +125,6 @@ struct AnalysisView: View {
                         leadParams: viewModel.orderedLeadParams
                     )
                 }
-
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -138,21 +133,28 @@ struct AnalysisView: View {
     // MARK: - Failed
 
     private var failedBody: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: AppMetrics.spacing24) {
             Spacer()
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 52, weight: .light))
                 .foregroundStyle(AppColors.statusWarning)
-            VStack(spacing: 8) {
-                Text(L10n.Analysis.Failed.title).font(AppTypography.title2).foregroundStyle(.primary)
+            VStack(spacing: AppMetrics.spacing8) {
+                Text(L10n.Analysis.Failed.title)
+                    .font(AppTypography.title2)
+                    .foregroundStyle(AppColors.textPrimary)
                 Text(L10n.Analysis.Failed.subtitle)
-                    .font(AppTypography.callout).foregroundStyle(.secondary)
-                    .multilineTextAlignment(.center).padding(.horizontal, 40)
+                    .font(AppTypography.callout)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, AppMetrics.spacing40)
             }
             Button(L10n.Analysis.Failed.redoButton) { viewModel.goBack() }
-                .font(AppTypography.bodyMedium).foregroundStyle(.white)
-                .padding(.horizontal, 32).padding(.vertical, 14)
-                .background(AppColors.brandPrimary).cornerRadius(AppMetrics.radiusMedium)
+                .font(AppTypography.bodyMedium)
+                .foregroundStyle(.white)
+                .padding(.horizontal, AppMetrics.spacing32)
+                .padding(.vertical, AppMetrics.spacing14)
+                .background(AppColors.brandPrimary)
+                .cornerRadius(AppMetrics.radiusMedium)
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -173,85 +175,98 @@ private struct InfoStrip: View {
 
             // HR
             VStack(alignment: .leading, spacing: 1) {
-                Text("HR").font(.system(size: 9, weight: .medium)).foregroundColor(.gray)
+                Text(L10n.Analysis.Measure.hr)
+                    .font(.system(size: 9, weight: .medium))
+                    .foregroundStyle(AppColors.textSecondary)
                 HStack(alignment: .lastTextBaseline, spacing: 3) {
                     Text(measurements.merge.hr.isEmpty ? "—" : measurements.merge.hr)
-                        .font(.system(size: 20, weight: .bold)).foregroundColor(.black).monospacedDigit()
-                    Text("bpm").font(.system(size: 9)).foregroundColor(.gray)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .monospacedDigit()
+                    Text(L10n.Analysis.Measure.unitBpm)
+                        .font(.system(size: 9))
+                        .foregroundStyle(AppColors.textSecondary)
                 }
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.horizontal, AppMetrics.spacing14)
+            .padding(.vertical, AppMetrics.spacing8)
 
-            separator()
+            stripSeparator()
 
-            // Measurements row
-            HStack(spacing: 14) {
-                measureItem("PR",    measurements.merge.pr,     "ms")
-                measureItem("QRS",   measurements.merge.qrs,    "ms")
-                measureItem("QT",    measurements.merge.qt,     "ms")
-                measureItem("QTc",   measurements.merge.qTc,    "ms")
-                measureItem("P°",    measurements.merge.paxis,  "°")
-                measureItem("QRS°",  measurements.merge.qrSaxis,"°")
-                measureItem("T°",    measurements.merge.taxis,  "°")
+            // Measurement items
+            HStack(spacing: AppMetrics.spacing14) {
+                measureItem(L10n.Analysis.Measure.pr,      measurements.merge.pr,      L10n.Analysis.Measure.unitMs)
+                measureItem(L10n.Analysis.Measure.qrs,     measurements.merge.qrs,     L10n.Analysis.Measure.unitMs)
+                measureItem(L10n.Analysis.Measure.qt,      measurements.merge.qt,      L10n.Analysis.Measure.unitMs)
+                measureItem(L10n.Analysis.Measure.qtc,     measurements.merge.qTc,     L10n.Analysis.Measure.unitMs)
+                measureItem("P°",                          measurements.merge.paxis,   L10n.Analysis.Measure.unitDeg)
+                measureItem("QRS°",                        measurements.merge.qrSaxis, L10n.Analysis.Measure.unitDeg)
+                measureItem("T°",                          measurements.merge.taxis,   L10n.Analysis.Measure.unitDeg)
             }
-            .padding(.horizontal, 14)
+            .padding(.horizontal, AppMetrics.spacing14)
 
-            separator()
+            stripSeparator()
 
-            // Diagnosis
+            // Interpretation
             VStack(alignment: .leading, spacing: 2) {
-                Text("INTERPRETATION")
-                    .font(.system(size: 9, weight: .semibold)).foregroundColor(.gray).tracking(0.5)
+                Text(L10n.Analysis.Section.interpretation.uppercased())
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(AppColors.textSecondary)
+                    .tracking(0.5)
                 Text(diagnosisLines.isEmpty ? "—" : diagnosisLines.joined(separator: " · "))
-                    .font(.system(size: 14,weight: .medium)).foregroundColor(.black)
-                    .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 8)
+            .padding(.horizontal, AppMetrics.spacing14)
+            .padding(.vertical, AppMetrics.spacing8)
 
-            // Rapid EKG badge / Performed by
             if isEmergency {
-                separator()
-                Text("Rapid EKG")
+                stripSeparator()
+                Text(L10n.PatientExams.rapidEkg)
                     .font(AppTypography.calloutBold)
                     .foregroundStyle(AppColors.statusCritical)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, AppMetrics.spacing16)
+                    .padding(.vertical, AppMetrics.spacing6)
                     .overlay(
                         RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
                             .stroke(AppColors.statusCritical, lineWidth: 1.5)
                     )
-                    .padding(.horizontal, 14)
+                    .padding(.horizontal, AppMetrics.spacing14)
             } else if !performedBy.isEmpty {
-                separator()
-                HStack(spacing: 8) {
-                    Text("By " + performedBy)
-                        .font(AppTypography.caption)
-                }
-                .foregroundStyle(Color.gray)
-                .padding(.horizontal, 14)
+                stripSeparator()
+                Text(L10n.Analysis.Nav.performedBy(performedBy))
+                    .font(AppTypography.caption)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .padding(.horizontal, AppMetrics.spacing14)
             }
         }
-        .background(Color.white)
-        .overlay(Rectangle().fill(Color(UIColor.systemGray5)).frame(height: 1), alignment: .bottom)
+        .background(AppColors.surfaceCard)
+        .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.6)).frame(height: 1), alignment: .bottom)
     }
 
     private func measureItem(_ label: String, _ value: String, _ unit: String) -> some View {
         VStack(alignment: .center, spacing: 1) {
-            Text(label).font(.system(size: 10, weight: .medium)).foregroundColor(.gray)
+            Text(label)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(AppColors.textSecondary)
             HStack(alignment: .lastTextBaseline, spacing: 1) {
                 Text(value.isEmpty ? "—" : value)
-                    .font(.system(size: 13, weight: .semibold)).foregroundColor(.black).monospacedDigit()
-                Text(unit).font(.system(size: 8)).foregroundColor(.gray)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .monospacedDigit()
+                Text(unit)
+                    .font(.system(size: 8))
+                    .foregroundStyle(AppColors.textSecondary)
             }
         }
     }
 
-    private func separator() -> some View {
+    private func stripSeparator() -> some View {
         Rectangle()
-            .fill(Color(UIColor.systemGray4))
+            .fill(AppColors.borderSubtle)
             .frame(width: 1, height: 36)
     }
 }
@@ -268,73 +283,71 @@ private struct LeadParamsTableOverlay: View {
     private let rowH: CGFloat   = 36
 
     private typealias Row = (String, (vhLeadParameter) -> String)
-    private let rows: [Row] = [
-        ("Morpho",   { $0.morpho ?? "—" }),
-        ("Pa (mV)",  { String(format: "%.2f", $0.pa1) }),
-        ("Pd (ms)",  { "\($0.pd)" }),
-        ("Qa (mV)",  { String(format: "%.2f", $0.qa) }),
-        ("Qd (ms)",  { "\($0.qd)" }),
-        ("Ra (mV)",  { String(format: "%.2f", $0.ra1) }),
-        ("Rd (ms)",  { "\($0.rd1)" }),
-        ("Sa (mV)",  { String(format: "%.2f", $0.sa1) }),
-        ("Sd (ms)",  { "\($0.sd1)" }),
-        ("Td (ms)",  { "\($0.td)" }),
-        ("QRS (ms)", { "\($0.qrs)" }),
-        ("PR (ms)",  { "\($0.pr)" }),
-        ("QT (ms)",  { "\($0.qt)" }),
-        ("STj (mV)", { String(format: "%.2f", $0.sTj) }),
-    ]
+    private var rows: [Row] {[
+        (L10n.Analysis.LeadParam.morpho, { $0.morpho ?? "—" }),
+        (L10n.Analysis.LeadParam.pa,     { String(format: "%.2f", $0.pa1) }),
+        (L10n.Analysis.LeadParam.pd,     { "\($0.pd)" }),
+        (L10n.Analysis.LeadParam.qa,     { String(format: "%.2f", $0.qa) }),
+        (L10n.Analysis.LeadParam.qd,     { "\($0.qd)" }),
+        (L10n.Analysis.LeadParam.ra,     { String(format: "%.2f", $0.ra1) }),
+        (L10n.Analysis.LeadParam.rd,     { "\($0.rd1)" }),
+        (L10n.Analysis.LeadParam.sa,     { String(format: "%.2f", $0.sa1) }),
+        (L10n.Analysis.LeadParam.sd,     { "\($0.sd1)" }),
+        (L10n.Analysis.LeadParam.td,     { "\($0.td)" }),
+        (L10n.Analysis.LeadParam.qrsD,   { "\($0.qrs)" }),
+        (L10n.Analysis.LeadParam.pr,     { "\($0.pr)" }),
+        (L10n.Analysis.LeadParam.qt,     { "\($0.qt)" }),
+        (L10n.Analysis.LeadParam.stj,    { String(format: "%.2f", $0.sTj) }),
+    ]}
 
     var body: some View {
         ScrollView([.horizontal, .vertical]) {
             VStack(spacing: 0) {
-                // Header
                 HStack(spacing: 0) {
-                    cell("", w: labelW, isHeader: true)
-                    ForEach(leadNames, id: \.self) { cell($0, w: colW, isHeader: true) }
+                    tableCell("", width: labelW, isHeader: true)
+                    ForEach(leadNames, id: \.self) { tableCell($0, width: colW, isHeader: true) }
                 }
-                // Rows
-                ForEach(Array(rows.enumerated()), id: \.offset) { idx, row in
+                ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
                     HStack(spacing: 0) {
-                        labelCell(row.0, alt: idx.isMultiple(of: 2))
+                        labelCell(row.0)
                         ForEach(Array(leadParams.enumerated()), id: \.offset) { _, p in
-                            dataCell(row.1(p), alt: idx.isMultiple(of: 2))
+                            dataCell(row.1(p))
                         }
                     }
                 }
             }
             .padding()
         }
-        .background(Color.white)
+        .background(AppColors.surfaceCard)
     }
 
-    private func cell(_ text: String, w: CGFloat, isHeader: Bool) -> some View {
+    private func tableCell(_ text: String, width: CGFloat, isHeader: Bool) -> some View {
         Text(text)
             .font(.system(size: 13, weight: isHeader ? .bold : .regular))
-            .foregroundStyle(isHeader ? AppColors.brandPrimary : Color.black)
-            .frame(width: w, height: rowH)
-            .background(isHeader ? AppColors.brandPrimary.opacity(0.08) : Color.white)
-            .overlay(Rectangle().stroke(Color(UIColor.systemGray4), lineWidth: 0.5))
+            .foregroundStyle(isHeader ? AppColors.brandPrimary : AppColors.textPrimary)
+            .frame(width: width, height: rowH)
+            .background(isHeader ? AppColors.brandPrimary.opacity(0.08) : AppColors.surfaceCard)
+            .overlay(Rectangle().stroke(AppColors.borderSubtle.opacity(0.5), lineWidth: 0.5))
     }
 
-    private func labelCell(_ text: String, alt: Bool) -> some View {
+    private func labelCell(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 13))
-            .foregroundStyle(Color(UIColor.darkGray))
-            .padding(.horizontal, 4)
+            .foregroundStyle(AppColors.textSecondary)
+            .padding(.horizontal, AppMetrics.spacing4)
             .frame(width: labelW, height: rowH, alignment: .leading)
-            .background(Color.white)
-            .overlay(Rectangle().stroke(Color(UIColor.systemGray4), lineWidth: 0.5))
+            .background(AppColors.surfaceCard)
+            .overlay(Rectangle().stroke(AppColors.borderSubtle.opacity(0.5), lineWidth: 0.5))
     }
 
-    private func dataCell(_ text: String, alt: Bool) -> some View {
+    private func dataCell(_ text: String) -> some View {
         Text(text)
             .font(.system(size: 13))
-            .foregroundStyle(Color.black)
+            .foregroundStyle(AppColors.textPrimary)
             .monospacedDigit()
             .frame(width: colW, height: rowH)
-            .background(Color.white)
-            .overlay(Rectangle().stroke(Color(UIColor.systemGray4), lineWidth: 0.5))
+            .background(AppColors.surfaceCard)
+            .overlay(Rectangle().stroke(AppColors.borderSubtle.opacity(0.5), lineWidth: 0.5))
     }
 }
 
@@ -351,145 +364,154 @@ private struct AnalysisNavBar: View {
             Spacer()
             titleBlock
             Spacer()
-            VStack(spacing: 4) {
-                LiveClockView()
-            }
+            LiveClockView()
 
-            // Exam history
             if viewModel.state == .success && !viewModel.patientExams.isEmpty {
                 Button { viewModel.showExamHistory.toggle() } label: {
-                    ZStack(alignment: .topTrailing) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "clock.arrow.circlepath")
-                                .font(.system(size: 23, weight: .semibold))
-                            if viewModel.patientExams.count > 1 {
-                                Text("\(viewModel.patientExams.count)")
-                                    .font(AppTypography.captionBold)
-                            }
+                    HStack(spacing: AppMetrics.spacing6) {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 23, weight: .semibold))
+                        if viewModel.patientExams.count > 1 {
+                            Text("\(viewModel.patientExams.count)")
+                                .font(AppTypography.captionBold)
                         }
-                        .foregroundStyle(AppColors.textPrimary)
-                        .padding(.horizontal, 12).padding(.vertical, 6)
-                        .background(Color(UIColor.systemGray5))
-                        .cornerRadius(AppMetrics.radiusMedium)
                     }
+                    .foregroundStyle(AppColors.ecgBackground)
+                    .padding(.horizontal, AppMetrics.spacing12)
+                    .padding(.vertical, AppMetrics.spacing6)
+                    .background(AppColors.accentTeal)
+                    .cornerRadius(AppMetrics.radiusMedium)
                 }
                 .buttonStyle(.hapticPlain)
-                .padding(.leading, 8)
+                .padding(.leading, AppMetrics.spacing8)
             }
 
-            // Controls menu
-            Menu {
-                Button {
-                    viewModel.uploadEKG()
-                } label: {
-                    Label(
-                        viewModel.isAlreadySynced ? "Already Sent" : "Send to EMR",
-                        systemImage: viewModel.isAlreadySynced ? "checkmark.circle" : "arrow.up.circle"
-                    )
-                }
-                .disabled(viewModel.isLocalMode || viewModel.isAlreadySynced)
-
-                Button {
-                    viewModel.showDiagnosisPanel = true
-                } label: {
-                    Label("Diagnosis", systemImage: "stethoscope")
-                }
-                .disabled(viewModel.isLocalMode || viewModel.isAlreadySynced)
-
-                if viewModel.visualizationMode != .standard {
-                    Button { viewModel.visualizationMode = .standard } label: {
-                        Label("Standard", systemImage: "arrow.left.arrow.right")
-                    }
-                    Button { viewModel.visualizationMode = .layers } label: {
-                        Label("Layers", systemImage: viewModel.visualizationMode == .layers ? "checkmark" : "square.3.layers.3d")
-                    }
-                    Button { viewModel.visualizationMode = .table } label: {
-                        Label("Table View", systemImage: viewModel.visualizationMode == .table ? "checkmark" : "chart.bar.doc.horizontal")
-                    }
-                } else {
-                    Menu {
-                        Button { viewModel.visualizationMode = .standard } label: {
-                            Label("Standard", systemImage: "checkmark")
-                        }
-                        Button { viewModel.visualizationMode = .layers } label: {
-                            Label("Layers", systemImage: "square.3.layers.3d")
-                        }
-                        Button { viewModel.visualizationMode = .table } label: {
-                            Label("Table View", systemImage: "chart.bar.doc.horizontal")
-                        }
-                    } label: {
-                        Label("Visualization", systemImage: "eye")
-                    }
-                }
-
-                Button {
-                    printECG(
-                        patient: viewModel.patient,
-                        templateData: viewModel.templateData,
-                        ecgData: viewModel.ecgData,
-                        sampleRate: viewModel.sampleRate,
-                        measurements: viewModel.measurements,
-                        diagnosisLines: viewModel.diagnosisLines,
-                        performedBy: viewModel.performedBy,
-                        isEmergency: viewModel.showEmergencyBanner
-                    )
-                } label: {
-                    Label("Print", systemImage: "printer")
-                }
-            } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 25, weight: .semibold))
-                    .foregroundStyle(AppColors.textPrimary)
-                    .padding(.horizontal, 12).padding(.vertical, 6)
-                    .background(Color(UIColor.systemGray5))
-                    .cornerRadius(AppMetrics.radiusMedium)
-            }
-            .padding(.leading, 8)
+            controlsMenu
+                .padding(.leading, AppMetrics.spacing8)
         }
         .padding(.horizontal, AppMetrics.spacing24)
         .frame(height: AppMetrics.navBarHeight)
-        .background(Color.white)
-        .overlay(Rectangle().fill(Color(UIColor.systemGray4)).frame(height: 1), alignment: .bottom)
+        .background(AppColors.surfaceCard)
+        .overlay(Rectangle().fill(AppColors.borderSubtle).frame(height: 1), alignment: .bottom)
     }
 
     private var backButton: some View {
         Button { viewModel.goBack() } label: {
-            HStack(spacing: 6) {
-                Image(systemName: "chevron.left").font(.system(size: 13, weight: .semibold))
-                Text(L10n.Common.back).font(AppTypography.callout)
+            HStack(spacing: AppMetrics.spacing6) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 13, weight: .semibold))
+                Text(L10n.Common.back)
+                    .font(AppTypography.callout)
             }
             .foregroundStyle(AppColors.textPrimary)
-            .padding(.horizontal, 12).padding(.vertical, 6)
-            .background(Color(UIColor.systemGray5))
+            .padding(.horizontal, AppMetrics.spacing12)
+            .padding(.vertical, AppMetrics.spacing6)
+            .background(AppColors.borderSubtle.opacity(0.4))
             .cornerRadius(AppMetrics.radiusMedium)
         }
         .buttonStyle(.hapticPlain)
     }
 
     private var patientInfo: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: AppMetrics.spacing10) {
             VStack(alignment: .leading, spacing: 1) {
-                Text(viewModel.patient.fullName).font(AppTypography.bodyMedium).foregroundStyle(.black)
-                HStack(spacing: 4) {
+                Text(viewModel.patient.fullName)
+                    .font(AppTypography.bodyMedium)
+                    .foregroundStyle(AppColors.textPrimary)
+                HStack(spacing: AppMetrics.spacing4) {
                     Text(viewModel.patient.age)
                     Text("·")
                     Text(viewModel.patient.genderDisplay)
                 }
-                .font(AppTypography.caption).foregroundStyle(.gray)
+                .font(AppTypography.caption)
+                .foregroundStyle(AppColors.textSecondary)
             }
-        }.padding(.leading, 8)
+        }
+        .padding(.leading, AppMetrics.spacing8)
     }
-    
 
     private var titleBlock: some View {
         VStack(spacing: 3) {
-            Text(L10n.Analysis.Nav.title).font(AppTypography.bodyMedium).foregroundStyle(.black)
+            Text(L10n.Analysis.Nav.title)
+                .font(AppTypography.bodyMedium)
+                .foregroundStyle(AppColors.textPrimary)
             Text(L10n.Analysis.Nav.unconfirmed)
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(AppColors.statusWarning)
-                .padding(.horizontal, 6).padding(.vertical, 2)
+                .padding(.horizontal, AppMetrics.spacing6)
+                .padding(.vertical, 2)
                 .background(AppColors.statusWarning.opacity(0.1))
-                .cornerRadius(4)
+                .cornerRadius(AppMetrics.radiusSmall)
+        }
+    }
+
+    private var controlsMenu: some View {
+        Menu {
+            Button {
+                viewModel.uploadEKG()
+            } label: {
+                Label(
+                    viewModel.isAlreadySynced ? L10n.Analysis.Nav.alreadySent : L10n.Analysis.Nav.sendToEmr,
+                    systemImage: viewModel.isAlreadySynced ? "checkmark.circle" : "arrow.up.circle"
+                )
+            }
+            .disabled(viewModel.isLocalMode || viewModel.isAlreadySynced)
+
+            Button {
+                viewModel.showDiagnosisPanel = true
+            } label: {
+                Label(L10n.Analysis.Nav.diagnosis, systemImage: "stethoscope")
+            }
+            .disabled(viewModel.isLocalMode || viewModel.isAlreadySynced)
+
+            if viewModel.visualizationMode != .standard {
+                Button { viewModel.visualizationMode = .standard } label: {
+                    Label(L10n.Analysis.Viz.standard, systemImage: "arrow.left.arrow.right")
+                }
+                Button { viewModel.visualizationMode = .layers } label: {
+                    Label(L10n.Analysis.Viz.layers, systemImage: viewModel.visualizationMode == .layers ? "checkmark" : "square.3.layers.3d")
+                }
+                Button { viewModel.visualizationMode = .table } label: {
+                    Label(L10n.Analysis.Viz.table, systemImage: viewModel.visualizationMode == .table ? "checkmark" : "chart.bar.doc.horizontal")
+                }
+            } else {
+                Menu {
+                    Button { viewModel.visualizationMode = .standard } label: {
+                        Label(L10n.Analysis.Viz.standard, systemImage: "checkmark")
+                    }
+                    Button { viewModel.visualizationMode = .layers } label: {
+                        Label(L10n.Analysis.Viz.layers, systemImage: "square.3.layers.3d")
+                    }
+                    Button { viewModel.visualizationMode = .table } label: {
+                        Label(L10n.Analysis.Viz.table, systemImage: "chart.bar.doc.horizontal")
+                    }
+                } label: {
+                    Label(L10n.Analysis.Viz.visualization, systemImage: "eye")
+                }
+            }
+
+            Button {
+                printECG(
+                    patient: viewModel.patient,
+                    templateData: viewModel.templateData,
+                    ecgData: viewModel.ecgData,
+                    sampleRate: viewModel.sampleRate,
+                    measurements: viewModel.measurements,
+                    diagnosisLines: viewModel.diagnosisLines,
+                    performedBy: viewModel.performedBy,
+                    isEmergency: viewModel.showEmergencyBanner
+                )
+            } label: {
+                Label(L10n.Analysis.Nav.print, systemImage: "printer")
+            }
+        } label: {
+            Image(systemName: "slider.horizontal.3")
+                .font(.system(size: 25, weight: .semibold))
+                .foregroundStyle(AppColors.ecgBackground)
+                .padding(.horizontal, AppMetrics.spacing12)
+                .padding(.vertical, AppMetrics.spacing6)
+                .background(AppColors.accentTeal)
+                .cornerRadius(AppMetrics.radiusMedium)
         }
     }
 }
@@ -601,7 +623,6 @@ private struct EmergencyPinOverlay: View {
             Color.black.opacity(0.6).ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // Header row
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
                         Text(L10n.Emergency.pinTitle)
@@ -625,7 +646,6 @@ private struct EmergencyPinOverlay: View {
                 }
                 .padding(.bottom, AppMetrics.spacing24)
 
-                // PIN dots
                 HStack(spacing: AppMetrics.spacing20) {
                     ForEach(0..<6, id: \.self) { idx in
                         ZStack {
@@ -648,7 +668,6 @@ private struct EmergencyPinOverlay: View {
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, AppMetrics.spacing8)
 
-                // Error line
                 Group {
                     if let err = viewModel.emergencyPinError {
                         Text(err)
@@ -693,7 +712,6 @@ private struct EmergencyAssignPatientSheet: View {
                     .padding(.horizontal, AppMetrics.spacing24)
                     .padding(.vertical, AppMetrics.spacing16)
 
-                // Search bar
                 HStack(spacing: AppMetrics.spacing8) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(AppColors.textSecondary)
@@ -742,9 +760,9 @@ private struct EmergencyAssignPatientSheet: View {
                                         Text(patient.fullName)
                                             .font(AppTypography.bodyMedium)
                                             .foregroundStyle(AppColors.textPrimary)
-                                        HStack(spacing: 6) {
+                                        HStack(spacing: AppMetrics.spacing6) {
                                             if !patient.mrn.isEmpty {
-                                                Text("MRN: \(patient.mrn)")
+                                                Text(L10n.PatientExams.mrnLabel(patient.mrn))
                                             }
                                             Text("·")
                                             Text(patient.age)
@@ -759,7 +777,7 @@ private struct EmergencyAssignPatientSheet: View {
                                         .font(.system(size: 12, weight: .semibold))
                                         .foregroundStyle(AppColors.borderSubtle)
                                 }
-                                .padding(.vertical, 4)
+                                .padding(.vertical, AppMetrics.spacing4)
                             }
                             .buttonStyle(.hapticPlain)
                         }
@@ -857,26 +875,3 @@ private struct EmergencyCreatePatientSheet: View {
         .preferredColorScheme(.light)
     }
 }
-
-// MARK: - Preview
-
-//#Preview {
-//    let router = AppRouter()
-//    let patient = Patient.mockPatients[0]
-//    let ecgData: ECGLeads = {
-//        guard let path = Bundle.main.path(forResource: "ecg_demo", ofType: "plist"),
-//              let raw = NSArray(contentsOfFile: path) as? [[NSNumber]] else { return [] }
-//        return raw
-//    }()
-//    let checkin = AppCheckinService()
-//    return AnalysisView(viewModel: AnalysisViewModel(
-//        patient: patient,
-//        ecgData: ecgData,
-//        sampleRate: 660,
-//        router: router,
-//        uploadService: EKGUploadService(),
-//        checkinService: checkin
-//    ))
-//
-//    .environment(router)
-//}

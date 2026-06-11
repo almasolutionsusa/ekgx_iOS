@@ -38,6 +38,18 @@ struct RegisterView: View {
         .ignoresSafeArea()
         .background(AppColors.surfaceBackground)
         .animation(.easeInOut(duration: 0.35), value: viewModel.registrationSucceeded)
+        .alert(L10n.Auth.Register.noInternetTitle, isPresented: $viewModel.showNoInternetAlert) {
+            Button(L10n.Auth.Register.noInternetOpenWifi) {
+                if let url = URL(string: "App-Prefs:WIFI"), UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                } else if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button(L10n.Common.cancel, role: .cancel) { }
+        } message: {
+            Text(L10n.Auth.Register.noInternetMessage)
+        }
         .overlay {
             if viewModel.isLoading {
                 LoadingOverlay()
@@ -53,6 +65,7 @@ struct RegisterView: View {
 private struct RegisterBrandingPanel: View {
 
     let onBack: () -> Void
+    @State private var keyboardHeight: CGFloat = 0
 
     var body: some View {
         ZStack {
@@ -92,6 +105,16 @@ private struct RegisterBrandingPanel: View {
                 Spacer()
             }
             .padding(.horizontal, AppMetrics.spacing40)
+            .padding(.bottom, keyboardHeight)
+            .animation(.easeInOut(duration: 0.3), value: keyboardHeight)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+            if let frame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                keyboardHeight = frame.height
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardHeight = 0
         }
     }
 }
@@ -112,7 +135,7 @@ private struct RegisterSuccessPanel: View {
                     Circle()
                         .fill(AppColors.brandPrimary.opacity(0.12))
                         .frame(width: 96, height: 96)
-                    Image(systemName: "envelope.badge.checkmark.fill")
+                    Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 40, weight: .semibold))
                         .foregroundStyle(AppColors.brandPrimary)
                 }
@@ -134,6 +157,15 @@ private struct RegisterSuccessPanel: View {
                     onBackToLogin()
                 }
                 .frame(maxWidth: 320)
+
+                (Text("Didn't receive an email within 5 minutes? Contact us at ")
+                    .foregroundStyle(AppColors.textSecondary)
+                 + Text("support@ekgx.com")
+                    .foregroundStyle(AppColors.brandPrimary)
+                )
+                .font(AppTypography.caption)
+                .multilineTextAlignment(.center)
+                .lineSpacing(3)
             }
             .padding(.horizontal, AppMetrics.spacing48)
 
@@ -291,6 +323,9 @@ private struct RegisterFormPanel: View {
         }
         .background(AppColors.surfaceBackground)
         .scrollDismissesKeyboard(.interactively)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { focus = .firstName }
+        }
         .onChange(of: focus) { _, newValue in
             guard let field = newValue else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {

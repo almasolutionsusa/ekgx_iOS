@@ -62,7 +62,7 @@ struct Patient: Identifiable, Codable, Hashable {
 
     var genderIcon: String {
         switch gender.lowercased() {
-        case "f", "female": return "person.dress.fill"
+        case "f", "female": return "figure.stand.dress"
         default:            return "figure.stand"
         }
     }

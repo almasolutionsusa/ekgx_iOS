@@ -53,6 +53,8 @@ struct EKGxApp: App {
                         guard message != L10n.Auth.Login.errorSessionExpired else { return }
                         guard message != L10n.Auth.Login.errorInvalidCredentials else { return }
                         guard router?.currentRoute != .vitals else { return }
+                        guard router?.currentRoute != .login else { return }
+                        guard router?.currentRoute != .register else { return }
                         diContainer?.errorToast.show(message)
                     }
                     // Fire-and-forget: registers the app install with the server.

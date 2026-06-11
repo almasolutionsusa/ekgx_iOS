@@ -4,6 +4,7 @@
 //
 
 import Foundation
+import Network
 
 @Observable
 @MainActor
@@ -20,9 +21,10 @@ final class RegisterViewModel {
 
     // MARK: - UI State
 
-    var isLoading: Bool           = false
-    var errorMessage: String?     = nil
+    var isLoading: Bool             = false
+    var errorMessage: String?       = nil
     var registrationSucceeded: Bool = false
+    var showNoInternetAlert: Bool   = false
 
     // Per-field errors
     var firstNameError: String?       = nil
@@ -46,7 +48,10 @@ final class RegisterViewModel {
 
     func register() {
         guard validateInputs() else { return }
-        Task { await performRegister() }
+        Task {
+            guard await isReachable() else { showNoInternetAlert = true; return }
+            await performRegister()
+        }
     }
 
     func navigateToLogin() {
@@ -66,6 +71,17 @@ final class RegisterViewModel {
     }
 
     // MARK: - Private
+
+    private func isReachable() async -> Bool {
+        await withCheckedContinuation { continuation in
+            let monitor = NWPathMonitor()
+            monitor.pathUpdateHandler = { path in
+                continuation.resume(returning: path.status == .satisfied)
+                monitor.cancel()
+            }
+            monitor.start(queue: .global())
+        }
+    }
 
     private func performRegister() async {
         isLoading = true

@@ -12,7 +12,7 @@ import Foundation
 
 // MARK: - Response Model
 
-struct AppInfoData: Decodable {
+struct AppInfoData: Codable {
     let assigned: Bool?
     let message: String?
     let facilityId: Int64?
@@ -29,10 +29,13 @@ final class AppInfoService {
 
     private let client: APIClient
     private let checkinService: AppCheckinService
+    private static let persistKey = "appInfoService.cachedAppInfo"
 
     /// The most recent app info fetched from the server. Cached in memory
     /// so any view model that needs `facilityId` can read it synchronously.
-    private(set) var cached: AppInfoData? = nil
+    private(set) var cached: AppInfoData? = nil {
+        didSet { persist() }
+    }
 
     /// Convenience accessor for the facility ID used by patient/ekg APIs.
     /// Prefers the freshly-fetched info; falls back to the facilityId
@@ -42,6 +45,19 @@ final class AppInfoService {
     init(client: APIClient = .shared, checkinService: AppCheckinService) {
         self.client         = client
         self.checkinService = checkinService
+        self.cached         = Self.loadPersisted()
+    }
+
+    private static func loadPersisted() -> AppInfoData? {
+        guard let data = UserDefaults.standard.data(forKey: persistKey),
+              let info = try? JSONDecoder().decode(AppInfoData.self, from: data) else { return nil }
+        return info
+    }
+
+    private func persist() {
+        guard let info = cached,
+              let data = try? JSONEncoder().encode(info) else { return }
+        UserDefaults.standard.set(data, forKey: Self.persistKey)
     }
 
     /// Fetches the full app info (facility, org, enum options) for the current install.

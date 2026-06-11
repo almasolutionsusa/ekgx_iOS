@@ -612,6 +612,10 @@ private struct PinInputField: View {
                             lineWidth: isFocused ? AppMetrics.borderWidthFocused : AppMetrics.borderWidth
                         )
                 )
+                .onChange(of: text) { _, newValue in
+                    let digits = String(newValue.filter(\.isNumber).prefix(6))
+                    if digits != newValue { text = digits }
+                }
         }
     }
 }

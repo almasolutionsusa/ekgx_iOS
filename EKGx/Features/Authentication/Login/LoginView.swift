@@ -342,7 +342,7 @@ private struct LoginFormPanel: View {
                             }
                             .frame(maxWidth: .infinity, alignment: .center)
                             .padding(.horizontal, AppMetrics.spacing16)
-                            .frame(minHeight: AppMetrics.buttonHeight)
+                            .frame(minHeight: AppMetrics.buttonHeight + 10)
                             .background(AppColors.statusCritical.opacity(0.07))
                             .cornerRadius(AppMetrics.radiusMedium)
                             .overlay(
@@ -483,15 +483,6 @@ private struct LoginFormPanel: View {
             }
             .padding(.bottom, AppMetrics.spacing32)
 
-            // Error banner
-            if let error = viewModel.errorMessage {
-                ErrorBanner(message: error) {
-                    withAnimation { viewModel.errorMessage = nil }
-                }
-                .padding(.bottom, AppMetrics.spacing24)
-                .transition(.opacity.combined(with: .move(edge: .top)))
-                .animation(.easeInOut(duration: 0.25), value: viewModel.errorMessage)
-            }
 
             // Fields
             VStack(spacing: AppMetrics.spacing20) {
