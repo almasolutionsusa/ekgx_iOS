@@ -7,15 +7,22 @@ struct VitalsView: View {
     @State var viewModel: VitalsViewModel
     @State private var pendingRR: Int? = nil
     @State private var savedRR: Int? = nil
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     var body: some View {
         @Bindable var vm = viewModel
-        ZStack {
-            AppColors.surfaceBackground.ignoresSafeArea()
-            VStack(spacing: 0) {
-                navBar
-                patientCard
-                content
+        Group {
+            if sizeClass == .compact {
+                PhoneVitalsLayout(viewModel: viewModel, pendingRR: $pendingRR, savedRR: $savedRR)
+            } else {
+                ZStack {
+                    AppColors.surfaceBackground.ignoresSafeArea()
+                    VStack(spacing: 0) {
+                        navBar
+                        patientCard
+                        content
+                    }
+                }
             }
         }
         .sheet(isPresented: $vm.showManualBPEntry) {
@@ -231,6 +238,7 @@ struct VitalsView: View {
                     VitalCard(
                         type: type,
                         state: viewModel.connectionState(for: type),
+                        isDemoMode: type == .ekg ? viewModel.isDemoMode : false,
                         source: cardSource(for: type),
                         onTap: { handleTap(type) },
                         onConnectTap: { viewModel.startConnect(for: type) },

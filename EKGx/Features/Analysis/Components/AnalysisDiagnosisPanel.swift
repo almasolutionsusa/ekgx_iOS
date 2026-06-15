@@ -14,6 +14,8 @@ struct AnalysisDiagnosisPanel: View {
     @State private var groups: [CodeGroup] = []
     @State private var customText: String = ""
     @State private var isVisible = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
         ZStack {
@@ -100,7 +102,7 @@ struct AnalysisDiagnosisPanel: View {
                     }
                     .listStyle(.insetGrouped)
                 }
-                .frame(width: UIScreen.main.bounds.width * 0.38)
+                .frame(width: UIScreen.main.bounds.width * (isCompact ? 0.88 : 0.38))
                 .background(Color(UIColor.systemGray6))
                 .offset(x: isVisible ? 0 : UIScreen.main.bounds.width)
                 .animation(.easeInOut(duration: 0.3), value: isVisible)

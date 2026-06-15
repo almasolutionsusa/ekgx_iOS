@@ -19,6 +19,8 @@ import SwiftUI
 struct AnalysisView: View {
 
     @State private var viewModel: AnalysisViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     init(viewModel: AnalysisViewModel) {
         _viewModel = State(wrappedValue: viewModel)
@@ -140,7 +142,7 @@ struct AnalysisView: View {
                 .foregroundStyle(AppColors.statusWarning)
             VStack(spacing: AppMetrics.spacing8) {
                 Text(L10n.Analysis.Failed.title)
-                    .font(AppTypography.title2)
+                    .font(isCompact ? AppTypography.phoneTitle : AppTypography.title2)
                     .foregroundStyle(AppColors.textPrimary)
                 Text(L10n.Analysis.Failed.subtitle)
                     .font(AppTypography.callout)
@@ -169,8 +171,14 @@ private struct InfoStrip: View {
     let diagnosisLines: [String]
     var isEmergency: Bool = false
     var performedBy: String = ""
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
+        if isCompact { compactBody } else { regularBody }
+    }
+
+    private var regularBody: some View {
         HStack(alignment: .center, spacing: 0) {
 
             // HR
@@ -193,7 +201,6 @@ private struct InfoStrip: View {
 
             stripSeparator()
 
-            // Measurement items
             HStack(spacing: AppMetrics.spacing14) {
                 measureItem(L10n.Analysis.Measure.pr,      measurements.merge.pr,      L10n.Analysis.Measure.unitMs)
                 measureItem(L10n.Analysis.Measure.qrs,     measurements.merge.qrs,     L10n.Analysis.Measure.unitMs)
@@ -207,7 +214,6 @@ private struct InfoStrip: View {
 
             stripSeparator()
 
-            // Interpretation
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.Analysis.Section.interpretation.uppercased())
                     .font(.system(size: 9, weight: .semibold))
@@ -242,6 +248,69 @@ private struct InfoStrip: View {
                     .foregroundStyle(AppColors.textSecondary)
                     .padding(.horizontal, AppMetrics.spacing14)
             }
+        }
+        .background(AppColors.surfaceCard)
+        .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.6)).frame(height: 1), alignment: .bottom)
+    }
+
+    private var compactBody: some View {
+        VStack(spacing: 0) {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(L10n.Analysis.Measure.hr)
+                            .font(.system(size: 9, weight: .medium))
+                            .foregroundStyle(AppColors.textSecondary)
+                        HStack(alignment: .lastTextBaseline, spacing: 2) {
+                            Text(measurements.merge.hr.isEmpty ? "—" : measurements.merge.hr)
+                                .font(.system(size: 17, weight: .bold))
+                                .foregroundStyle(AppColors.textPrimary)
+                                .monospacedDigit()
+                            Text(L10n.Analysis.Measure.unitBpm)
+                                .font(.system(size: 9))
+                                .foregroundStyle(AppColors.textSecondary)
+                        }
+                    }
+                    .padding(.horizontal, AppMetrics.spacing10)
+                    .padding(.vertical, AppMetrics.spacing6)
+
+                    stripSeparator()
+
+                    HStack(spacing: AppMetrics.spacing12) {
+                        measureItem(L10n.Analysis.Measure.pr,   measurements.merge.pr,      L10n.Analysis.Measure.unitMs)
+                        measureItem(L10n.Analysis.Measure.qrs,  measurements.merge.qrs,     L10n.Analysis.Measure.unitMs)
+                        measureItem(L10n.Analysis.Measure.qt,   measurements.merge.qt,      L10n.Analysis.Measure.unitMs)
+                        measureItem(L10n.Analysis.Measure.qtc,  measurements.merge.qTc,     L10n.Analysis.Measure.unitMs)
+                        measureItem("P°",                        measurements.merge.paxis,   L10n.Analysis.Measure.unitDeg)
+                        measureItem("QRS°",                      measurements.merge.qrSaxis, L10n.Analysis.Measure.unitDeg)
+                        measureItem("T°",                        measurements.merge.taxis,   L10n.Analysis.Measure.unitDeg)
+                    }
+                    .padding(.horizontal, AppMetrics.spacing10)
+                }
+            }
+
+            Divider()
+
+            HStack(spacing: AppMetrics.spacing8) {
+                Text(diagnosisLines.isEmpty ? "—" : diagnosisLines.joined(separator: " · "))
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .lineLimit(2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                if isEmergency {
+                    Text(L10n.PatientExams.rapidEkg)
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(AppColors.statusCritical)
+                        .padding(.horizontal, AppMetrics.spacing6)
+                        .padding(.vertical, 3)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(AppColors.statusCritical, lineWidth: 1.5)
+                        )
+                }
+            }
+            .padding(.horizontal, AppMetrics.spacing10)
+            .padding(.vertical, AppMetrics.spacing6)
         }
         .background(AppColors.surfaceCard)
         .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.6)).frame(height: 1), alignment: .bottom)
@@ -356,8 +425,18 @@ private struct LeadParamsTableOverlay: View {
 private struct AnalysisNavBar: View {
 
     @Bindable var viewModel: AnalysisViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
+        Group {
+            if isCompact { compactBody } else { regularBody }
+        }
+        .background(AppColors.surfaceCard)
+        .overlay(Rectangle().fill(AppColors.borderSubtle).frame(height: 1), alignment: .bottom)
+    }
+
+    private var regularBody: some View {
         HStack(alignment: .center, spacing: 0) {
             backButton
             patientInfo
@@ -391,8 +470,63 @@ private struct AnalysisNavBar: View {
         }
         .padding(.horizontal, AppMetrics.spacing24)
         .frame(height: AppMetrics.navBarHeight)
-        .background(AppColors.surfaceCard)
-        .overlay(Rectangle().fill(AppColors.borderSubtle).frame(height: 1), alignment: .bottom)
+    }
+
+    @ViewBuilder private var compactHistoryButton: some View {
+        if viewModel.state == .success && !viewModel.patientExams.isEmpty {
+            Button { viewModel.showExamHistory.toggle() } label: {
+                ZStack(alignment: .topTrailing) {
+                    Image(systemName: "doc.on.doc")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppColors.ecgBackground)
+                        .frame(width: 34, height: 34)
+                        .background(AppColors.accentTeal)
+                        .cornerRadius(AppMetrics.radiusMedium)
+                    if viewModel.patientExams.count > 1 {
+                        Text("\(viewModel.patientExams.count)")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 3)
+                            .padding(.vertical, 1)
+                            .background(Color.red)
+                            .clipShape(Capsule())
+                            .offset(x: 4, y: -4)
+                    }
+                }
+            }
+            .buttonStyle(.hapticPlain)
+        }
+    }
+
+    private var compactBody: some View {
+        HStack(alignment: .center, spacing: AppMetrics.spacing8) {
+            Button { viewModel.goBack() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .frame(width: 34, height: 34)
+                    .background(AppColors.borderSubtle.opacity(0.4))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.hapticPlain)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(viewModel.patient.fullName)
+                    .font(AppTypography.phoneBodyMedium)
+                    .foregroundStyle(AppColors.textPrimary)
+                    .lineLimit(1)
+                Text(L10n.Analysis.Nav.unconfirmed)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(AppColors.statusWarning)
+            }
+
+            Spacer()
+
+            compactHistoryButton
+            controlsMenu
+        }
+        .padding(.horizontal, AppMetrics.spacing16)
+        .frame(height: 52)
     }
 
     private var backButton: some View {
@@ -506,10 +640,11 @@ private struct AnalysisNavBar: View {
             }
         } label: {
             Image(systemName: "slider.horizontal.3")
-                .font(.system(size: 25, weight: .semibold))
+                .font(.system(size: isCompact ? 15 : 25, weight: .semibold))
                 .foregroundStyle(AppColors.ecgBackground)
-                .padding(.horizontal, AppMetrics.spacing12)
-                .padding(.vertical, AppMetrics.spacing6)
+                .frame(width: isCompact ? 34 : nil, height: isCompact ? 34 : nil)
+                .padding(.horizontal, isCompact ? 0 : AppMetrics.spacing12)
+                .padding(.vertical, isCompact ? 0 : AppMetrics.spacing6)
                 .background(AppColors.accentTeal)
                 .cornerRadius(AppMetrics.radiusMedium)
         }
@@ -521,6 +656,8 @@ private struct AnalysisNavBar: View {
 private struct UploadStatusOverlay: View {
 
     @Bindable var viewModel: AnalysisViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
         ZStack {
@@ -536,78 +673,124 @@ private struct UploadStatusOverlay: View {
                         .foregroundStyle(AppColors.textPrimary)
                 } else if viewModel.uploadSuccess {
                     Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 56, weight: .light))
+                        .font(.system(size: isCompact ? 44 : 56, weight: .light))
                         .foregroundStyle(AppColors.statusSuccess)
                     Text(L10n.Analysis.Upload.successTitle)
-                        .font(AppTypography.title2)
+                        .font(isCompact ? AppTypography.phoneTitle : AppTypography.title2)
                         .foregroundStyle(AppColors.textPrimary)
                     Text(L10n.Analysis.Upload.successSubtitle)
                         .font(AppTypography.callout)
                         .foregroundStyle(AppColors.textSecondary)
                         .multilineTextAlignment(.center)
-                    HStack(spacing: AppMetrics.spacing12) {
-                        Button(L10n.Analysis.Upload.doneButton) {
-                            viewModel.showUploadResult = false
-                            viewModel.goBack()
-                        }
-                        .font(AppTypography.bodyMedium)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, AppMetrics.spacing32)
-                        .frame(height: AppMetrics.buttonHeight)
-                        .background(AppColors.brandPrimary)
-                        .cornerRadius(AppMetrics.radiusMedium)
-
-                        Button(L10n.Analysis.Upload.stayButton) {
-                            viewModel.showUploadResult = false
-                        }
-                        .font(AppTypography.bodyMedium)
-                        .foregroundStyle(AppColors.brandPrimary)
-                        .padding(.horizontal, AppMetrics.spacing32)
-                        .frame(height: AppMetrics.buttonHeight)
-                        .background(AppColors.brandPrimary.opacity(0.1))
-                        .cornerRadius(AppMetrics.radiusMedium)
-                    }
+                    successActions
                 } else if let error = viewModel.uploadError {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 56, weight: .light))
+                        .font(.system(size: isCompact ? 44 : 56, weight: .light))
                         .foregroundStyle(AppColors.statusCritical)
                     Text(L10n.Analysis.Upload.errorTitle)
-                        .font(AppTypography.title2)
+                        .font(isCompact ? AppTypography.phoneTitle : AppTypography.title2)
                         .foregroundStyle(AppColors.textPrimary)
                     Text(error)
                         .font(AppTypography.callout)
                         .foregroundStyle(AppColors.textSecondary)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, AppMetrics.spacing24)
-                    HStack(spacing: AppMetrics.spacing12) {
-                        Button(L10n.Common.retry) {
-                            viewModel.showUploadResult = false
-                            viewModel.uploadEKG()
-                        }
-                        .font(AppTypography.bodyMedium)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, AppMetrics.spacing32)
-                        .frame(height: AppMetrics.buttonHeight)
-                        .background(AppColors.brandPrimary)
-                        .cornerRadius(AppMetrics.radiusMedium)
-
-                        Button(L10n.Common.cancel) {
-                            viewModel.showUploadResult = false
-                        }
-                        .font(AppTypography.bodyMedium)
-                        .foregroundStyle(AppColors.textSecondary)
-                        .padding(.horizontal, AppMetrics.spacing32)
-                        .frame(height: AppMetrics.buttonHeight)
-                        .background(AppColors.borderSubtle.opacity(0.4))
-                        .cornerRadius(AppMetrics.radiusMedium)
-                    }
+                    errorActions
                 }
             }
             .padding(AppMetrics.spacing32)
             .background(AppColors.surfaceCard)
             .cornerRadius(AppMetrics.radiusLarge)
             .shadow(color: .black.opacity(0.2), radius: 24)
-            .padding(.horizontal, AppMetrics.spacing48)
+            .padding(.horizontal, isCompact ? AppMetrics.spacing20 : AppMetrics.spacing48)
+        }
+    }
+
+    @ViewBuilder private var successActions: some View {
+        if isCompact {
+            VStack(spacing: AppMetrics.spacing12) {
+                Button(L10n.Analysis.Upload.doneButton) {
+                    viewModel.showUploadResult = false; viewModel.goBack()
+                }
+                .font(AppTypography.phoneBodyMedium)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: AppMetrics.buttonHeight)
+                .background(AppColors.brandPrimary)
+                .cornerRadius(AppMetrics.radiusMedium)
+
+                Button(L10n.Analysis.Upload.stayButton) { viewModel.showUploadResult = false }
+                    .font(AppTypography.phoneBodyMedium)
+                    .foregroundStyle(AppColors.brandPrimary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: AppMetrics.buttonHeight)
+                    .background(AppColors.brandPrimary.opacity(0.1))
+                    .cornerRadius(AppMetrics.radiusMedium)
+            }
+        } else {
+            HStack(spacing: AppMetrics.spacing12) {
+                Button(L10n.Analysis.Upload.doneButton) {
+                    viewModel.showUploadResult = false; viewModel.goBack()
+                }
+                .font(AppTypography.bodyMedium)
+                .foregroundStyle(.white)
+                .padding(.horizontal, AppMetrics.spacing32)
+                .frame(height: AppMetrics.buttonHeight)
+                .background(AppColors.brandPrimary)
+                .cornerRadius(AppMetrics.radiusMedium)
+
+                Button(L10n.Analysis.Upload.stayButton) { viewModel.showUploadResult = false }
+                    .font(AppTypography.bodyMedium)
+                    .foregroundStyle(AppColors.brandPrimary)
+                    .padding(.horizontal, AppMetrics.spacing32)
+                    .frame(height: AppMetrics.buttonHeight)
+                    .background(AppColors.brandPrimary.opacity(0.1))
+                    .cornerRadius(AppMetrics.radiusMedium)
+            }
+        }
+    }
+
+    @ViewBuilder private var errorActions: some View {
+        if isCompact {
+            VStack(spacing: AppMetrics.spacing12) {
+                Button(L10n.Common.retry) {
+                    viewModel.showUploadResult = false; viewModel.uploadEKG()
+                }
+                .font(AppTypography.phoneBodyMedium)
+                .foregroundStyle(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: AppMetrics.buttonHeight)
+                .background(AppColors.brandPrimary)
+                .cornerRadius(AppMetrics.radiusMedium)
+
+                Button(L10n.Common.cancel) { viewModel.showUploadResult = false }
+                    .font(AppTypography.phoneBodyMedium)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: AppMetrics.buttonHeight)
+                    .background(AppColors.borderSubtle.opacity(0.4))
+                    .cornerRadius(AppMetrics.radiusMedium)
+            }
+        } else {
+            HStack(spacing: AppMetrics.spacing12) {
+                Button(L10n.Common.retry) {
+                    viewModel.showUploadResult = false; viewModel.uploadEKG()
+                }
+                .font(AppTypography.bodyMedium)
+                .foregroundStyle(.white)
+                .padding(.horizontal, AppMetrics.spacing32)
+                .frame(height: AppMetrics.buttonHeight)
+                .background(AppColors.brandPrimary)
+                .cornerRadius(AppMetrics.radiusMedium)
+
+                Button(L10n.Common.cancel) { viewModel.showUploadResult = false }
+                    .font(AppTypography.bodyMedium)
+                    .foregroundStyle(AppColors.textSecondary)
+                    .padding(.horizontal, AppMetrics.spacing32)
+                    .frame(height: AppMetrics.buttonHeight)
+                    .background(AppColors.borderSubtle.opacity(0.4))
+                    .cornerRadius(AppMetrics.radiusMedium)
+            }
         }
     }
 }
@@ -617,6 +800,8 @@ private struct UploadStatusOverlay: View {
 private struct EmergencyPinOverlay: View {
 
     @Bindable var viewModel: AnalysisViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
         ZStack {
@@ -626,7 +811,7 @@ private struct EmergencyPinOverlay: View {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
                         Text(L10n.Emergency.pinTitle)
-                            .font(AppTypography.title2)
+                            .font(isCompact ? AppTypography.phoneTitle : AppTypography.title2)
                             .foregroundStyle(AppColors.textPrimary)
                         Text(L10n.Emergency.pinSubtitle)
                             .font(AppTypography.caption)
@@ -688,10 +873,11 @@ private struct EmergencyPinOverlay: View {
                 )
             }
             .padding(AppMetrics.spacing28)
-            .frame(width: 420)
+            .frame(maxWidth: 420)
             .background(AppColors.surfaceCard)
             .cornerRadius(AppMetrics.radiusLarge)
             .shadow(color: .black.opacity(0.25), radius: 28)
+            .padding(.horizontal, isCompact ? AppMetrics.spacing16 : 0)
         }
     }
 }

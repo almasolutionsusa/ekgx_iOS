@@ -17,6 +17,15 @@ struct PrimaryButton: View {
     var isDisabled: Bool = false
     let action: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var resolvedFont: Font {
+        sizeClass == .compact ? AppTypography.phoneBodyMedium : AppTypography.bodyMedium
+    }
+    private var resolvedHeight: CGFloat {
+        sizeClass == .compact ? 48 : AppMetrics.buttonHeight
+    }
+
     var body: some View {
         Button(action: action) {
             ZStack {
@@ -33,12 +42,12 @@ struct PrimaryButton: View {
                         .scaleEffect(0.9)
                 } else {
                     Text(title)
-                        .font(AppTypography.bodyMedium)
+                        .font(resolvedFont)
                         .foregroundStyle(useGradient ? AppColors.onAccent : foreground)
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: AppMetrics.buttonHeight)
+            .frame(height: resolvedHeight)
             .contentShape(Rectangle())
         }
         .buttonStyle(.hapticPlain)

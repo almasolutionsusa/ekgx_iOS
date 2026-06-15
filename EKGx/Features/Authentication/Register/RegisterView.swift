@@ -13,12 +13,35 @@ import SwiftUI
 struct RegisterView: View {
 
     @State private var viewModel: RegisterViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     init(viewModel: RegisterViewModel) {
         _viewModel = State(wrappedValue: viewModel)
     }
 
     var body: some View {
+        Group {
+            if sizeClass == .compact {
+                PhoneRegisterLayout(viewModel: viewModel)
+            } else {
+                iPadLayout
+            }
+        }
+        .alert(L10n.Auth.Register.noInternetTitle, isPresented: $viewModel.showNoInternetAlert) {
+            Button(L10n.Auth.Register.noInternetOpenWifi) {
+                if let url = URL(string: "App-Prefs:WIFI"), UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                } else if let url = URL(string: UIApplication.openSettingsURLString) {
+                    UIApplication.shared.open(url)
+                }
+            }
+            Button(L10n.Common.cancel, role: .cancel) { }
+        } message: {
+            Text(L10n.Auth.Register.noInternetMessage)
+        }
+    }
+
+    private var iPadLayout: some View {
         GeometryReader { geometry in
             HStack(spacing: 0) {
                 RegisterBrandingPanel(onBack: { viewModel.navigateToLogin() })
@@ -38,18 +61,6 @@ struct RegisterView: View {
         .ignoresSafeArea()
         .background(AppColors.surfaceBackground)
         .animation(.easeInOut(duration: 0.35), value: viewModel.registrationSucceeded)
-        .alert(L10n.Auth.Register.noInternetTitle, isPresented: $viewModel.showNoInternetAlert) {
-            Button(L10n.Auth.Register.noInternetOpenWifi) {
-                if let url = URL(string: "App-Prefs:WIFI"), UIApplication.shared.canOpenURL(url) {
-                    UIApplication.shared.open(url)
-                } else if let url = URL(string: UIApplication.openSettingsURLString) {
-                    UIApplication.shared.open(url)
-                }
-            }
-            Button(L10n.Common.cancel, role: .cancel) { }
-        } message: {
-            Text(L10n.Auth.Register.noInternetMessage)
-        }
         .overlay {
             if viewModel.isLoading {
                 LoadingOverlay()

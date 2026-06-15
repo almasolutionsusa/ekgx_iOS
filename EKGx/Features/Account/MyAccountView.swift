@@ -29,6 +29,8 @@ import SwiftUI
 struct MyAccountView: View {
 
     @State private var viewModel: MyAccountViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     init(viewModel: MyAccountViewModel) {
         _viewModel = State(wrappedValue: viewModel)
@@ -42,7 +44,7 @@ struct MyAccountView: View {
                 AccountNavBar(viewModel: viewModel)
 
                 ScrollView {
-                    VStack(alignment: .leading, spacing: AppMetrics.spacing32) {
+                    VStack(alignment: .leading, spacing: isCompact ? AppMetrics.spacing20 : AppMetrics.spacing32) {
 
                         ProfilePictureSection(viewModel: viewModel)
 
@@ -64,33 +66,51 @@ struct MyAccountView: View {
 
                         Color.clear.frame(height: AppMetrics.spacing32)
                     }
-                    .padding(.horizontal, AppMetrics.spacing48)
-                    .padding(.vertical, AppMetrics.spacing32)
-                    .frame(maxWidth: 860)
+                    .padding(.horizontal, isCompact ? AppMetrics.spacing16 : AppMetrics.spacing48)
+                    .padding(.vertical, isCompact ? AppMetrics.spacing20 : AppMetrics.spacing32)
+                    .frame(maxWidth: isCompact ? .infinity : 860)
                     .frame(maxWidth: .infinity)
                 }
             }
 
-            // PIN overlay
-            if viewModel.showSetPinSheet {
-                Color.black.opacity(0.35)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-                SetPinSheet(viewModel: viewModel)
-                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
-            }
+            // iPad overlays only — iPhone uses native .sheet below
+            if !isCompact {
+                if viewModel.showSetPinSheet {
+                    Color.black.opacity(0.35)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                    SetPinSheet(viewModel: viewModel)
+                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                }
 
-            // Change Password overlay — ZStack so it survives background transitions
-            if viewModel.showChangePasswordSheet {
-                Color.black.opacity(0.35)
-                    .ignoresSafeArea()
-                    .transition(.opacity)
-                ChangePasswordSheet(viewModel: viewModel)
-                    .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                if viewModel.showChangePasswordSheet {
+                    Color.black.opacity(0.35)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                    ChangePasswordSheet(viewModel: viewModel)
+                        .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                }
             }
         }
         .animation(.easeInOut(duration: 0.22), value: viewModel.showSetPinSheet)
         .animation(.easeInOut(duration: 0.22), value: viewModel.showChangePasswordSheet)
+        // iPhone: native bottom sheets with built-in keyboard avoidance
+        .sheet(isPresented: Binding(
+            get: { isCompact && viewModel.showSetPinSheet },
+            set: { if !$0 { viewModel.showSetPinSheet = false } }
+        )) {
+            SetPinSheet(viewModel: viewModel)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: Binding(
+            get: { isCompact && viewModel.showChangePasswordSheet },
+            set: { if !$0 { viewModel.showChangePasswordSheet = false } }
+        )) {
+            ChangePasswordSheet(viewModel: viewModel)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+        }
         .alert(L10n.Account.Danger.alertTitle, isPresented: $viewModel.showDeactivateAlert) {
             Button(L10n.Account.Danger.alertCancel, role: .cancel) {}
             Button(L10n.Account.Danger.alertConfirm, role: .destructive) { viewModel.executeDeactivate() }
@@ -106,8 +126,16 @@ struct MyAccountView: View {
 private struct AccountNavBar: View {
 
     let viewModel: MyAccountViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
+        if isCompact { compactLayout } else { regularLayout }
+    }
+
+    // MARK: Regular (iPad) layout
+
+    private var regularLayout: some View {
         HStack(alignment: .center, spacing: AppMetrics.spacing16) {
             Button(action: { viewModel.navigateBack() }) {
                 HStack(spacing: AppMetrics.spacing8) {
@@ -180,6 +208,59 @@ private struct AccountNavBar: View {
         .background(AppColors.surfaceCard)
         .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
+
+    // MARK: Compact (iPhone) layout
+
+    private var compactLayout: some View {
+        HStack(spacing: AppMetrics.spacing12) {
+            Button(action: { viewModel.navigateBack() }) {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .frame(width: 38, height: 38)
+                    .background(AppColors.borderSubtle.opacity(0.5))
+                    .cornerRadius(AppMetrics.radiusMedium)
+            }
+            .buttonStyle(.hapticPlain)
+
+            Text(L10n.Account.Nav.title)
+                .font(AppTypography.bodyMedium)
+                .foregroundStyle(AppColors.textPrimary)
+                .frame(maxWidth: .infinity)
+
+            if viewModel.hasUnsavedChanges {
+                Button(action: { viewModel.discardChanges() }) {
+                    Image(systemName: "arrow.uturn.backward")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(AppColors.statusCritical)
+                        .frame(width: 36, height: 36)
+                        .background(AppColors.statusCritical.opacity(0.08))
+                        .cornerRadius(AppMetrics.radiusMedium)
+                }
+                .buttonStyle(.hapticPlain)
+            }
+
+            Button(action: { viewModel.saveChanges() }) {
+                Text(L10n.Account.Nav.saveChanges)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, AppMetrics.spacing14)
+                    .padding(.vertical, AppMetrics.spacing8)
+                    .background(
+                        viewModel.hasUnsavedChanges
+                            ? AppColors.brandPrimary
+                            : AppColors.borderSubtle
+                    )
+                    .cornerRadius(AppMetrics.radiusMedium)
+            }
+            .disabled(!viewModel.hasUnsavedChanges)
+            .animation(.easeInOut(duration: 0.2), value: viewModel.hasUnsavedChanges)
+        }
+        .padding(.horizontal, AppMetrics.spacing16)
+        .frame(height: 52)
+        .background(AppColors.surfaceCard)
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
 }
 
 // MARK: - Reusable Card Wrapper
@@ -189,6 +270,9 @@ private struct AccountFormCard<Content: View>: View {
     let subtitle: String
     let content: Content
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
+
     init(title: String, subtitle: String, @ViewBuilder content: () -> Content) {
         self.title    = title
         self.subtitle = subtitle
@@ -196,26 +280,28 @@ private struct AccountFormCard<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let hPad: CGFloat = isCompact ? AppMetrics.spacing16 : AppMetrics.spacing24
+        let vPad: CGFloat = isCompact ? AppMetrics.spacing14 : AppMetrics.spacing20
+        return VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
                 Text(title)
-                    .font(AppTypography.title3)
+                    .font(isCompact ? AppTypography.phoneBodyMedium : AppTypography.title3)
                     .foregroundStyle(AppColors.textPrimary)
                 Text(subtitle)
-                    .font(AppTypography.caption)
+                    .font(isCompact ? AppTypography.phoneCaption : AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
             }
-            .padding(.horizontal, AppMetrics.spacing24)
-            .padding(.top, AppMetrics.spacing20)
-            .padding(.bottom, AppMetrics.spacing16)
+            .padding(.horizontal, hPad)
+            .padding(.top, vPad)
+            .padding(.bottom, isCompact ? AppMetrics.spacing12 : AppMetrics.spacing16)
 
             Rectangle()
                 .fill(AppColors.borderSubtle.opacity(0.6))
                 .frame(height: 1)
 
             content
-                .padding(.horizontal, AppMetrics.spacing24)
-                .padding(.vertical, AppMetrics.spacing20)
+                .padding(.horizontal, hPad)
+                .padding(.vertical, vPad)
         }
         .background(AppColors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
@@ -232,9 +318,12 @@ private struct AccountFormCard<Content: View>: View {
 private struct ProfilePictureSection: View {
 
     @Bindable var viewModel: MyAccountViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
-        HStack(spacing: AppMetrics.spacing24) {
+        let avatarSize: CGFloat = isCompact ? 72 : 96
+        return HStack(spacing: isCompact ? AppMetrics.spacing16 : AppMetrics.spacing24) {
             ZStack(alignment: .bottomTrailing) {
                 Group {
                     if let data = viewModel.profileImageData,
@@ -250,12 +339,12 @@ private struct ProfilePictureSection: View {
                                 endPoint: .bottomTrailing
                             )
                             Text(initials)
-                                .font(.system(size: 32, weight: .semibold, design: .rounded))
+                                .font(.system(size: isCompact ? 22 : 32, weight: .semibold, design: .rounded))
                                 .foregroundStyle(.white)
                         }
                     }
                 }
-                .frame(width: 96, height: 96)
+                .frame(width: avatarSize, height: avatarSize)
                 .clipShape(Circle())
                 .overlay(Circle().strokeBorder(AppColors.borderSubtle, lineWidth: AppMetrics.borderWidth))
 
@@ -263,28 +352,28 @@ private struct ProfilePictureSection: View {
                     ZStack {
                         Circle()
                             .fill(AppColors.brandPrimary)
-                            .frame(width: 30, height: 30)
+                            .frame(width: isCompact ? 24 : 30, height: isCompact ? 24 : 30)
                         Image(systemName: "camera.fill")
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: isCompact ? 10 : 13, weight: .medium))
                             .foregroundStyle(.white)
                     }
                 }
                 .buttonStyle(.hapticPlain)
-                .offset(x: 4, y: 4)
+                .offset(x: 3, y: 3)
             }
 
             VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
                 Text("\(viewModel.firstName) \(viewModel.lastName)")
-                    .font(AppTypography.title3)
+                    .font(isCompact ? AppTypography.phoneBodyMedium : AppTypography.title3)
                     .foregroundStyle(AppColors.textPrimary)
                 Text(viewModel.facilityName)
-                    .font(AppTypography.callout)
+                    .font(isCompact ? AppTypography.phoneCallout : AppTypography.callout)
                     .foregroundStyle(AppColors.textSecondary)
 
                 Button(L10n.Account.Profile.changePhoto) {
                     viewModel.requestProfileImageChange()
                 }
-                .font(AppTypography.captionBold)
+                .font(isCompact ? AppTypography.phoneCaption : AppTypography.captionBold)
                 .foregroundStyle(AppColors.brandPrimary)
                 .padding(.top, AppMetrics.spacing4)
             }
@@ -305,26 +394,21 @@ private struct ProfilePictureSection: View {
 private struct PersonalInfoSection: View {
 
     @Bindable var viewModel: MyAccountViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
         VStack(spacing: AppMetrics.spacing16) {
-            HStack(spacing: AppMetrics.spacing16) {
-                ETextField(
-                    label: L10n.Account.Personal.firstName,
-                    placeholder: L10n.Account.Personal.firstNamePH,
-                    systemImage: "person",
-                    text: $viewModel.firstName,
-                    errorMessage: viewModel.firstNameError,
-                    autocapitalization: .characters
-                )
-                ETextField(
-                    label: L10n.Account.Personal.lastName,
-                    placeholder: L10n.Account.Personal.lastNamePH,
-                    systemImage: "person",
-                    text: $viewModel.lastName,
-                    errorMessage: viewModel.lastNameError,
-                    autocapitalization: .characters
-                )
+            if isCompact {
+                VStack(spacing: AppMetrics.spacing12) {
+                    firstNameField
+                    lastNameField
+                }
+            } else {
+                HStack(spacing: AppMetrics.spacing16) {
+                    firstNameField
+                    lastNameField
+                }
             }
             ELockedField(
                 label: L10n.Account.Personal.workEmail,
@@ -333,6 +417,28 @@ private struct PersonalInfoSection: View {
             )
         }
     }
+
+    private var firstNameField: some View {
+        ETextField(
+            label: L10n.Account.Personal.firstName,
+            placeholder: L10n.Account.Personal.firstNamePH,
+            systemImage: "person",
+            text: $viewModel.firstName,
+            errorMessage: viewModel.firstNameError,
+            autocapitalization: .characters
+        )
+    }
+
+    private var lastNameField: some View {
+        ETextField(
+            label: L10n.Account.Personal.lastName,
+            placeholder: L10n.Account.Personal.lastNamePH,
+            systemImage: "person",
+            text: $viewModel.lastName,
+            errorMessage: viewModel.lastNameError,
+            autocapitalization: .characters
+        )
+    }
 }
 
 // MARK: - Security Actions Section
@@ -340,29 +446,48 @@ private struct PersonalInfoSection: View {
 private struct SecurityActionsSection: View {
 
     let viewModel: MyAccountViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
-        HStack(spacing: AppMetrics.spacing16) {
-            SecurityActionButton(
-                icon: "lock.circle.fill",
-                iconColor: AppColors.brandPrimary,
-                title: (viewModel.hasPin) ? L10n.Account.Security.changePinTitle : L10n.Account.Security.setPinTitle,
-                subtitle: (viewModel.hasPin) ? L10n.Account.Security.changePinSubtitle : L10n.Account.Security.setPinSubtitle,
-                action: { viewModel.openSetPin() }
-            )
-
-            Rectangle()
-                .fill(AppColors.borderSubtle.opacity(0.6))
-                .frame(width: 1, height: 56)
-
-            SecurityActionButton(
-                icon: "key.fill",
-                iconColor: AppColors.statusWarning,
-                title: L10n.Account.Security.changePassTitle,
-                subtitle: L10n.Account.Security.changePassSubtitle,
-                action: { viewModel.openChangePassword() }
-            )
+        if isCompact {
+            VStack(spacing: 10) {
+                pinButton
+                Rectangle()
+                    .fill(AppColors.borderSubtle.opacity(0.5))
+                    .frame(height: 1)
+                    .padding(.horizontal, -AppMetrics.spacing24)
+                passwordButton
+            }
+        } else {
+            HStack(spacing: AppMetrics.spacing16) {
+                pinButton
+                Rectangle()
+                    .fill(AppColors.borderSubtle.opacity(0.6))
+                    .frame(width: 1, height: 56)
+                passwordButton
+            }
         }
+    }
+
+    private var pinButton: some View {
+        SecurityActionButton(
+            icon: "lock.circle.fill",
+            iconColor: AppColors.brandPrimary,
+            title: viewModel.hasPin ? L10n.Account.Security.changePinTitle : L10n.Account.Security.setPinTitle,
+            subtitle: viewModel.hasPin ? L10n.Account.Security.changePinSubtitle : L10n.Account.Security.setPinSubtitle,
+            action: { viewModel.openSetPin() }
+        )
+    }
+
+    private var passwordButton: some View {
+        SecurityActionButton(
+            icon: "key.fill",
+            iconColor: AppColors.statusWarning,
+            title: L10n.Account.Security.changePassTitle,
+            subtitle: L10n.Account.Security.changePassSubtitle,
+            action: { viewModel.openChangePassword() }
+        )
     }
 }
 
@@ -373,31 +498,34 @@ private struct SecurityActionButton: View {
     let subtitle: String
     let action: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
+
     var body: some View {
         Button(action: action) {
-            HStack(spacing: AppMetrics.spacing14) {
+            HStack(spacing: AppMetrics.spacing12) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: 9)
                         .fill(iconColor.opacity(0.1))
-                        .frame(width: 44, height: 44)
+                        .frame(width: isCompact ? 36 : 44, height: isCompact ? 36 : 44)
                     Image(systemName: icon)
-                        .font(.system(size: 19, weight: .medium))
+                        .font(.system(size: isCompact ? 15 : 19, weight: .medium))
                         .foregroundStyle(iconColor)
                 }
 
                 VStack(alignment: .leading, spacing: AppMetrics.spacing2) {
                     Text(title)
-                        .font(AppTypography.bodyMedium)
+                        .font(isCompact ? AppTypography.phoneBodyMedium : AppTypography.bodyMedium)
                         .foregroundStyle(AppColors.textPrimary)
                     Text(subtitle)
-                        .font(AppTypography.caption)
+                        .font(isCompact ? AppTypography.phoneCaption : AppTypography.caption)
                         .foregroundStyle(AppColors.textSecondary)
                 }
 
                 Spacer()
 
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(AppColors.textSecondary.opacity(0.5))
             }
             .contentShape(Rectangle())
@@ -412,41 +540,45 @@ private struct SecurityActionButton: View {
 private struct DangerZoneSection: View {
 
     let viewModel: MyAccountViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let hPad: CGFloat = isCompact ? AppMetrics.spacing16 : AppMetrics.spacing24
+        let vPad: CGFloat = isCompact ? AppMetrics.spacing14 : AppMetrics.spacing20
+        return VStack(alignment: .leading, spacing: 0) {
             VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
                 Text(L10n.Account.Danger.sectionTitle)
-                    .font(AppTypography.title3)
+                    .font(isCompact ? AppTypography.phoneBodyMedium : AppTypography.title3)
                     .foregroundStyle(AppColors.statusCritical)
                 Text(L10n.Account.Danger.sectionSubtitle)
-                    .font(AppTypography.caption)
+                    .font(isCompact ? AppTypography.phoneCaption : AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
             }
-            .padding(.horizontal, AppMetrics.spacing24)
-            .padding(.top, AppMetrics.spacing20)
-            .padding(.bottom, AppMetrics.spacing16)
+            .padding(.horizontal, hPad)
+            .padding(.top, vPad)
+            .padding(.bottom, isCompact ? AppMetrics.spacing12 : AppMetrics.spacing16)
 
             Rectangle()
                 .fill(AppColors.statusCritical.opacity(0.2))
                 .frame(height: 1)
 
-            HStack(spacing: AppMetrics.spacing16) {
+            HStack(spacing: AppMetrics.spacing12) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: 9)
                         .fill(AppColors.statusCritical.opacity(0.1))
-                        .frame(width: 44, height: 44)
+                        .frame(width: isCompact ? 36 : 44, height: isCompact ? 36 : 44)
                     Image(systemName: "person.crop.circle.badge.xmark")
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.system(size: isCompact ? 15 : 18, weight: .medium))
                         .foregroundStyle(AppColors.statusCritical)
                 }
 
                 VStack(alignment: .leading, spacing: AppMetrics.spacing2) {
                     Text(L10n.Account.Danger.deactivateTitle)
-                        .font(AppTypography.bodyMedium)
+                        .font(isCompact ? AppTypography.phoneBodyMedium : AppTypography.bodyMedium)
                         .foregroundStyle(AppColors.statusCritical)
                     Text(L10n.Account.Danger.deactivateSubtitle)
-                        .font(AppTypography.caption)
+                        .font(isCompact ? AppTypography.phoneCaption : AppTypography.caption)
                         .foregroundStyle(AppColors.textSecondary)
                 }
 
@@ -454,17 +586,17 @@ private struct DangerZoneSection: View {
 
                 Button(action: { viewModel.confirmDeactivate() }) {
                     Text(L10n.Account.Danger.deactivateButton)
-                        .font(AppTypography.callout)
+                        .font(isCompact ? AppTypography.phoneCallout : AppTypography.callout)
                         .foregroundStyle(.white)
-                        .padding(.horizontal, AppMetrics.spacing20)
-                        .padding(.vertical, AppMetrics.spacing10)
+                        .padding(.horizontal, isCompact ? AppMetrics.spacing12 : AppMetrics.spacing20)
+                        .padding(.vertical, isCompact ? AppMetrics.spacing8 : AppMetrics.spacing10)
                         .background(AppColors.statusCritical)
                         .cornerRadius(AppMetrics.radiusMedium)
                 }
                 .buttonStyle(.hapticPlain)
             }
-            .padding(.horizontal, AppMetrics.spacing24)
-            .padding(.vertical, AppMetrics.spacing20)
+            .padding(.horizontal, hPad)
+            .padding(.vertical, vPad)
         }
         .background(AppColors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
@@ -482,19 +614,24 @@ private struct SetPinSheet: View {
 
     @Bindable var viewModel: MyAccountViewModel
     @FocusState private var focusedField: PinField?
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     enum PinField { case pin, confirm }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
+        let hPad: CGFloat = isCompact ? AppMetrics.spacing20 : AppMetrics.spacing32
+        let iconSize: CGFloat = isCompact ? 44 : 56
+        let iconFont: CGFloat = isCompact ? 20 : 26
+        return VStack(alignment: .leading, spacing: 0) {
 
             HStack {
                 VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
                     Text(viewModel.hasPin ? L10n.Account.Pin.changeSheetTitle : L10n.Account.Pin.sheetTitle)
-                        .font(AppTypography.title2)
+                        .font(isCompact ? AppTypography.phoneTitle : AppTypography.title2)
                         .foregroundStyle(AppColors.textPrimary)
                     Text(viewModel.hasPin ? L10n.Account.Pin.changeSheetSubtitle : L10n.Account.Pin.sheetSubtitle)
-                        .font(AppTypography.callout)
+                        .font(isCompact ? AppTypography.phoneCallout : AppTypography.callout)
                         .foregroundStyle(AppColors.textSecondary)
                 }
                 Spacer()
@@ -508,26 +645,28 @@ private struct SetPinSheet: View {
                 }
                 .buttonStyle(.hapticPlain)
             }
-            .padding(.horizontal, AppMetrics.spacing32)
-            .padding(.top, AppMetrics.spacing28)
-            .padding(.bottom, AppMetrics.spacing20)
+            .padding(.horizontal, hPad)
+            .padding(.top, isCompact ? AppMetrics.spacing20 : AppMetrics.spacing28)
+            .padding(.bottom, isCompact ? AppMetrics.spacing16 : AppMetrics.spacing20)
 
             Rectangle()
                 .fill(AppColors.borderSubtle.opacity(0.6))
                 .frame(height: 1)
 
-            VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+            VStack(alignment: .leading, spacing: isCompact ? AppMetrics.spacing16 : AppMetrics.spacing20) {
 
-                ZStack {
-                    RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
-                        .fill(AppColors.brandPrimary.opacity(0.1))
-                        .frame(width: 56, height: 56)
-                    Image(systemName: "lock.circle.fill")
-                        .font(.system(size: 26, weight: .medium))
-                        .foregroundStyle(AppColors.brandPrimary)
+                if !isCompact {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                            .fill(AppColors.brandPrimary.opacity(0.1))
+                            .frame(width: iconSize, height: iconSize)
+                        Image(systemName: "lock.circle.fill")
+                            .font(.system(size: iconFont, weight: .medium))
+                            .foregroundStyle(AppColors.brandPrimary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, AppMetrics.spacing4)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.top, AppMetrics.spacing4)
 
                 VStack(spacing: AppMetrics.spacing12) {
                     PinInputField(
@@ -550,7 +689,7 @@ private struct SetPinSheet: View {
                             Image(systemName: "exclamationmark.circle.fill")
                                 .font(.system(size: 12))
                             Text(error)
-                                .font(AppTypography.caption)
+                                .font(isCompact ? AppTypography.phoneCaption : AppTypography.caption)
                         }
                         .foregroundStyle(AppColors.statusCritical)
                         .transition(.opacity.combined(with: .move(edge: .top)))
@@ -563,9 +702,9 @@ private struct SetPinSheet: View {
                     PrimaryButton(title: viewModel.hasPin ? L10n.Account.Pin.changeSubmitButton : L10n.Account.Pin.submitButton) { viewModel.submitPin() }
                 }
             }
-            .padding(.horizontal, AppMetrics.spacing32)
-            .padding(.top, AppMetrics.spacing24)
-            .padding(.bottom, AppMetrics.spacing32)
+            .padding(.horizontal, hPad)
+            .padding(.top, isCompact ? AppMetrics.spacing20 : AppMetrics.spacing24)
+            .padding(.bottom, isCompact ? AppMetrics.spacing24 : AppMetrics.spacing32)
         }
         .background(AppColors.surfaceCard)
         .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusLarge))
@@ -575,7 +714,7 @@ private struct SetPinSheet: View {
                 .strokeBorder(AppColors.borderSubtle.opacity(0.5), lineWidth: AppMetrics.borderWidth)
         )
         .frame(maxWidth: 520)
-        .padding(.horizontal, AppMetrics.spacing32)
+        .padding(.horizontal, isCompact ? AppMetrics.spacing16 : AppMetrics.spacing32)
         .onAppear { focusedField = .pin }
     }
 }
@@ -587,22 +726,24 @@ private struct PinInputField: View {
     var focusedField: FocusState<SetPinSheet.PinField?>.Binding
     let fieldTag: SetPinSheet.PinField
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
     var isFocused: Bool { focusedField.wrappedValue == fieldTag }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
             Text(label.uppercased())
-                .font(AppTypography.captionBold)
+                .font(isCompact ? AppTypography.phoneCaption : AppTypography.captionBold)
                 .foregroundStyle(AppColors.textSecondary)
                 .tracking(0.5)
 
             SecureField(placeholder, text: $text)
-                .font(AppTypography.body)
+                .font(isCompact ? AppTypography.phoneBody : AppTypography.body)
                 .foregroundStyle(AppColors.textPrimary)
                 .keyboardType(.numberPad)
                 .focused(focusedField, equals: fieldTag)
                 .padding(.horizontal, AppMetrics.spacing16)
-                .frame(height: AppMetrics.textFieldHeight)
+                .frame(height: isCompact ? 44 : AppMetrics.textFieldHeight)
                 .background(AppColors.surfaceCard)
                 .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
                 .overlay(
@@ -626,11 +767,16 @@ private struct ChangePasswordSheet: View {
 
     @Bindable var viewModel: MyAccountViewModel
     @FocusState private var focusedField: PasswordField?
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     enum PasswordField { case current, new, confirm }
 
     var body: some View {
-        ScrollView {
+        let hPad: CGFloat = isCompact ? AppMetrics.spacing20 : AppMetrics.spacing32
+        let iconSize: CGFloat = isCompact ? 44 : 56
+        let iconFont: CGFloat = isCompact ? 20 : 24
+        return ScrollView {
             VStack(alignment: .leading, spacing: 0) {
 
                 // Header
@@ -639,12 +785,12 @@ private struct ChangePasswordSheet: View {
                         Text(viewModel.passwordStep == .verify
                              ? L10n.Account.Password.verifyTitle
                              : L10n.Account.Password.sheetTitle)
-                            .font(AppTypography.title2)
+                            .font(isCompact ? AppTypography.phoneTitle : AppTypography.title2)
                             .foregroundStyle(AppColors.textPrimary)
                         Text(viewModel.passwordStep == .verify
                              ? L10n.Account.Password.verifySubtitle
                              : L10n.Account.Password.sheetSubtitle)
-                            .font(AppTypography.callout)
+                            .font(isCompact ? AppTypography.phoneCallout : AppTypography.callout)
                             .foregroundStyle(AppColors.textSecondary)
                     }
                     Spacer()
@@ -658,18 +804,18 @@ private struct ChangePasswordSheet: View {
                     }
                     .buttonStyle(.hapticPlain)
                 }
-                .padding(.horizontal, AppMetrics.spacing32)
-                .padding(.top, AppMetrics.spacing28)
-                .padding(.bottom, AppMetrics.spacing20)
+                .padding(.horizontal, hPad)
+                .padding(.top, isCompact ? AppMetrics.spacing20 : AppMetrics.spacing28)
+                .padding(.bottom, isCompact ? AppMetrics.spacing16 : AppMetrics.spacing20)
 
                 Rectangle()
                     .fill(AppColors.borderSubtle.opacity(0.6))
                     .frame(height: 1)
 
                 if viewModel.passwordStep == .verify {
-                    verifyStep
+                    verifyStep(hPad: hPad, iconSize: iconSize, iconFont: iconFont)
                 } else {
-                    setNewStep
+                    setNewStep(hPad: hPad, iconSize: iconSize, iconFont: iconFont)
                 }
             }
         }
@@ -682,25 +828,27 @@ private struct ChangePasswordSheet: View {
                 .strokeBorder(AppColors.borderSubtle.opacity(0.5), lineWidth: AppMetrics.borderWidth)
         )
         .frame(maxWidth: 520)
-        .padding(.horizontal, AppMetrics.spacing32)
+        .padding(.horizontal, isCompact ? AppMetrics.spacing16 : AppMetrics.spacing32)
         .onAppear { focusedField = .current }
         .onChange(of: viewModel.passwordStep) { _, step in
             focusedField = step == .verify ? .current : .new
         }
     }
 
-    private var verifyStep: some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
-            ZStack {
-                RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
-                    .fill(AppColors.brandPrimary.opacity(0.1))
-                    .frame(width: 56, height: 56)
-                Image(systemName: "person.badge.key.fill")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(AppColors.brandPrimary)
+    private func verifyStep(hPad: CGFloat, iconSize: CGFloat, iconFont: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: isCompact ? AppMetrics.spacing14 : AppMetrics.spacing20) {
+            if !isCompact {
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                        .fill(AppColors.brandPrimary.opacity(0.1))
+                        .frame(width: iconSize, height: iconSize)
+                    Image(systemName: "person.badge.key.fill")
+                        .font(.system(size: iconFont, weight: .medium))
+                        .foregroundStyle(AppColors.brandPrimary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, AppMetrics.spacing4)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.top, AppMetrics.spacing4)
 
             // Locked email
             ELockedField(
@@ -722,7 +870,7 @@ private struct ChangePasswordSheet: View {
                     Image(systemName: "exclamationmark.circle.fill")
                         .font(.system(size: 12))
                     Text(error)
-                        .font(AppTypography.caption)
+                        .font(isCompact ? AppTypography.phoneCaption : AppTypography.caption)
                 }
                 .foregroundStyle(AppColors.statusCritical)
                 .transition(.opacity.combined(with: .move(edge: .top)))
@@ -736,23 +884,25 @@ private struct ChangePasswordSheet: View {
             }
         }
         .animation(.easeInOut(duration: 0.2), value: viewModel.verifyError)
-        .padding(.horizontal, AppMetrics.spacing32)
-        .padding(.top, AppMetrics.spacing24)
-        .padding(.bottom, AppMetrics.spacing32)
+        .padding(.horizontal, hPad)
+        .padding(.top, isCompact ? AppMetrics.spacing20 : AppMetrics.spacing24)
+        .padding(.bottom, isCompact ? AppMetrics.spacing24 : AppMetrics.spacing32)
     }
 
-    private var setNewStep: some View {
-        VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
-            ZStack {
-                RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
-                    .fill(AppColors.statusWarning.opacity(0.1))
-                    .frame(width: 56, height: 56)
-                Image(systemName: "key.fill")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(AppColors.statusWarning)
+    private func setNewStep(hPad: CGFloat, iconSize: CGFloat, iconFont: CGFloat) -> some View {
+        VStack(alignment: .leading, spacing: isCompact ? AppMetrics.spacing14 : AppMetrics.spacing20) {
+            if !isCompact {
+                ZStack {
+                    RoundedRectangle(cornerRadius: AppMetrics.radiusLarge)
+                        .fill(AppColors.statusWarning.opacity(0.1))
+                        .frame(width: iconSize, height: iconSize)
+                    Image(systemName: "key.fill")
+                        .font(.system(size: iconFont, weight: .medium))
+                        .foregroundStyle(AppColors.statusWarning)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.top, AppMetrics.spacing4)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.top, AppMetrics.spacing4)
 
             VStack(spacing: AppMetrics.spacing12) {
                 PasswordFieldView(
@@ -775,7 +925,7 @@ private struct ChangePasswordSheet: View {
                         Image(systemName: "exclamationmark.circle.fill")
                             .font(.system(size: 12))
                         Text(error)
-                            .font(AppTypography.caption)
+                            .font(isCompact ? AppTypography.phoneCaption : AppTypography.caption)
                     }
                     .foregroundStyle(AppColors.statusCritical)
                     .transition(.opacity.combined(with: .move(edge: .top)))
@@ -791,9 +941,9 @@ private struct ChangePasswordSheet: View {
                 }
             }
         }
-        .padding(.horizontal, AppMetrics.spacing32)
-        .padding(.top, AppMetrics.spacing24)
-        .padding(.bottom, AppMetrics.spacing32)
+        .padding(.horizontal, hPad)
+        .padding(.top, isCompact ? AppMetrics.spacing20 : AppMetrics.spacing24)
+        .padding(.bottom, isCompact ? AppMetrics.spacing24 : AppMetrics.spacing32)
     }
 }
 
@@ -804,21 +954,23 @@ private struct PasswordFieldView: View {
     var focusedField: FocusState<ChangePasswordSheet.PasswordField?>.Binding
     let fieldTag: ChangePasswordSheet.PasswordField
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
     var isFocused: Bool { focusedField.wrappedValue == fieldTag }
 
     var body: some View {
         VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
             Text(label.uppercased())
-                .font(AppTypography.captionBold)
+                .font(isCompact ? AppTypography.phoneCaption : AppTypography.captionBold)
                 .foregroundStyle(AppColors.textSecondary)
                 .tracking(0.5)
 
             SecureField(placeholder, text: $text)
-                .font(AppTypography.body)
+                .font(isCompact ? AppTypography.phoneBody : AppTypography.body)
                 .foregroundStyle(AppColors.textPrimary)
                 .focused(focusedField, equals: fieldTag)
                 .padding(.horizontal, AppMetrics.spacing16)
-                .frame(height: AppMetrics.textFieldHeight)
+                .frame(height: isCompact ? 44 : AppMetrics.textFieldHeight)
                 .background(AppColors.surfaceCard)
                 .clipShape(RoundedRectangle(cornerRadius: AppMetrics.radiusMedium))
                 .overlay(
@@ -839,10 +991,13 @@ private struct ELockedField: View {
     let value: String
     var systemImage: String? = nil
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
+
     var body: some View {
         VStack(alignment: .leading, spacing: AppMetrics.spacing6) {
             Text(label)
-                .font(AppTypography.captionBold)
+                .font(isCompact ? AppTypography.phoneCaption : AppTypography.captionBold)
                 .foregroundStyle(AppColors.textSecondary)
                 .textCase(.uppercase)
                 .tracking(0.5)
@@ -855,7 +1010,7 @@ private struct ELockedField: View {
                         .frame(width: AppMetrics.iconSizeMedium)
                 }
                 Text(value.isEmpty ? "—" : value)
-                    .font(AppTypography.body)
+                    .font(isCompact ? AppTypography.phoneBody : AppTypography.body)
                     .foregroundStyle(AppColors.textSecondary)
                 Spacer()
                 Image(systemName: "lock.fill")
@@ -863,7 +1018,7 @@ private struct ELockedField: View {
                     .foregroundStyle(AppColors.textSecondary.opacity(0.5))
             }
             .padding(.horizontal, AppMetrics.spacing16)
-            .frame(height: AppMetrics.textFieldHeight)
+            .frame(height: isCompact ? 44 : AppMetrics.textFieldHeight)
             .background(AppColors.surfaceCard.opacity(0.6))
             .cornerRadius(AppMetrics.radiusMedium)
             .overlay(

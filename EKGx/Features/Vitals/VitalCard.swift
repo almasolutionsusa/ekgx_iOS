@@ -65,6 +65,9 @@ private func painStep(for score: Int) -> (score: Int, emoji: String, label: Stri
 // MARK: - Save Capsule Button
 
 struct SaveCapsuleButton: View {
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
+
     let isSaved: Bool
     let hasReading: Bool
     let saveText: String
@@ -74,15 +77,15 @@ struct SaveCapsuleButton: View {
     var body: some View {
         if hasReading || isSaved {
             Button(action: action) {
-                HStack(spacing: 5) {
+                HStack(spacing: isCompact ? 4 : 5) {
                     Image(systemName: isSaved ? "checkmark.circle.fill" : "arrow.down.circle.fill")
-                        .font(.system(size: 13, weight: .semibold))
-                    Text(isSaved ? savedText : saveText)
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.system(size: isCompact ? 11 : 13, weight: .semibold))
+                    Text(isSaved ? savedText : (isCompact ? "Save" : saveText))
+                        .font(.system(size: isCompact ? 12 : 15, weight: .bold))
                 }
                 .foregroundStyle(AppColors.ecgBackground)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
+                .padding(.horizontal, isCompact ? 12 : 16)
+                .padding(.vertical, isCompact ? 7 : 10)
                 .background(Capsule().fill(isSaved ? AppColors.statusSuccess : AppColors.brandPrimary))
                 .shadow(
                     color: (isSaved ? AppColors.statusSuccess : AppColors.brandPrimary).opacity(0.40),
@@ -91,8 +94,8 @@ struct SaveCapsuleButton: View {
             }
             .buttonStyle(.hapticPlain)
             .disabled(isSaved)
-            .padding(.bottom, 12)
-            .padding(.trailing, 12)
+            .padding(.bottom, isCompact ? 8 : 12)
+            .padding(.trailing, isCompact ? 8 : 12)
             .transition(.asymmetric(
                 insertion: .scale(scale: 0.6, anchor: .bottomTrailing).combined(with: .opacity),
                 removal:   .scale(scale: 0.6, anchor: .bottomTrailing).combined(with: .opacity)
@@ -104,9 +107,12 @@ struct SaveCapsuleButton: View {
 // MARK: - Vital Card
 
 struct VitalCard: View {
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     let type: VitalType
     let state: DeviceConnectionState
+    var isDemoMode: Bool = false
     var selectedPainLevel: Int? = nil
     var selectedValue: String? = nil
     var source: String? = nil
@@ -238,20 +244,20 @@ struct VitalCard: View {
                     }
 
                     // Arm: R / L circles
-                    HStack(spacing: 10) {
+                    HStack(spacing: isCompact ? 8 : 10) {
                         ForEach(BPArm.allCases, id: \.self) { arm in
                             Button { onArmChange?(arm) } label: {
                                 Text(arm.label)
-                                    .font(.system(size: 17, weight: .bold, design: .rounded))
+                                    .font(.system(size: isCompact ? 15 : 17, weight: .bold, design: .rounded))
                                     .foregroundStyle(bpArm == arm ? .white : AppColors.textSecondary)
-                                    .frame(width: 50, height: 50)
+                                    .frame(width: isCompact ? 40 : 50, height: isCompact ? 40 : 50)
                                     .background(Circle().fill(bpArm == arm ? AppColors.textPrimary.opacity(0.25) : Color.clear))
                                     .overlay(Circle().stroke(bpArm == arm ? AppColors.textPrimary.opacity(0.6) : AppColors.borderSubtle, lineWidth: 1.5))
                             }
                             .buttonStyle(.hapticPlain)
                             .animation(.easeInOut(duration: 0.15), value: bpArm)
                         }
-                    }.padding(.leading)
+                    }.padding(.leading, isCompact ? 8 : 16)
 
                     // Divider
                     Rectangle()
@@ -259,7 +265,7 @@ struct VitalCard: View {
                         .frame(width: 1, height: 20)
 
                     // Position: Sit / Stand / Lie circles
-                    HStack(spacing: 10) {
+                    HStack(spacing: isCompact ? 8 : 10) {
                         ForEach(BPPosition.allCases, id: \.self) { pos in
                             Button { onPositionChange?(pos) } label: {
                                 Group {
@@ -268,21 +274,21 @@ struct VitalCard: View {
                                             .renderingMode(.template)
                                             .resizable()
                                             .scaledToFit()
-                                            .frame(width: 22, height: 22)
+                                            .frame(width: isCompact ? 18 : 22, height: isCompact ? 18 : 22)
                                     } else {
                                         Image(systemName: pos.icon)
-                                            .font(.system(size: 17, weight: .medium))
+                                            .font(.system(size: isCompact ? 14 : 17, weight: .medium))
                                     }
                                 }
                                 .foregroundStyle(bpPosition == pos ? .white : AppColors.textSecondary)
-                                .frame(width: 50, height: 50)
+                                .frame(width: isCompact ? 40 : 50, height: isCompact ? 40 : 50)
                                 .background(Circle().fill(bpPosition == pos ? AppColors.textPrimary.opacity(0.25) : Color.clear))
                                 .overlay(Circle().stroke(bpPosition == pos ? AppColors.textPrimary.opacity(0.6) : AppColors.borderSubtle, lineWidth: 1.5))
                             }
                             .buttonStyle(.hapticPlain)
                             .animation(.easeInOut(duration: 0.15), value: bpPosition)
                         }
-                    }.padding(.trailing)
+                    }.padding(.trailing, isCompact ? 8 : 16)
 
                     Spacer()
                 }
@@ -291,8 +297,8 @@ struct VitalCard: View {
 
                 Spacer(minLength: 10)
 
-                // History strip
-                if !bpHistory.isEmpty {
+                // History strip — iPad only (too narrow on iPhone)
+                if !bpHistory.isEmpty && !isCompact {
                     bpHistoryStrip
                 }
             }
@@ -325,7 +331,7 @@ struct VitalCard: View {
                         // SYS column
                         VStack(alignment: .center, spacing: 3) {
                             Text("\(r.sys)")
-                                .font(.system(size: 100, weight: .medium))
+                                .font(.system(size: isCompact ? 72 : 100, weight: .medium))
                                 .foregroundStyle(type.iconColor.opacity(0.9))
                                 .contentTransition(.numericText())
                                 .minimumScaleFactor(0.4)
@@ -335,19 +341,19 @@ struct VitalCard: View {
                                 .foregroundStyle(type.iconColor.opacity(0.55))
                                 .tracking(2)
                         }
-                        .frame(minWidth: 80)
+                        .frame(minWidth: isCompact ? 60 : 80)
 
                         // Slash
                         Text("/")
-                            .font(.system(size: 50, weight: .medium))
+                            .font(.system(size: isCompact ? 36 : 50, weight: .medium))
                             .foregroundStyle(type.iconColor.opacity(0.8))
                             .padding(.horizontal, 6)
-                            .offset(y: -14)
+                            .offset(y: isCompact ? -10 : -14)
 
                         // DIA column
                         VStack(alignment: .center, spacing: 3) {
                             Text("\(r.dia)")
-                                .font(.system(size: 60, weight: .medium))
+                                .font(.system(size: isCompact ? 44 : 60, weight: .medium))
                                 .foregroundStyle(type.iconColor.opacity(0.9))
                                 .contentTransition(.numericText())
                                 .minimumScaleFactor(0.45)
@@ -357,7 +363,7 @@ struct VitalCard: View {
                                 .foregroundStyle(type.iconColor.opacity(0.55))
                                 .tracking(2)
                         }
-                        .frame(minWidth: 80)
+                        .frame(minWidth: isCompact ? 60 : 80)
 
                         Spacer()
                     }
@@ -369,7 +375,7 @@ struct VitalCard: View {
 
                         VStack(alignment: .center, spacing: 3) {
                             Text("\(cuff)")
-                                .font(.system(size: 100, weight: .medium))
+                                .font(.system(size: isCompact ? 72 : 100, weight: .medium))
                                 .foregroundStyle(type.iconColor.opacity(0.9))
                                 .contentTransition(.numericText())
                                 .minimumScaleFactor(0.4)
@@ -379,24 +385,24 @@ struct VitalCard: View {
                                 .foregroundStyle(type.iconColor.opacity(0.45))
                                 .tracking(2)
                         }
-                        .frame(minWidth: 80)
+                        .frame(minWidth: isCompact ? 60 : 80)
 
                         Text("/")
-                            .font(.system(size: 50, weight: .medium))
+                            .font(.system(size: isCompact ? 36 : 50, weight: .medium))
                             .foregroundStyle(type.iconColor.opacity(0.9))
                             .padding(.horizontal, 6)
-                            .offset(y: -14)
+                            .offset(y: isCompact ? -10 : -14)
 
                         VStack(alignment: .center, spacing: 3) {
                             Text("--")
-                                .font(.system(size: 60, weight: .medium))
+                                .font(.system(size: isCompact ? 44 : 60, weight: .medium))
                                 .foregroundStyle(type.iconColor.opacity(0.25))
                             Text(L10n.Vitals.BP.dia)
                                 .font(.system(size: 10, weight: .bold))
                                 .foregroundStyle(type.iconColor.opacity(0.25))
                                 .tracking(2)
                         }
-                        .frame(minWidth: 80)
+                        .frame(minWidth: isCompact ? 60 : 80)
 
                         Spacer()
                     }
@@ -404,7 +410,7 @@ struct VitalCard: View {
                 } else {
                     // No reading — show placeholder
                     Text("––/––")
-                        .font(.system(size: 80, weight: .medium))
+                        .font(.system(size: isCompact ? 56 : 80, weight: .medium))
                         .foregroundStyle(type.iconColor.opacity(0.9))
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
@@ -481,7 +487,7 @@ struct VitalCard: View {
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(badgeColor)
                         } else if state == .disconnected {
-                            Text(L10n.Vitals.Device.tapToConnect)
+                            Text(isDemoMode && type == .ekg ? "Demo" : L10n.Vitals.Device.tapToConnect)
                                 .font(.system(size: 10, weight: .medium))
                                 .foregroundStyle(AppColors.textSecondary)
                         }
@@ -601,7 +607,7 @@ struct VitalCard: View {
                         }
                     } else {
                         Text("––")
-                            .font(.system(size: 80, weight: .medium))
+                            .font(.system(size: isCompact ? 50 : 80, weight: .medium))
                             .foregroundStyle(type.iconColor)
                     }
                     Spacer(minLength: 0)
@@ -613,21 +619,24 @@ struct VitalCard: View {
             VStack(spacing: 0) {
                 Spacer()
                 if let source, selectedValue != nil, !(type == .weight && bodyFatPercent != nil) {
-                    HStack(spacing: 5) {
+                    HStack(spacing: 4) {
                         Text(L10n.Vitals.sourceLabel(source))
-                            .font(.system(size: 15, weight: .regular))
+                            .font(.system(size: isCompact ? 11 : 15, weight: .regular))
                             .foregroundStyle(type.iconColor.opacity(0.7))
+                            .lineLimit(1)
                         if let onManualEntry {
                             Button(action: onManualEntry) {
                                 Image(systemName: "pencil.circle.fill")
-                                    .font(.system(size: 18, weight: .medium))
+                                    .font(.system(size: isCompact ? 14 : 18, weight: .medium))
                                     .foregroundStyle(AppColors.textSecondary.opacity(0.5))
                             }
                             .buttonStyle(.hapticPlain)
                         }
                     }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical)
+                    .frame(maxWidth: .infinity, alignment: isCompact ? .leading : .center)
+                    .padding(.leading, isCompact ? 10 : 0)
+                    .padding(.trailing, isCompact ? 88 : 0)
+                    .padding(.vertical, isCompact ? 6 : AppMetrics.spacing8)
                 }
             }
         }
@@ -635,13 +644,14 @@ struct VitalCard: View {
 
     @ViewBuilder
     private func valueText(_ value: String) -> some View {
+        let valueFontSize: CGFloat = isCompact ? 56 : 100
         if type == .heartRate {
             HStack(alignment: .center, spacing: 5) {
                 Image(systemName: "heart.fill")
-                    .font(.system(size: 16, weight: .bold))
+                    .font(.system(size: isCompact ? 14 : 16, weight: .bold))
                     .foregroundStyle(Color.red)
                 Text(value)
-                    .font(.system(size: 100, weight: .medium))
+                    .font(.system(size: valueFontSize, weight: .medium))
                     .foregroundStyle(type.iconColor)
                     .contentTransition(.numericText())
                     .minimumScaleFactor(0.4)
@@ -649,7 +659,7 @@ struct VitalCard: View {
             }
         } else {
             Text(value)
-                .font(.system(size: 100, weight: .medium))
+                .font(.system(size: valueFontSize, weight: .medium))
                 .foregroundStyle(type.iconColor)
                 .contentTransition(.numericText())
                 .animation(.spring(duration: 0.35), value: value)
@@ -748,18 +758,18 @@ struct VitalCard: View {
                 HStack(spacing: 6) {
                     Image("painLevel\(s.score)")
                         .resizable().scaledToFit()
-                        .frame(width: 64, height: 64)
+                        .frame(width: isCompact ? 40 : 64, height: isCompact ? 40 : 64)
                     VStack(alignment: .leading, spacing: 1) {
                         Text("\(score) / 10")
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.system(size: isCompact ? 12 : 15, weight: .bold))
                             .foregroundStyle(s.color)
                         Text(s.label)
-                            .font(.system(size: 10, weight: .regular))
+                            .font(.system(size: isCompact ? 9 : 10, weight: .regular))
                             .foregroundStyle(s.color.opacity(0.7))
                     }
                 }
                 .animation(.spring(duration: 0.3), value: score)
-                .padding(.bottom, 4)
+                .padding(.bottom, isCompact ? 2 : 4)
             }
 
             Spacer(minLength: 0)
@@ -768,21 +778,23 @@ struct VitalCard: View {
             HStack(spacing: 0) {
                 ForEach(painScale, id: \.score) { s in
                     let isSel = s.score == pendingPainLevel
+                    let imgSize: CGFloat = isSel ? (isCompact ? 22 : 52) : (isCompact ? 18 : 40)
+                    let frameSize: CGFloat = isCompact ? 30 : 64
                     Button {
                         withAnimation(.spring(duration: 0.25)) {
                             pendingPainLevel = s.score
                         }
                     } label: {
-                        VStack(spacing: 3) {
+                        VStack(spacing: isCompact ? 1 : 3) {
                             Image("painLevel\(s.score)")
                                 .resizable().scaledToFit()
-                                .frame(width: isSel ? 52 : 40, height: isSel ? 52 : 40)
-                                .frame(width: 64, height: 64)
+                                .frame(width: imgSize, height: imgSize)
+                                .frame(width: frameSize, height: frameSize)
                                 .background(Circle().fill(isSel ? s.color.opacity(0.15) : Color.clear))
                                 .overlay(Circle().stroke(isSel ? s.color.opacity(0.5) : Color.clear, lineWidth: 1.5))
                                 .animation(.spring(duration: 0.25), value: isSel)
                             Text("\(s.score)")
-                                .font(.system(size: 14, weight: isSel ? .bold : .regular))
+                                .font(.system(size: isCompact ? 10 : 14, weight: isSel ? .bold : .regular))
                                 .foregroundStyle(isSel ? s.color : AppColors.textSecondary)
                         }
                     }
@@ -790,9 +802,9 @@ struct VitalCard: View {
                     .frame(maxWidth: .infinity)
                 }
             }
-            .padding(.horizontal, 4)
+            .padding(.horizontal, isCompact ? 2 : 4)
             .padding(.top, 4)
-            .padding(.bottom, 12)
+            .padding(.bottom, isCompact ? 8 : 12)
 
             // Save button
             if let pending = pendingPainLevel {

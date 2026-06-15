@@ -36,6 +36,18 @@ struct AppTypography {
     static let caption     = Font.custom("Roboto-Regular",  size: 16, relativeTo: .caption)
     static let captionBold = Font.custom("Roboto-SemiBold", size: 16, relativeTo: .caption)
 
+    // MARK: - Phone Scale (iPhone — compact width class)
+    // iPad tokens run 16–38pt (designed for arm's-length reading).
+    // These run 12–24pt — standard iOS iPhone proportions, same fonts.
+
+    static let phoneTitle       = Font.custom("Montserrat-SemiBold", size: 24, relativeTo: .title2)
+    static let phoneBody        = Font.custom("Roboto-Regular",      size: 16, relativeTo: .body)
+    static let phoneBodyMedium  = Font.custom("Roboto-Medium",       size: 17, relativeTo: .body)
+    static let phoneCallout     = Font.custom("Roboto-Regular",      size: 15, relativeTo: .callout)
+    static let phoneSubheadline = Font.custom("Roboto-SemiBold",     size: 14, relativeTo: .subheadline)
+    static let phoneFootnote    = Font.custom("Roboto-Regular",      size: 13, relativeTo: .footnote)
+    static let phoneCaption     = Font.custom("Roboto-Regular",      size: 12, relativeTo: .caption)
+
     // MARK: - Monospaced (Vitals & ECG Values)
 
     static let vitalsLarge = Font.system(size: 44, weight: .bold,   design: .monospaced)

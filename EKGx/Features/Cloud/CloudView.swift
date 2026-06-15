@@ -174,10 +174,10 @@ private struct PatientPanel: View {
                 }
                 Spacer()
             } else {
-                ScrollView {
+                ScrollView { 
                     LazyVStack(spacing: 0) {
                         ForEach(viewModel.filteredPatients) { patient in
-                            PatientRow(
+                            CloudPatientRow(
                                 patient: patient,
                                 isSelected: viewModel.selectedPatient?.patientId == patient.patientId
                             ) {
@@ -199,7 +199,7 @@ private struct PatientPanel: View {
 
 // MARK: - Patient Row
 
-private struct PatientRow: View {
+private struct CloudPatientRow: View {
 
     let patient: Patient
     let isSelected: Bool
@@ -485,7 +485,7 @@ private struct RecordingRow: View {
                     }
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
-                    .labelStyle(CompactLabelStyle())
+                    .labelStyle(CloudCompactLabelStyle())
 
                     HStack(spacing: AppMetrics.spacing16) {
                         if let diagnosis = recording.diagnosis {
@@ -499,7 +499,7 @@ private struct RecordingRow: View {
                             Label(username, systemImage: "person")
                                 .font(AppTypography.caption)
                                 .foregroundStyle(AppColors.textSecondary)
-                                .labelStyle(CompactLabelStyle())
+                                .labelStyle(CloudCompactLabelStyle())
                         }
                     }
                 }
@@ -606,7 +606,7 @@ private struct CloudSearchBar: View {
 
 // MARK: - Compact Label Style
 
-private struct CompactLabelStyle: LabelStyle {
+private struct CloudCompactLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 4) {
             configuration.icon

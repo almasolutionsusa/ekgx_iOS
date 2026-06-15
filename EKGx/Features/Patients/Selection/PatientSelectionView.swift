@@ -16,6 +16,7 @@ struct PatientSelectionView: View {
     @State private var viewModel: PatientSelectionViewModel
     @State private var searchMode: SearchMode = .name
     @State private var showQRScanner = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     enum SearchMode: CaseIterable {
         case name
@@ -34,6 +35,29 @@ struct PatientSelectionView: View {
     }
 
     var body: some View {
+        Group {
+            if sizeClass == .compact {
+                PhonePatientSelectionLayout(viewModel: viewModel)
+            } else {
+                iPadLayout
+            }
+        }
+        .sheet(isPresented: $viewModel.showCreatePatient) {
+            CreatePatientSheet(viewModel: viewModel)
+                .interactiveDismissDisabled()
+        }
+        .sheet(isPresented: $viewModel.showEditPatient) {
+            EditPatientSheet(viewModel: viewModel)
+                .interactiveDismissDisabled()
+        }
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                viewModel.activate()
+            }
+        }
+    }
+
+    private var iPadLayout: some View {
         ZStack {
             AppColors.surfaceBackground.ignoresSafeArea()
 
@@ -48,21 +72,8 @@ struct PatientSelectionView: View {
 
                     centerPanel
                         .frame(maxWidth: .infinity)
-
-//                    divider
-//
-//                    rightPanel
-//                        .frame(width: 360)
                 }
             }
-        }
-        .sheet(isPresented: $viewModel.showCreatePatient) {
-            CreatePatientSheet(viewModel: viewModel)
-                .interactiveDismissDisabled()
-        }
-        .sheet(isPresented: $viewModel.showEditPatient) {
-            EditPatientSheet(viewModel: viewModel)
-                .interactiveDismissDisabled()
         }
         .sheet(isPresented: $showQRScanner) {
             QRScannerView { scanned in
@@ -72,13 +83,6 @@ struct PatientSelectionView: View {
             .ignoresSafeArea()
         }
         .background(KeyboardShiftBlocker())
-        .onAppear {
-            // Delay until after the navigation push animation (~0.35s) so the list
-            // doesn't render mid-transition.
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                viewModel.activate()
-            }
-        }
         .ignoresSafeArea(.keyboard)
     }
 
@@ -533,7 +537,7 @@ struct PatientSelectionView: View {
 
 // MARK: - Patient Row
 
-private struct PatientRow: View {
+struct PatientRow: View {
 
     let patient: LocalPatient
     let isSelected: Bool
@@ -542,42 +546,56 @@ private struct PatientRow: View {
     let onHistoryTap: () -> Void
     let onTap: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
+
+    private var btnSize: CGFloat  { isCompact ? 36 : 40 }
+    private var iconSize: CGFloat { isCompact ? 14 : 16 }
+    private var avatarSize: CGFloat { isCompact ? 42 : 48 }
+
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: AppMetrics.spacing14) {
+            HStack(spacing: AppMetrics.spacing12) {
                 ZStack {
                     Circle()
                         .fill(AppColors.ecgBackground)
-                        .frame(width: 48, height: 48)
+                        .frame(width: avatarSize, height: avatarSize)
                     Text(patient.initials)
-                        .font(AppTypography.calloutBold)
+                        .font(isCompact ? AppTypography.phoneBodyMedium : AppTypography.calloutBold)
                         .foregroundStyle(AppColors.textPrimary)
                 }
 
-                VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text(patient.fullName)
-                        .font(AppTypography.calloutBold)
+                        .font(isCompact ? AppTypography.phoneBodyMedium : AppTypography.calloutBold)
                         .foregroundStyle(AppColors.textPrimary)
                         .lineLimit(1)
 
                     HStack(spacing: AppMetrics.spacing6) {
                         if !patient.birthDate.isEmpty {
                             Text(patient.age)
-                                .font(AppTypography.caption)
+                                .font(isCompact ? AppTypography.phoneCaption : AppTypography.caption)
                                 .foregroundStyle(AppColors.textSecondary)
                         }
                         if !patient.gender.isEmpty {
                             GenderBadge(gender: patient.gender)
                         }
-                        if !patient.mrn.isEmpty {
-                            Text("·").foregroundStyle(AppColors.borderSubtle).font(AppTypography.caption)
+                        if !isCompact, !patient.mrn.isEmpty {
+                            Text("·").foregroundStyle(AppColors.borderSubtle)
+                                .font(AppTypography.caption)
                             Text("#\(patient.mrn)")
                                 .font(AppTypography.caption)
                                 .foregroundStyle(AppColors.textSecondary)
                         }
                     }
 
-                    if !patient.createdBy.isEmpty {
+                    if isCompact, !patient.mrn.isEmpty {
+                        Text("#\(patient.mrn)")
+                            .font(AppTypography.phoneCaption)
+                            .foregroundStyle(AppColors.textSecondary)
+                    }
+
+                    if !isCompact, !patient.createdBy.isEmpty {
                         Label(patient.createdBy, systemImage: "person")
                             .font(AppTypography.caption)
                             .foregroundStyle(AppColors.textSecondary)
@@ -590,9 +608,9 @@ private struct PatientRow: View {
                 // Edit button
                 Button(action: onEdit) {
                     Image(systemName: "pencil")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: iconSize, weight: .medium))
                         .foregroundStyle(AppColors.statusWarning)
-                        .frame(width: 40, height: 40)
+                        .frame(width: btnSize, height: btnSize)
                         .background(AppColors.statusWarning.opacity(0.12))
                         .cornerRadius(AppMetrics.radiusMedium)
                 }
@@ -601,14 +619,14 @@ private struct PatientRow: View {
                 // History badge — tappable, navigates to patient's exam history
                 if examCount > 0 {
                     Button(action: onHistoryTap) {
-                        VStack(spacing: 3) {
+                        VStack(spacing: 2) {
                             Image(systemName: "doc.on.doc")
-                                .font(.system(size: 16, weight: .medium))
+                                .font(.system(size: iconSize, weight: .medium))
                             Text("\(examCount)")
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.system(size: isCompact ? 10 : 11, weight: .bold))
                         }
                         .foregroundStyle(AppColors.brandPrimary)
-                        .frame(width: 40, height: 40)
+                        .frame(width: btnSize, height: btnSize)
                         .background(AppColors.brandPrimary.opacity(0.10))
                         .cornerRadius(AppMetrics.radiusMedium)
                     }
@@ -616,7 +634,7 @@ private struct PatientRow: View {
                 }
             }
             .padding(.horizontal, AppMetrics.spacing16)
-            .padding(.vertical, AppMetrics.spacing12)
+            .padding(.vertical, isCompact ? AppMetrics.spacing10 : AppMetrics.spacing12)
             .background(isSelected ? AppColors.accentTeal.opacity(0.07) : AppColors.surfaceElevatedOverride)
             .cornerRadius(AppMetrics.radiusSmall)
             .overlay(
@@ -637,7 +655,14 @@ struct CreatePatientSheet: View {
 
     @Bindable var viewModel: PatientSelectionViewModel
     @FocusState private var focused: Field?
+    @Environment(\.horizontalSizeClass) private var sizeClass
     enum Field { case firstName, lastName, mrn }
+
+    private var isCompact: Bool { sizeClass == .compact }
+    private var hPad: CGFloat  { isCompact ? AppMetrics.spacing20 : AppMetrics.spacing28 }
+    private var btnHeight: CGFloat { isCompact ? 48 : AppMetrics.buttonHeight }
+    private var titleFont: Font  { isCompact ? AppTypography.phoneTitle      : AppTypography.title2 }
+    private var btnFont: Font    { isCompact ? AppTypography.phoneBodyMedium : AppTypography.bodyMedium }
 
     var body: some View {
         ZStack {
@@ -645,14 +670,14 @@ struct CreatePatientSheet: View {
             VStack(spacing: 0) {
                 header
                 ScrollView {
-                    VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+                    VStack(alignment: .leading, spacing: AppMetrics.spacing16) {
 
                         if let error = viewModel.createErrorMessage {
                             HStack(spacing: AppMetrics.spacing12) {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundStyle(AppColors.statusCritical)
                                 Text(error)
-                                    .font(AppTypography.callout)
+                                    .font(isCompact ? AppTypography.phoneCallout : AppTypography.callout)
                                     .foregroundStyle(AppColors.statusCritical)
                             }
                             .padding(AppMetrics.spacing16)
@@ -661,27 +686,52 @@ struct CreatePatientSheet: View {
                             .cornerRadius(AppMetrics.radiusMedium)
                         }
 
-                        HStack(spacing: AppMetrics.spacing14) {
-                            ETextField(
-                                placeholder: L10n.PatientSelection.Create.firstName,
-                                systemImage: "person",
-                                text: $viewModel.createFirstName,
-                                errorMessage: viewModel.createFirstNameError,
-                                autocapitalization: .characters
-                            )
-                            .focused($focused, equals: .firstName)
-                            .onChange(of: viewModel.createFirstName) { _, _ in viewModel.createFirstNameError = nil }
-                            .onSubmit { focused = .lastName }
+                        if isCompact {
+                            VStack(spacing: AppMetrics.spacing14) {
+                                ETextField(
+                                    placeholder: L10n.PatientSelection.Create.firstName,
+                                    systemImage: "person",
+                                    text: $viewModel.createFirstName,
+                                    errorMessage: viewModel.createFirstNameError,
+                                    autocapitalization: .characters
+                                )
+                                .focused($focused, equals: .firstName)
+                                .onChange(of: viewModel.createFirstName) { _, _ in viewModel.createFirstNameError = nil }
+                                .onSubmit { focused = .lastName }
 
-                            ETextField(
-                                placeholder: L10n.PatientSelection.Create.lastName,
-                                systemImage: "person",
-                                text: $viewModel.createLastName,
-                                errorMessage: viewModel.createLastNameError,
-                                autocapitalization: .characters
-                            )
-                            .focused($focused, equals: .lastName)
-                            .onChange(of: viewModel.createLastName) { _, _ in viewModel.createLastNameError = nil }
+                                ETextField(
+                                    placeholder: L10n.PatientSelection.Create.lastName,
+                                    systemImage: "person",
+                                    text: $viewModel.createLastName,
+                                    errorMessage: viewModel.createLastNameError,
+                                    autocapitalization: .characters
+                                )
+                                .focused($focused, equals: .lastName)
+                                .onChange(of: viewModel.createLastName) { _, _ in viewModel.createLastNameError = nil }
+                            }
+                        } else {
+                            HStack(spacing: AppMetrics.spacing14) {
+                                ETextField(
+                                    placeholder: L10n.PatientSelection.Create.firstName,
+                                    systemImage: "person",
+                                    text: $viewModel.createFirstName,
+                                    errorMessage: viewModel.createFirstNameError,
+                                    autocapitalization: .characters
+                                )
+                                .focused($focused, equals: .firstName)
+                                .onChange(of: viewModel.createFirstName) { _, _ in viewModel.createFirstNameError = nil }
+                                .onSubmit { focused = .lastName }
+
+                                ETextField(
+                                    placeholder: L10n.PatientSelection.Create.lastName,
+                                    systemImage: "person",
+                                    text: $viewModel.createLastName,
+                                    errorMessage: viewModel.createLastNameError,
+                                    autocapitalization: .characters
+                                )
+                                .focused($focused, equals: .lastName)
+                                .onChange(of: viewModel.createLastName) { _, _ in viewModel.createLastNameError = nil }
+                            }
                         }
 
                         DOBTextField(
@@ -690,13 +740,10 @@ struct CreatePatientSheet: View {
                         )
                         .onChange(of: viewModel.createDob) { _, _ in viewModel.createDobError = nil }
 
-                        VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
-                           
-                            Picker("", selection: $viewModel.createGender) {
-                                ForEach(viewModel.genderOptions, id: \.self) { Text($0).tag($0) }
-                            }
-                            .pickerStyle(.segmented)
+                        Picker("", selection: $viewModel.createGender) {
+                            ForEach(viewModel.genderOptions, id: \.self) { Text($0).tag($0) }
                         }
+                        .pickerStyle(.segmented)
 
                         ETextField(
                             placeholder: L10n.PatientSelection.Create.mrnPlaceholder,
@@ -707,8 +754,9 @@ struct CreatePatientSheet: View {
                         .focused($focused, equals: .mrn)
                         .onChange(of: viewModel.createMRN) { _, _ in viewModel.createMRNError = nil }
                     }
-                    .padding(.horizontal, AppMetrics.spacing28)
-                    .padding(.top, AppMetrics.spacing24)
+                    .padding(.horizontal, hPad)
+                    .padding(.top, AppMetrics.spacing20)
+                    .padding(.bottom, AppMetrics.spacing16)
                 }
                 footer
             }
@@ -717,11 +765,9 @@ struct CreatePatientSheet: View {
 
     private var header: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(L10n.PatientSelection.Create.title)
-                    .font(AppTypography.title2)
-                    .foregroundStyle(AppColors.textPrimary)
-            }
+            Text(L10n.PatientSelection.Create.title)
+                .font(titleFont)
+                .foregroundStyle(AppColors.textPrimary)
             Spacer()
             Button(action: viewModel.cancelCreatePatient) {
                 Image(systemName: "xmark.circle.fill")
@@ -730,8 +776,8 @@ struct CreatePatientSheet: View {
             }
             .buttonStyle(.hapticPlain)
         }
-        .padding(.horizontal, AppMetrics.spacing28)
-        .padding(.vertical, AppMetrics.spacing20)
+        .padding(.horizontal, hPad)
+        .padding(.vertical, AppMetrics.spacing16)
         .background(AppColors.surfaceCard)
         .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(height: 1), alignment: .bottom)
     }
@@ -740,10 +786,10 @@ struct CreatePatientSheet: View {
         HStack(spacing: AppMetrics.spacing12) {
             Button(action: viewModel.cancelCreatePatient) {
                 Text(L10n.PatientSelection.Create.cancel)
-                    .font(AppTypography.bodyMedium)
+                    .font(btnFont)
                     .foregroundStyle(AppColors.textPrimary)
                     .frame(maxWidth: .infinity)
-                    .frame(height: AppMetrics.buttonHeight)
+                    .frame(height: btnHeight)
                     .background(AppColors.borderSubtle.opacity(0.5))
                     .cornerRadius(AppMetrics.radiusMedium)
             }
@@ -757,14 +803,14 @@ struct CreatePatientSheet: View {
                             .scaleEffect(0.9)
                     } else {
                         Image(systemName: "person.badge.plus")
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.system(size: 14, weight: .semibold))
                     }
                     Text(L10n.PatientSelection.Create.submit)
-                        .font(AppTypography.bodyMedium)
+                        .font(btnFont)
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: AppMetrics.buttonHeight)
+                .frame(height: btnHeight)
                 .background(viewModel.canSubmitCreate ? AppColors.brandPrimary : AppColors.borderSubtle)
                 .cornerRadius(AppMetrics.radiusMedium)
                 .animation(.easeInOut(duration: 0.2), value: viewModel.canSubmitCreate)
@@ -772,8 +818,8 @@ struct CreatePatientSheet: View {
             .buttonStyle(.hapticPlain)
             .disabled(!viewModel.canSubmitCreate || viewModel.isCreating)
         }
-        .padding(.horizontal, AppMetrics.spacing28)
-        .padding(.vertical, AppMetrics.spacing20)
+        .padding(.horizontal, hPad)
+        .padding(.vertical, AppMetrics.spacing16)
         .background(AppColors.surfaceCard)
         .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(height: 1), alignment: .top)
     }
@@ -785,7 +831,14 @@ struct EditPatientSheet: View {
 
     @Bindable var viewModel: PatientSelectionViewModel
     @FocusState private var focused: Field?
+    @Environment(\.horizontalSizeClass) private var sizeClass
     enum Field { case firstName, lastName, mrn }
+
+    private var isCompact: Bool { sizeClass == .compact }
+    private var hPad: CGFloat   { isCompact ? AppMetrics.spacing20 : AppMetrics.spacing28 }
+    private var btnHeight: CGFloat { isCompact ? 48 : AppMetrics.buttonHeight }
+    private var titleFont: Font  { isCompact ? AppTypography.phoneTitle      : AppTypography.title2 }
+    private var btnFont: Font    { isCompact ? AppTypography.phoneBodyMedium : AppTypography.bodyMedium }
 
     var body: some View {
         ZStack {
@@ -793,14 +846,14 @@ struct EditPatientSheet: View {
             VStack(spacing: 0) {
                 header
                 ScrollView {
-                    VStack(alignment: .leading, spacing: AppMetrics.spacing20) {
+                    VStack(alignment: .leading, spacing: AppMetrics.spacing16) {
 
                         if let error = viewModel.editErrorMessage {
                             HStack(spacing: AppMetrics.spacing12) {
                                 Image(systemName: "exclamationmark.triangle.fill")
                                     .foregroundStyle(AppColors.statusCritical)
                                 Text(error)
-                                    .font(AppTypography.callout)
+                                    .font(isCompact ? AppTypography.phoneCallout : AppTypography.callout)
                                     .foregroundStyle(AppColors.statusCritical)
                             }
                             .padding(AppMetrics.spacing16)
@@ -809,29 +862,54 @@ struct EditPatientSheet: View {
                             .cornerRadius(AppMetrics.radiusMedium)
                         }
 
-                        HStack(spacing: AppMetrics.spacing14) {
-                            ETextField(
-                                label: L10n.PatientSelection.Create.firstName,
-                                placeholder: L10n.PatientSelection.Create.firstName,
-                                systemImage: "person",
-                                text: $viewModel.editFirstName,
-                                errorMessage: viewModel.editFirstNameError,
-                                autocapitalization: .characters
-                            )
-                            .focused($focused, equals: .firstName)
-                            .onChange(of: viewModel.editFirstName) { _, _ in viewModel.editFirstNameError = nil }
-                            .onSubmit { focused = .lastName }
+                        if isCompact {
+                            VStack(spacing: AppMetrics.spacing14) {
+                                ETextField(
+                                    placeholder: L10n.PatientSelection.Create.firstName,
+                                    systemImage: "person",
+                                    text: $viewModel.editFirstName,
+                                    errorMessage: viewModel.editFirstNameError,
+                                    autocapitalization: .characters
+                                )
+                                .focused($focused, equals: .firstName)
+                                .onChange(of: viewModel.editFirstName) { _, _ in viewModel.editFirstNameError = nil }
+                                .onSubmit { focused = .lastName }
 
-                            ETextField(
-                                label: L10n.PatientSelection.Create.lastName,
-                                placeholder: L10n.PatientSelection.Create.lastName,
-                                systemImage: "person",
-                                text: $viewModel.editLastName,
-                                errorMessage: viewModel.editLastNameError,
-                                autocapitalization: .characters
-                            )
-                            .focused($focused, equals: .lastName)
-                            .onChange(of: viewModel.editLastName) { _, _ in viewModel.editLastNameError = nil }
+                                ETextField(
+                                    placeholder: L10n.PatientSelection.Create.lastName,
+                                    systemImage: "person",
+                                    text: $viewModel.editLastName,
+                                    errorMessage: viewModel.editLastNameError,
+                                    autocapitalization: .characters
+                                )
+                                .focused($focused, equals: .lastName)
+                                .onChange(of: viewModel.editLastName) { _, _ in viewModel.editLastNameError = nil }
+                            }
+                        } else {
+                            HStack(spacing: AppMetrics.spacing14) {
+                                ETextField(
+                                    label: L10n.PatientSelection.Create.firstName,
+                                    placeholder: L10n.PatientSelection.Create.firstName,
+                                    systemImage: "person",
+                                    text: $viewModel.editFirstName,
+                                    errorMessage: viewModel.editFirstNameError,
+                                    autocapitalization: .characters
+                                )
+                                .focused($focused, equals: .firstName)
+                                .onChange(of: viewModel.editFirstName) { _, _ in viewModel.editFirstNameError = nil }
+                                .onSubmit { focused = .lastName }
+
+                                ETextField(
+                                    label: L10n.PatientSelection.Create.lastName,
+                                    placeholder: L10n.PatientSelection.Create.lastName,
+                                    systemImage: "person",
+                                    text: $viewModel.editLastName,
+                                    errorMessage: viewModel.editLastNameError,
+                                    autocapitalization: .characters
+                                )
+                                .focused($focused, equals: .lastName)
+                                .onChange(of: viewModel.editLastName) { _, _ in viewModel.editLastNameError = nil }
+                            }
                         }
 
                         DOBTextField(
@@ -843,7 +921,7 @@ struct EditPatientSheet: View {
 
                         VStack(alignment: .leading, spacing: AppMetrics.spacing8) {
                             Text(L10n.PatientSelection.Create.gender)
-                                .font(AppTypography.captionBold)
+                                .font(isCompact ? AppTypography.phoneCaption : AppTypography.captionBold)
                                 .foregroundStyle(AppColors.textSecondary)
                             Picker("", selection: $viewModel.editGender) {
                                 ForEach(viewModel.genderOptions, id: \.self) { Text($0).tag($0) }
@@ -861,8 +939,9 @@ struct EditPatientSheet: View {
                         .focused($focused, equals: .mrn)
                         .onChange(of: viewModel.editMRN) { _, _ in viewModel.editMRNError = nil }
                     }
-                    .padding(.horizontal, AppMetrics.spacing28)
-                    .padding(.top, AppMetrics.spacing24)
+                    .padding(.horizontal, hPad)
+                    .padding(.top, AppMetrics.spacing20)
+                    .padding(.bottom, AppMetrics.spacing16)
                 }
                 footer
             }
@@ -873,10 +952,10 @@ struct EditPatientSheet: View {
         HStack {
             VStack(alignment: .leading, spacing: 2) {
                 Text(L10n.PatientSelection.Edit.title)
-                    .font(AppTypography.title2)
+                    .font(titleFont)
                     .foregroundStyle(AppColors.textPrimary)
                 Text(L10n.PatientSelection.Edit.subtitle)
-                    .font(AppTypography.caption)
+                    .font(isCompact ? AppTypography.phoneCaption : AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
             }
             Spacer()
@@ -887,8 +966,8 @@ struct EditPatientSheet: View {
             }
             .buttonStyle(.hapticPlain)
         }
-        .padding(.horizontal, AppMetrics.spacing28)
-        .padding(.vertical, AppMetrics.spacing20)
+        .padding(.horizontal, hPad)
+        .padding(.vertical, AppMetrics.spacing16)
         .background(AppColors.surfaceCard)
         .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(height: 1), alignment: .bottom)
     }
@@ -897,10 +976,10 @@ struct EditPatientSheet: View {
         HStack(spacing: AppMetrics.spacing12) {
             Button(action: viewModel.cancelEditPatient) {
                 Text(L10n.Common.cancel)
-                    .font(AppTypography.bodyMedium)
+                    .font(btnFont)
                     .foregroundStyle(AppColors.textPrimary)
                     .frame(maxWidth: .infinity)
-                    .frame(height: AppMetrics.buttonHeight)
+                    .frame(height: btnHeight)
                     .background(AppColors.borderSubtle.opacity(0.5))
                     .cornerRadius(AppMetrics.radiusMedium)
             }
@@ -914,22 +993,22 @@ struct EditPatientSheet: View {
                             .scaleEffect(0.9)
                     } else {
                         Image(systemName: "checkmark")
-                            .font(.system(size: 15, weight: .semibold))
+                            .font(.system(size: 14, weight: .semibold))
                     }
                     Text(L10n.PatientSelection.Edit.submit)
-                        .font(AppTypography.bodyMedium)
+                        .font(btnFont)
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity)
-                .frame(height: AppMetrics.buttonHeight)
+                .frame(height: btnHeight)
                 .background(AppColors.brandPrimary)
                 .cornerRadius(AppMetrics.radiusMedium)
             }
             .buttonStyle(.hapticPlain)
             .disabled(viewModel.isUpdating)
         }
-        .padding(.horizontal, AppMetrics.spacing28)
-        .padding(.vertical, AppMetrics.spacing20)
+        .padding(.horizontal, hPad)
+        .padding(.vertical, AppMetrics.spacing16)
         .background(AppColors.surfaceCard)
         .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.5)).frame(height: 1), alignment: .top)
     }
@@ -975,7 +1054,7 @@ struct GenderBadge: View {
 
 // MARK: - Shared Label Style
 
-private struct CompactLabelStyle: LabelStyle {
+struct CompactLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 4) {
             configuration.icon
@@ -1025,7 +1104,7 @@ final class KeyboardBlockerVC: UIViewController {
 
 // MARK: - QR Scanner
 
-private struct QRScannerView: UIViewControllerRepresentable {
+struct QRScannerView: UIViewControllerRepresentable {
 
     let onScanned: (String) -> Void
 

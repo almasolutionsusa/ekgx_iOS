@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Network
 
 @Observable
 @MainActor
@@ -252,6 +253,10 @@ final class LoginViewModel {
         configureAutoLock()
         pinInput = ""
         router.navigate(to: .patientSelection)
+
+        // Silently refresh the server token in the background when online.
+        // Navigation already happened — this never blocks the user.
+        backgroundRefreshToken(email: user.email ?? user.username, username: user.username)
     }
 
     private func performLogin() async {
@@ -290,6 +295,7 @@ final class LoginViewModel {
             diContainer.clearRecordingSession()
             configureAutoLock()
             router.navigate(to: .patientSelection)
+            backgroundRefreshToken(email: trimmedEmail, username: store.username ?? trimmedEmail)
             return
         }
 
@@ -331,6 +337,44 @@ final class LoginViewModel {
             errorMessage = authError.errorDescription
         } catch {
             errorMessage = L10n.Auth.Login.errorGeneric
+        }
+    }
+
+    // MARK: - Background Token Refresh
+
+    /// Fires a silent API login on a background Task after the user is already navigated away.
+    /// Uses the plaintext password stored in Keychain by a prior API login.
+    /// Skipped entirely when offline — never blocks or shows errors to the user.
+    private func backgroundRefreshToken(email: String, username: String) {
+        let authSvc = authService
+        Task {
+            guard await LoginViewModel.isOnline() else {
+                print("[Auth] Background refresh skipped — device offline")
+                return
+            }
+            let store = LocalUserStore.shared
+            guard let pwd = store.storedPassword(for: email)
+                         ?? store.storedPassword(for: username) else {
+                print("[Auth] Background refresh skipped — no stored password")
+                return
+            }
+            do {
+                try await authSvc.login(email: email, password: pwd)
+                print("[Auth] Background token refresh ✅")
+            } catch {
+                print("[Auth] Background token refresh failed (non-critical): \(error)")
+            }
+        }
+    }
+
+    private static func isOnline() async -> Bool {
+        await withCheckedContinuation { continuation in
+            let monitor = NWPathMonitor()
+            monitor.pathUpdateHandler = { path in
+                monitor.cancel()
+                continuation.resume(returning: path.status == .satisfied)
+            }
+            monitor.start(queue: DispatchQueue(label: "ekgx.login.netcheck", qos: .background))
         }
     }
 

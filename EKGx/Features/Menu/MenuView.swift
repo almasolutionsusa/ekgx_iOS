@@ -14,12 +14,27 @@ import SwiftUI
 struct MenuView: View {
 
     @State private var viewModel: MenuViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
 
     init(viewModel: MenuViewModel) {
         _viewModel = State(wrappedValue: viewModel)
     }
 
     var body: some View {
+        Group {
+            if sizeClass == .compact {
+                PhoneMenuLayout(viewModel: viewModel, settings: viewModel.settings)
+            } else {
+                iPadLayout
+            }
+        }
+        .alert(L10n.Menu.logoutConfirm, isPresented: $viewModel.showLogoutAlert) {
+            Button(L10n.Menu.logoutConfirmButton, role: .destructive) { viewModel.logout() }
+            Button(L10n.Common.cancel, role: .cancel) {}
+        }
+    }
+
+    private var iPadLayout: some View {
         HStack(spacing: 0) {
             profilePanel
                 .frame(width: 340)
@@ -39,10 +54,6 @@ struct MenuView: View {
             .frame(maxWidth: .infinity)
         }
         .ignoresSafeArea()
-        .alert(L10n.Menu.logoutConfirm, isPresented: $viewModel.showLogoutAlert) {
-            Button(L10n.Menu.logoutConfirmButton, role: .destructive) { viewModel.logout() }
-            Button(L10n.Common.cancel, role: .cancel) {}
-        }
     }
 
     // MARK: - Left: Profile Panel

@@ -14,43 +14,26 @@ import SwiftUI
 struct LoginView: View {
 
     @State private var viewModel: LoginViewModel
-
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    
     init(viewModel: LoginViewModel) {
         _viewModel = State(wrappedValue: viewModel)
     }
 
     var body: some View {
-        GeometryReader { geometry in
-            HStack(spacing: 0) {
-                LoginBrandingPanel(
-                    organizationName: viewModel.organizationName,
-                    facilityName: viewModel.facilityName,
-                    onLogoDoubleTap: {
-                        viewModel.uuidSendSuccess = nil
-                        viewModel.showUUIDAlert = true
-                    }
-                )
-                .frame(width: geometry.size.width * AppMetrics.sidebarWidthRatio)
-
-                LoginFormPanel(viewModel: viewModel)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+        Group {
+            if sizeClass == .compact {
+                PhoneLoginLayout(viewModel: viewModel)
+            } else {
+                iPadLayout
             }
         }
-        .ignoresSafeArea(.container)
-        .background(AppColors.surfaceBackground)
         .onTapGesture { UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil) }
         .task {
             for _ in 0..<20 {
                 viewModel.refreshFacilityInfo()
                 if viewModel.facilityName != nil { break }
                 try? await Task.sleep(for: .milliseconds(300))
-            }
-        }
-        .overlay {
-            if viewModel.isLoading {
-                LoadingOverlay()
-                    .transition(.opacity)
-                    .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
             }
         }
         .sheet(isPresented: $viewModel.showForgotPassword) {
@@ -69,6 +52,34 @@ struct LoginView: View {
                      : "Failed to send. Please try again.\n\n\(viewModel.appUUID)")
             } else {
                 Text(viewModel.appUUID)
+            }
+        }
+    }
+
+    private var iPadLayout: some View {
+        GeometryReader { geometry in
+            HStack(spacing: 0) {
+                LoginBrandingPanel(
+                    organizationName: viewModel.organizationName,
+                    facilityName: viewModel.facilityName,
+                    onLogoDoubleTap: {
+                        viewModel.uuidSendSuccess = nil
+                        viewModel.showUUIDAlert = true
+                    }
+                )
+                .frame(width: geometry.size.width * AppMetrics.sidebarWidthRatio)
+
+                LoginFormPanel(viewModel: viewModel)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            }
+        }
+        .ignoresSafeArea(.container)
+        .background(AppColors.surfaceBackground)
+        .overlay {
+            if viewModel.isLoading {
+                LoadingOverlay()
+                    .transition(.opacity)
+                    .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
             }
         }
     }
@@ -163,7 +174,7 @@ private struct LoginBrandingPanel: View {
 
 // MARK: - Facility Badge
 
-private struct FacilityBadge: View {
+struct FacilityBadge: View {
 
     let organizationName: String?
     let facilityName: String?
@@ -200,89 +211,89 @@ private struct FacilityBadge: View {
 
 // MARK: - ECG Grid Overlay (decorative + shimmer)
 
-private struct ECGGridOverlay: View {
+struct ECGGridOverlay: View {
+
+    var animated: Bool = true
 
     @State private var startDate: Date? = nil
 
     private let delay:      Double = 0.75
     private let sweepIn:    Double = 0.35
-    // sweep-out starts when sweep-in hits 80% (no hold pause)
     private let sweepOut:   Double = 0.35
 
     var body: some View {
-        TimelineView(.animation) { timeline in
-            GeometryReader { geo in
-                // elapsed since onAppear, minus initial delay
-                let elapsed: Double = {
-                    guard let start = startDate else { return -1 }
-                    return timeline.date.timeIntervalSince(start) - delay
-                }()
+        if animated {
+            TimelineView(.animation) { timeline in
+                GeometryReader { geo in
+                    let elapsed: Double = {
+                        guard let start = startDate else { return -1 }
+                        return timeline.date.timeIntervalSince(start) - delay
+                    }()
 
-                // For each grid line (diagPos 0→1), compute its glow brightness
-                // Phase 1 (sweepIn):  front edge advances 0→1, lines behind it stay ON
-                // Phase 2 (hold):     all lines ON
-                // Phase 3 (sweepOut): a dark edge advances 0→1, lines behind it turn OFF
-                let glowFront: CGFloat = {
-                    guard elapsed > 0 else { return -1 }           // delay: nothing lit
-                    let p = elapsed / sweepIn
-                    return p < 1.0 ? CGFloat(p) : 1.0             // 0→1 then clamp
-                }()
+                    let glowFront: CGFloat = {
+                        guard elapsed > 0 else { return -1 }
+                        let p = elapsed / sweepIn
+                        return p < 1.0 ? CGFloat(p) : 1.0
+                    }()
 
-                let darkFront: CGFloat = {
-                    // Start sweep-out when sweep-in reaches 80% (sweepIn * 0.8)
-                    let outStart = sweepIn * 0.8
-                    guard elapsed > outStart else { return -1 }
-                    let p = (elapsed - outStart) / sweepOut
-                    return p < 1.0 ? CGFloat(p) : 1.0
-                }()
+                    let darkFront: CGFloat = {
+                        let outStart = sweepIn * 0.8
+                        guard elapsed > outStart else { return -1 }
+                        let p = (elapsed - outStart) / sweepOut
+                        return p < 1.0 ? CGFloat(p) : 1.0
+                    }()
 
-                Canvas { context, size in
-                    let spacing:   CGFloat = 28
-                    let glowColor = AppColors.accentCyan
-                    let baseColor = Color.white
-
-                    let edgeSoftness: CGFloat = 0.12  // fade zone width (0=hard, higher=softer)
-
-                    func brightness(for diagPos: CGFloat) -> CGFloat {
-                        guard glowFront >= 0 else { return 0 }
-
-                        // Fade in at the leading edge of the sweep-in front
-                        let inFade  = min(1.0, max(0.0, (glowFront - diagPos) / edgeSoftness))
-
-                        // Fade out at the leading edge of the sweep-out front
-                        let outFade: CGFloat = darkFront >= 0
-                            ? min(1.0, max(0.0, (diagPos - darkFront) / edgeSoftness))
-                            : 1.0
-
-                        return inFade * outFade
-                    }
-
-                    var x: CGFloat = 0
-                    while x <= size.width {
-                        let b = brightness(for: x / size.width)
-                        let color = b > 0 ? glowColor.opacity(0.08 + 0.55 * b) : baseColor.opacity(0.05)
-                        context.stroke(
-                            Path { p in p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x, y: size.height)) },
-                            with: .color(color), lineWidth: b > 0 ? 1.5 : 1
-                        )
-                        x += spacing
-                    }
-
-                    var y: CGFloat = 0
-                    while y <= size.height {
-                        let b = brightness(for: y / size.height)
-                        let color = b > 0 ? glowColor.opacity(0.08 + 0.55 * b) : baseColor.opacity(0.05)
-                        context.stroke(
-                            Path { p in p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: size.width, y: y)) },
-                            with: .color(color), lineWidth: b > 0 ? 1.5 : 1
-                        )
-                        y += spacing
-                    }
+                    staticGrid(glowFront: glowFront, darkFront: darkFront)
+                        .frame(width: geo.size.width, height: geo.size.height)
                 }
-                .frame(width: geo.size.width, height: geo.size.height)
+            }
+            .onAppear { startDate = Date() }
+        } else {
+            GeometryReader { geo in
+                staticGrid(glowFront: -1, darkFront: -1)
+                    .frame(width: geo.size.width, height: geo.size.height)
             }
         }
-        .onAppear { startDate = Date() }
+    }
+
+    private func staticGrid(glowFront: CGFloat, darkFront: CGFloat) -> some View {
+        Canvas { context, size in
+            let spacing:      CGFloat = 28
+            let glowColor = AppColors.accentCyan
+            let baseColor = Color.white
+            let edgeSoftness: CGFloat = 0.12
+
+            func brightness(for diagPos: CGFloat) -> CGFloat {
+                guard glowFront >= 0 else { return 0 }
+                let inFade  = min(1.0, max(0.0, (glowFront - diagPos) / edgeSoftness))
+                let outFade: CGFloat = darkFront >= 0
+                    ? min(1.0, max(0.0, (diagPos - darkFront) / edgeSoftness))
+                    : 1.0
+                return inFade * outFade
+            }
+
+            var x: CGFloat = 0
+            while x <= size.width {
+                let b = brightness(for: x / size.width)
+                let color = b > 0 ? glowColor.opacity(0.08 + 0.55 * b) : baseColor.opacity(0.05)
+                context.stroke(
+                    Path { p in p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x, y: size.height)) },
+                    with: .color(color), lineWidth: b > 0 ? 1.5 : 1
+                )
+                x += spacing
+            }
+
+            var y: CGFloat = 0
+            while y <= size.height {
+                let b = brightness(for: y / size.height)
+                let color = b > 0 ? glowColor.opacity(0.08 + 0.55 * b) : baseColor.opacity(0.05)
+                context.stroke(
+                    Path { p in p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: size.width, y: y)) },
+                    with: .color(color), lineWidth: b > 0 ? 1.5 : 1
+                )
+                y += spacing
+            }
+        }
     }
 }
 
@@ -592,6 +603,8 @@ struct PinNumericKeypad: View {
 
     let onDigit:  (String) -> Void
     let onDelete: () -> Void
+    var buttonHeight: CGFloat = 65
+    var spacing: CGFloat = 12
 
     private let rows: [[String]] = [
         ["1", "2", "3"],
@@ -601,12 +614,12 @@ struct PinNumericKeypad: View {
     ]
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: spacing) {
             ForEach(rows, id: \.self) { row in
-                HStack(spacing: 12) {
+                HStack(spacing: spacing) {
                     ForEach(row, id: \.self) { key in
                         if key.isEmpty {
-                            Color.clear.frame(maxWidth: .infinity).frame(height: 72)
+                            Color.clear.frame(maxWidth: .infinity).frame(height: buttonHeight)
                         } else if key == "⌫" {
                             keyButton(key: key, isDelete: true)
                         } else {
@@ -642,7 +655,7 @@ struct PinNumericKeypad: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 65)
+            .frame(height: buttonHeight)
         }
         .buttonStyle(.hapticPlain)
     }

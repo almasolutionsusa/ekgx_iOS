@@ -54,6 +54,9 @@ final class AppDIContainer {
 
     private(set) var deviceService: DeviceServiceProtocol = BLEDeviceService()
 
+    /// True when the app is running with the simulated demo ECG device.
+    var isDemoMode: Bool { deviceService is DemoDeviceService }
+
     // MARK: - Vital Device Services (app-scoped so devices stay connected across navigation)
 
     let bpVitalService     = BPVitalDeviceService()
@@ -87,6 +90,11 @@ final class AppDIContainer {
         self.localPatientStore   = LocalPatientStore()
         self.patientRepository   = CoreDataPatientRepository()
         self.errorToast          = ErrorToastManager()
+        // Restore demo device if it was enabled in a previous session
+        if UserDefaults.standard.bool(forKey: "app.demoData") {
+            deviceService = DemoDeviceService()
+        }
+
         self.autoLockManager.onWillLock = { [weak self] in
             self?.deviceService.disconnect()
         }
@@ -215,7 +223,7 @@ final class AppDIContainer {
     private var _settingsViewModel: SettingsViewModel?
     func makeSettingsViewModel(router: AppRouter) -> SettingsViewModel {
         if let existing = _settingsViewModel { return existing }
-        let vm = SettingsViewModel(router: router, authService: authService)
+        let vm = SettingsViewModel(router: router, authService: authService, diContainer: self)
         _settingsViewModel = vm
         return vm
     }

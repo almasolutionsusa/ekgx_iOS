@@ -11,6 +11,8 @@ struct ExitConfirmationOverlay: View {
 
     let onKeep: () -> Void
     let onDiscard: () -> Void
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
         ZStack {
@@ -19,7 +21,7 @@ struct ExitConfirmationOverlay: View {
             VStack(spacing: AppMetrics.spacing24) {
                 VStack(spacing: AppMetrics.spacing8) {
                     Text(L10n.Recording.Exit.title)
-                        .font(AppTypography.title2)
+                        .font(isCompact ? AppTypography.phoneTitle : AppTypography.title2)
                         .foregroundStyle(AppColors.textPrimary)
                     Text(L10n.Recording.Exit.subtitle)
                         .font(AppTypography.callout)
@@ -27,27 +29,46 @@ struct ExitConfirmationOverlay: View {
                         .multilineTextAlignment(.center)
                 }
 
-                HStack(spacing: AppMetrics.spacing16) {
-                    PrimaryButton(
-                        title: L10n.Recording.Exit.keepButton,
-                        background: AppColors.surfaceCard,
-                        foreground: AppColors.textPrimary,
-                        useGradient: false,
-                        action: onKeep
-                    )
-                    PrimaryButton(
-                        title: L10n.Recording.Exit.discardButton,
-                        background: AppColors.statusCritical,
-                        foreground: .white,
-                        useGradient: false,
-                        action: onDiscard
-                    )
+                if isCompact {
+                    VStack(spacing: AppMetrics.spacing12) {
+                        PrimaryButton(
+                            title: L10n.Recording.Exit.keepButton,
+                            background: AppColors.surfaceCard,
+                            foreground: AppColors.textPrimary,
+                            useGradient: false,
+                            action: onKeep
+                        )
+                        PrimaryButton(
+                            title: L10n.Recording.Exit.discardButton,
+                            background: AppColors.statusCritical,
+                            foreground: .white,
+                            useGradient: false,
+                            action: onDiscard
+                        )
+                    }
+                } else {
+                    HStack(spacing: AppMetrics.spacing16) {
+                        PrimaryButton(
+                            title: L10n.Recording.Exit.keepButton,
+                            background: AppColors.surfaceCard,
+                            foreground: AppColors.textPrimary,
+                            useGradient: false,
+                            action: onKeep
+                        )
+                        PrimaryButton(
+                            title: L10n.Recording.Exit.discardButton,
+                            background: AppColors.statusCritical,
+                            foreground: .white,
+                            useGradient: false,
+                            action: onDiscard
+                        )
+                    }
                 }
             }
             .padding(AppMetrics.spacing32)
             .background(AppColors.surfaceBackground)
             .cornerRadius(AppMetrics.radiusLarge)
-            .padding(.horizontal, UIScreen.main.bounds.size.width * 0.2)
+            .padding(.horizontal, isCompact ? AppMetrics.spacing20 : UIScreen.main.bounds.size.width * 0.2)
             .shadow(color: .black.opacity(0.4), radius: 24)
         }
     }

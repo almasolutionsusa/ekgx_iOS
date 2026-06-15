@@ -39,6 +39,15 @@ struct ETextField<Trailing: View>: View {
     }
 
     @FocusState private var isFocused: Bool
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var isCompact: Bool { sizeClass == .compact }
+    private var fieldHeight:  CGFloat { isCompact ? 46 : AppMetrics.textFieldHeight }
+    private var iconSmall:    CGFloat { isCompact ? 17 : AppMetrics.iconSizeSmall }
+    private var iconMedium:   CGFloat { isCompact ? 22 : AppMetrics.iconSizeMedium }
+    private var inputFont:    Font    { isCompact ? AppTypography.phoneBodyMedium : AppTypography.body }
+    private var labelFont:    Font    { isCompact ? AppTypography.phoneCaption  : AppTypography.captionBold }
+    private var errorFont:    Font    { isCompact ? AppTypography.phoneCaption  : AppTypography.caption }
 
     // MARK: - Body
 
@@ -47,7 +56,7 @@ struct ETextField<Trailing: View>: View {
             // Label
             if let label {
                 Text(label)
-                    .font(AppTypography.captionBold)
+                    .font(labelFont)
                     .foregroundStyle(AppColors.textSecondary)
                     .tracking(0.5)
             }
@@ -56,13 +65,13 @@ struct ETextField<Trailing: View>: View {
             HStack(spacing: AppMetrics.spacing12) {
                 if let systemImage {
                     Image(systemName: systemImage)
-                        .font(.system(size: AppMetrics.iconSizeSmall, weight: .medium))
+                        .font(.system(size: iconSmall, weight: .medium))
                         .foregroundStyle(iconColor)
-                        .frame(width: AppMetrics.iconSizeMedium)
+                        .frame(width: iconMedium)
                 }
 
                 TextField(placeholder, text: $text)
-                    .font(AppTypography.body)
+                    .font(inputFont)
                     .foregroundStyle(AppColors.textPrimary)
                     .keyboardType(keyboardType)
                     .textContentType(textContentType)
@@ -73,7 +82,7 @@ struct ETextField<Trailing: View>: View {
                 if !text.isEmpty {
                     Button { text = "" } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: AppMetrics.iconSizeSmall, weight: .medium))
+                            .font(.system(size: iconSmall, weight: .medium))
                             .foregroundStyle(AppColors.textSecondary)
                     }
                     .buttonStyle(.hapticPlain)
@@ -85,7 +94,7 @@ struct ETextField<Trailing: View>: View {
                 }
             }
             .padding(.horizontal, AppMetrics.spacing16)
-            .frame(height: AppMetrics.textFieldHeight)
+            .frame(height: fieldHeight)
             .background(AppColors.surfaceCard)
             .cornerRadius(AppMetrics.radiusMedium)
             .overlay(
@@ -98,9 +107,9 @@ struct ETextField<Trailing: View>: View {
             if let error = errorMessage {
                 HStack(spacing: AppMetrics.spacing4) {
                     Image(systemName: "exclamationmark.circle.fill")
-                        .font(.system(size: 12))
+                        .font(.system(size: isCompact ? 11 : 12))
                     Text(error)
-                        .font(AppTypography.caption)
+                        .font(errorFont)
                 }
                 .foregroundStyle(AppColors.statusCritical)
                 .transition(.opacity.combined(with: .move(edge: .top)))

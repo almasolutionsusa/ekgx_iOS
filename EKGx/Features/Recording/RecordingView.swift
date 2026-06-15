@@ -102,8 +102,16 @@ private struct RecordingNavBar: View {
 
     let viewModel: RecordingViewModel
     @State private var pulseHeart = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
+        if isCompact { compactLayout } else { regularLayout }
+    }
+
+    // MARK: Regular (iPad) layout
+
+    private var regularLayout: some View {
         HStack(alignment: .center, spacing: 0) {
             backButton
             Spacer()
@@ -119,6 +127,101 @@ private struct RecordingNavBar: View {
         .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 
+    // MARK: Compact (iPhone) layout
+
+    private var compactLayout: some View {
+        HStack(alignment: .center, spacing: 8) {
+            backButton
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(viewModel.patient.fullName)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .lineLimit(1)
+                HStack(spacing: 5) {
+                    Text(viewModel.patient.age)
+                    Text("·")
+                    Text(viewModel.patient.genderDisplay)
+                }
+                .font(.system(size: 11, weight: .regular))
+                .foregroundStyle(AppColors.textSecondary)
+            }
+            .layoutPriority(1)
+
+            Spacer(minLength: 4)
+
+            compactHeartPill
+            compactTimerPill
+            if let battery = viewModel.batteryLevel {
+                compactBatteryPill(battery)
+            }
+        }
+        .padding(.horizontal, 12)
+        .frame(height: 52)
+        .background(AppColors.surfaceCard)
+        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+
+    private var compactHeartPill: some View {
+        HStack(spacing: 4) {
+            Image(systemName: "heart.fill")
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(AppColors.statusCritical)
+                .opacity(pulseHeart ? 1 : 0.4)
+                .animation(.easeInOut(duration: 0.5).repeatForever(autoreverses: true), value: pulseHeart)
+                .onAppear { pulseHeart = viewModel.recordingState == .recording }
+                .onChange(of: viewModel.recordingState) { _, state in pulseHeart = state == .recording }
+            Text("\(viewModel.heartRate)")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppColors.textPrimary)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(AppColors.borderSubtle.opacity(0.4))
+        .clipShape(Capsule())
+    }
+
+    private var compactTimerPill: some View {
+        HStack(spacing: 4) {
+            Circle()
+                .fill(viewModel.recordingState == .recording ? AppColors.statusCritical : AppColors.textSecondary)
+                .frame(width: 6, height: 6)
+                .opacity(pulseHeart ? 1 : 0.3)
+            Text(viewModel.elapsedFormatted)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(AppColors.textPrimary)
+                .monospacedDigit()
+            if viewModel.selectedDuration != .continuous {
+                Text("/ \(viewModel.durationFormatted)")
+                    .font(.system(size: 10, weight: .regular))
+                    .foregroundStyle(AppColors.textSecondary)
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(AppColors.borderSubtle.opacity(0.4))
+        .clipShape(Capsule())
+    }
+
+    private func compactBatteryPill(_ level: Int) -> some View {
+        HStack(spacing: 3) {
+            Image(systemName: batteryIcon(level))
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(level <= 20 ? AppColors.statusCritical : AppColors.statusSuccess)
+            Text("\(level)%")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(AppColors.textPrimary)
+                .monospacedDigit()
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background(AppColors.borderSubtle.opacity(0.4))
+        .clipShape(Capsule())
+    }
+
+    // MARK: Shared back button
+
     private var backButton: some View {
         Button {
             if viewModel.recordingState == .recording {
@@ -127,20 +230,31 @@ private struct RecordingNavBar: View {
                 viewModel.confirmExit()
             }
         } label: {
-            HStack(spacing: AppMetrics.spacing8) {
+            if isCompact {
                 Image(systemName: "chevron.left")
-                    .font(.system(size: 14, weight: .semibold))
-                Text(L10n.Recording.Nav.backButton)
-                    .font(AppTypography.callout)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(AppColors.textPrimary)
+                    .frame(width: 38, height: 38)
+                    .background(AppColors.borderSubtle.opacity(0.5))
+                    .cornerRadius(AppMetrics.radiusMedium)
+            } else {
+                HStack(spacing: AppMetrics.spacing8) {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .semibold))
+                    Text(L10n.Recording.Nav.backButton)
+                        .font(AppTypography.callout)
+                }
+                .foregroundStyle(AppColors.textPrimary)
+                .padding(.horizontal, AppMetrics.spacing16)
+                .padding(.vertical, AppMetrics.spacing8)
+                .background(AppColors.borderSubtle.opacity(0.5))
+                .cornerRadius(AppMetrics.radiusMedium)
             }
-            .foregroundStyle(AppColors.textPrimary)
-            .padding(.horizontal, AppMetrics.spacing16)
-            .padding(.vertical, AppMetrics.spacing8)
-            .background(AppColors.borderSubtle.opacity(0.5))
-            .cornerRadius(AppMetrics.radiusMedium)
         }
         .buttonStyle(.hapticPlain)
     }
+
+    // MARK: iPad-only subviews
 
     private var patientInfo: some View {
         HStack(spacing: AppMetrics.spacing12) {
@@ -261,6 +375,8 @@ private struct RecordingControlsPanel: View {
     private let beepGap: TimeInterval = 1.5
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     // Adaptive frosted-glass surface: white tint on dark canvas, dark tint on light canvas.
     private var floatingSurface: Color {
@@ -270,34 +386,42 @@ private struct RecordingControlsPanel: View {
         colorScheme == .dark ? Color.white.opacity(0.25) : Color.black.opacity(0.18)
     }
 
+    // Adaptive sizing for compact (iPhone) vs regular (iPad)
+    private var iconFont:       Font    { isCompact ? .system(size: 14)                : .title3 }
+    private var ctrlFont:       Font    { isCompact ? .system(size: 13, weight: .bold) : .title3.weight(.bold) }
+    private var btnCornerLarge: CGFloat { isCompact ? 10 : 14 }
+    private var btnCornerSmall: CGFloat { isCompact ? 9  : 12 }
+    private var outerPad:       CGFloat { isCompact ? 10 : 14 }
+    private var topPad:         CGFloat { isCompact ? 12 : 20 }
+
     var body: some View {
         GeometryReader { geo in
             let shortSide  = min(geo.size.width, geo.size.height)
-            let btnSize    = min(shortSide * 0.15, 60.0)
-            // Create-button width mirrors the Medix 2 formula: shortSide * 0.30 * 0.5
-            let createW    = max(shortSide * 0.15, btnSize * 2.0)
-            // Each duration chip when expanded — four chips fill the same total width
-            let chipW      = max(0.0, (shortSide * 0.30 - 12.0) / 4.0)
+            let btnSize    = min(shortSide * 0.12, isCompact ? 40.0 : 60.0)
+            let createW    = max(shortSide * 0.15, btnSize * 2.2)
+            // Divide by actual duration count so chips never underflow on narrow screens
+            let durCount   = CGFloat(RecordingDuration.allCases.count)
+            let chipW      = max(0.0, (shortSide * 0.30 - (durCount - 1) * 4.0) / durCount)
 
             ZStack {
                 // ── TOP-RIGHT: layout picker + beep + reset ──────────────
-                VStack(alignment: .trailing, spacing: 12) {
+                VStack(alignment: .trailing, spacing: isCompact ? 6 : 12) {
                     layoutGroup(size: btnSize)
                     beepBtn(size: btnSize)
                     resetBtn(size: btnSize)
                 }
-                .padding(.top, 20)
-                .padding(.trailing, 14)
+                .padding(.top, topPad)
+                .padding(.trailing, outerPad)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
 
                 // ── BOTTOM-RIGHT: video + duration + record/stop ─────────
-                VStack(alignment: .trailing, spacing: 8) {
+                VStack(alignment: .trailing, spacing: isCompact ? 6 : 8) {
                     videoBtn(size: btnSize)
                     durationGroup(btnSize: btnSize, chipW: chipW)
                     createButton(size: btnSize, width: createW)
                 }
-                .padding(.bottom, 14)
-                .padding(.trailing, 14)
+                .padding(.bottom, outerPad)
+                .padding(.trailing, outerPad)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -344,10 +468,10 @@ private struct RecordingControlsPanel: View {
                                 .foregroundStyle(Color.primary)
                                 .frame(width: size, height: size)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 12)
+                                    RoundedRectangle(cornerRadius: btnCornerSmall)
                                         .fill(sel ? AnyShapeStyle(AppColors.brandPrimary) : AnyShapeStyle(floatingSurface))
                                 )
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(floatingBorder, lineWidth: 0.5))
+                                .overlay(RoundedRectangle(cornerRadius: btnCornerSmall).stroke(floatingBorder, lineWidth: 0.5))
                         }
                         .buttonStyle(.hapticPlain)
                     }
@@ -363,11 +487,11 @@ private struct RecordingControlsPanel: View {
     private func beepBtn(size: CGFloat) -> some View {
         Button { toggleBeep() } label: {
             Image(systemName: isBeeping ? "speaker.slash.fill" : "speaker.fill")
-                .font(.title3)
+                .font(iconFont)
                 .foregroundStyle(Color.primary)
                 .frame(width: size, height: size)
-                .background(RoundedRectangle(cornerRadius: 14).fill(floatingSurface))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(floatingBorder, lineWidth: 0.5))
+                .background(RoundedRectangle(cornerRadius: btnCornerLarge).fill(floatingSurface))
+                .overlay(RoundedRectangle(cornerRadius: btnCornerLarge).stroke(floatingBorder, lineWidth: 0.5))
                 .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.hapticPlain)
@@ -403,14 +527,14 @@ private struct RecordingControlsPanel: View {
                             withAnimation { showDurationPicker = false }
                         } label: {
                             Text(durationShort(dur))
-                                .font(.title3.weight(.bold))
+                                .font(ctrlFont)
                                 .foregroundStyle(Color.primary)
                                 .frame(width: chipW, height: btnSize)
                                 .background(
-                                    RoundedRectangle(cornerRadius: 12)
+                                    RoundedRectangle(cornerRadius: btnCornerSmall)
                                         .fill(sel ? AnyShapeStyle(AppColors.brandPrimary) : AnyShapeStyle(floatingSurface))
                                 )
-                                .overlay(RoundedRectangle(cornerRadius: 12).stroke(floatingBorder, lineWidth: 0.5))
+                                .overlay(RoundedRectangle(cornerRadius: btnCornerSmall).stroke(floatingBorder, lineWidth: 0.5))
                                 .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
                         }
                         .buttonStyle(.hapticPlain)
@@ -422,11 +546,11 @@ private struct RecordingControlsPanel: View {
                     withAnimation { showDurationPicker = true; showLayoutPicker = false }
                 } label: {
                     Text(durationShort(viewModel.selectedDuration))
-                        .font(.title3.weight(.bold))
+                        .font(ctrlFont)
                         .foregroundStyle(Color.primary)
                         .frame(width: btnSize, height: btnSize)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(floatingSurface))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(floatingBorder, lineWidth: 0.5))
+                        .background(RoundedRectangle(cornerRadius: btnCornerSmall).fill(floatingSurface))
+                        .overlay(RoundedRectangle(cornerRadius: btnCornerSmall).stroke(floatingBorder, lineWidth: 0.5))
                         .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
                 }
                 .buttonStyle(.hapticPlain)
@@ -446,26 +570,26 @@ private struct RecordingControlsPanel: View {
         } label: {
             ZStack(alignment: .leading) {
                 // Frosted base
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: btnCornerSmall)
                     .fill(floatingSurface)
 
                 // Accent / success fill growing left→right
                 GeometryReader { g in
-                    RoundedRectangle(cornerRadius: 12)
+                    RoundedRectangle(cornerRadius: btnCornerSmall)
                         .fill(createFillColor)
                         .frame(width: g.size.width * createFillFraction)
                         .animation(.linear(duration: 1.0), value: viewModel.elapsedSeconds)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: btnCornerSmall))
 
                 Text(createLabel)
-                    .font(.title3.weight(.bold))
+                    .font(ctrlFont)
                     .foregroundStyle(Color.primary)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
             .frame(width: width, height: size)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(RoundedRectangle(cornerRadius: 12).stroke(floatingBorder, lineWidth: 0.5))
+            .clipShape(RoundedRectangle(cornerRadius: btnCornerSmall))
+            .overlay(RoundedRectangle(cornerRadius: btnCornerSmall).stroke(floatingBorder, lineWidth: 0.5))
             .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.hapticPlain)
@@ -480,11 +604,11 @@ private struct RecordingControlsPanel: View {
     private func iconBtn(icon: String, size: CGFloat, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: icon)
-                .font(.title3)
+                .font(iconFont)
                 .foregroundStyle(Color.primary)
                 .frame(width: size, height: size)
-                .background(RoundedRectangle(cornerRadius: 14).fill(floatingSurface))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(floatingBorder, lineWidth: 0.5))
+                .background(RoundedRectangle(cornerRadius: btnCornerLarge).fill(floatingSurface))
+                .overlay(RoundedRectangle(cornerRadius: btnCornerLarge).stroke(floatingBorder, lineWidth: 0.5))
                 .shadow(color: .black.opacity(0.3), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(.hapticPlain)
@@ -666,6 +790,8 @@ private struct DeviceDisconnectedOverlay: View {
 private struct RecordingConnectOverlay: View {
 
     let viewModel: RecordingViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     private var state: DeviceConnectionState { viewModel.connectSheetState }
 
@@ -677,8 +803,10 @@ private struct RecordingConnectOverlay: View {
                 header
                 statusBlock
             }
-            .padding(AppMetrics.spacing32)
-            .frame(width: 400)
+            .padding(isCompact ? AppMetrics.spacing20 : AppMetrics.spacing32)
+            .frame(width: isCompact ? nil : 400)
+            .frame(maxWidth: isCompact ? .infinity : nil)
+            .padding(.horizontal, isCompact ? AppMetrics.spacing20 : 0)
             .background(AppColors.surfaceCard)
             .cornerRadius(20)
             .shadow(color: .black.opacity(0.25), radius: 24)

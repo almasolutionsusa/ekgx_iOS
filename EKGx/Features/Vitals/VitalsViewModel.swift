@@ -679,6 +679,7 @@ final class VitalsViewModel {
     private func setUp() {
         let ekgService = EKGVitalDeviceService(diContainer: diContainer)
         register(ekgService, for: .ekg)
+        if diContainer.isDemoMode { ekgService.connect() }
 
         register(diContainer.bpVitalService,   for: .bloodPressure)
         register(diContainer.spo2VitalService, for: .oxygenSaturation)
@@ -799,6 +800,7 @@ final class VitalsViewModel {
 
     // MARK: - Computed
 
+    var isDemoMode: Bool { diContainer.isDemoMode }
     var facilityName: String { appInfoService.cached?.facilityName ?? "EKGx" }
     var patientName: String  { patient.fullName }
 

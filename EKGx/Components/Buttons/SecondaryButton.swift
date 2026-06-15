@@ -13,14 +13,24 @@ struct SecondaryButton: View {
     var isDisabled: Bool = false
     let action: () -> Void
 
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var resolvedFont: Font {
+        sizeClass == .compact ? AppTypography.phoneBodyMedium : AppTypography.bodyMedium
+    }
+    private var resolvedHeight: CGFloat {
+        sizeClass == .compact ? 48 : AppMetrics.buttonHeight
+    }
+
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(AppTypography.bodyMedium)
+                .font(resolvedFont)
                 .foregroundStyle(isDisabled ? AppColors.accentTeal.opacity(0.4) : AppColors.accentTeal)
                 .frame(maxWidth: .infinity)
-                .frame(height: AppMetrics.buttonHeight)
+                .frame(height: resolvedHeight)
                 .background(Color.clear)
+                .contentShape(Rectangle())
                 .overlay(
                     RoundedRectangle(cornerRadius: AppMetrics.radiusMedium)
                         .strokeBorder(

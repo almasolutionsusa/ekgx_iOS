@@ -14,6 +14,8 @@ struct RecordingDoneOverlay: View {
     let elapsedFormatted: String
     let onRedo: () -> Void
     let onAnalysis: () -> Void
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
         ZStack {
@@ -24,11 +26,10 @@ struct RecordingDoneOverlay: View {
                 patientSummaryRow
                 actionButtons
             }
-            .padding(AppMetrics.spacing32)
+            .padding(isCompact ? AppMetrics.spacing24 : AppMetrics.spacing32)
             .background(AppColors.surfaceBackground)
             .cornerRadius(AppMetrics.radiusLarge)
-            .padding(.horizontal, UIScreen.main.bounds.size.width * 0.2)
-            
+            .padding(.horizontal, isCompact ? AppMetrics.spacing20 : UIScreen.main.bounds.size.width * 0.2)
             .shadow(color: .black.opacity(0.4), radius: 24)
         }
     }
@@ -36,11 +37,11 @@ struct RecordingDoneOverlay: View {
     private var headerSection: some View {
         VStack(spacing: AppMetrics.spacing8) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 48))
+                .font(.system(size: isCompact ? 40 : 48))
                 .foregroundStyle(AppColors.statusSuccess)
 
             Text(L10n.Recording.Done.title)
-                .font(AppTypography.title2)
+                .font(isCompact ? AppTypography.phoneTitle : AppTypography.title2)
                 .foregroundStyle(AppColors.textPrimary)
 
             Text(L10n.Recording.Done.durationLabel(elapsedFormatted))
@@ -54,7 +55,7 @@ struct RecordingDoneOverlay: View {
             ZStack {
                 Circle()
                     .fill(AppColors.brandPrimary)
-                    .frame(width: 48, height: 48)
+                    .frame(width: isCompact ? 40 : 48, height: isCompact ? 40 : 48)
                 Text(patient.initials)
                     .font(AppTypography.bodySemibold)
                     .foregroundStyle(.white)
@@ -62,8 +63,9 @@ struct RecordingDoneOverlay: View {
 
             VStack(alignment: .leading, spacing: AppMetrics.spacing4) {
                 Text(patient.fullName)
-                    .font(AppTypography.bodyMedium)
+                    .font(isCompact ? AppTypography.phoneBodyMedium : AppTypography.bodyMedium)
                     .foregroundStyle(AppColors.textPrimary)
+                    .lineLimit(1)
                 HStack(spacing: AppMetrics.spacing12) {
                     Label(patient.age, systemImage: "person.fill")
                     Label(patient.genderDisplay, systemImage: "heart.fill")
@@ -74,24 +76,41 @@ struct RecordingDoneOverlay: View {
 
             Spacer()
         }
-        .padding(AppMetrics.spacing16)
+        .padding(isCompact ? AppMetrics.spacing12 : AppMetrics.spacing16)
         .background(AppColors.surfaceCard)
         .cornerRadius(AppMetrics.radiusMedium)
     }
 
+    @ViewBuilder
     private var actionButtons: some View {
-        HStack(spacing: AppMetrics.spacing16) {
-            PrimaryButton(
-                title: L10n.Recording.Done.redoButton,
-                background: AppColors.surfaceCard,
-                foreground: AppColors.textPrimary,
-                useGradient: false,
-                action: onRedo
-            )
-            PrimaryButton(
-                title: L10n.Recording.Done.analysisButton,
-                action: onAnalysis
-            )
+        if isCompact {
+            VStack(spacing: AppMetrics.spacing12) {
+                PrimaryButton(
+                    title: L10n.Recording.Done.redoButton,
+                    background: AppColors.surfaceCard,
+                    foreground: AppColors.textPrimary,
+                    useGradient: false,
+                    action: onRedo
+                )
+                PrimaryButton(
+                    title: L10n.Recording.Done.analysisButton,
+                    action: onAnalysis
+                )
+            }
+        } else {
+            HStack(spacing: AppMetrics.spacing16) {
+                PrimaryButton(
+                    title: L10n.Recording.Done.redoButton,
+                    background: AppColors.surfaceCard,
+                    foreground: AppColors.textPrimary,
+                    useGradient: false,
+                    action: onRedo
+                )
+                PrimaryButton(
+                    title: L10n.Recording.Done.analysisButton,
+                    action: onAnalysis
+                )
+            }
         }
     }
 }

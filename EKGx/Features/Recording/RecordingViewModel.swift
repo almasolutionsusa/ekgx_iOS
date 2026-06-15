@@ -121,6 +121,9 @@ final class RecordingViewModel {
         wireConnectionCallback()
         if deviceService.currentState == .connected {
             startRecording()
+        } else if diContainer.isDemoMode {
+            // Demo mode: connect silently — no connect sheet. wireConnectionCallback handles .connected.
+            deviceService.connect()
         } else {
             showConnectSheet = true
             deviceService.connect()
@@ -179,6 +182,9 @@ final class RecordingViewModel {
                 case .connected where self.showConnectSheet:
                     self.connectSheetDeviceName = self.deviceService.connectedDeviceName
                     self.showConnectSheet = false
+                    self.startRecording()
+                case .connected where self.recordingState == .idle:
+                    // Demo device finished its 1.5s simulated handshake — start recording.
                     self.startRecording()
                 case .disconnected where !self.isReconnecting && !self.showConnectSheet:
                     self.stopTimers()

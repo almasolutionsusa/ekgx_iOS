@@ -86,7 +86,7 @@ final class EKGVitalDeviceService: VitalDeviceServiceProtocol {
     }
 
     func connect() {
-        diContainer.switchToRealDevice()
+        if !diContainer.isDemoMode { diContainer.switchToRealDevice() }
         wire()
         diContainer.deviceService.connect()
     }

@@ -11,6 +11,8 @@ import SwiftUI
 struct AnalysisControlsMenu: View {
 
     @Bindable var viewModel: AnalysisViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
         ZStack {
@@ -99,7 +101,7 @@ struct AnalysisControlsMenu: View {
                 }
                 .padding(16)
             }
-            .frame(width: 360)
+            .frame(width: isCompact ? UIScreen.main.bounds.width - 32 : 360)
             .background(Color.white)
             .cornerRadius(22)
             .shadow(color: .black.opacity(0.22), radius: 40, x: 0, y: 12)
@@ -224,6 +226,8 @@ struct VisualizationMenuSheet: View {
 struct RejectConfirmSheet: View {
 
     @Bindable var viewModel: AnalysisViewModel
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
         ZStack {
@@ -231,7 +235,7 @@ struct RejectConfirmSheet: View {
 
             VStack(spacing: 20) {
                 Text("Reject ECG?")
-                    .font(AppTypography.title2)
+                    .font(isCompact ? AppTypography.phoneTitle : AppTypography.title2)
                     .foregroundColor(.black)
                 Text("This ECG will be discarded and you will return to the dashboard.")
                     .font(AppTypography.callout)

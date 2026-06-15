@@ -20,6 +20,15 @@ struct ESecureField: View {
     @FocusState private var isSecureFocused: Bool
     @FocusState private var isPlainFocused: Bool
     @State private var isRevealed: Bool = false
+    @Environment(\.horizontalSizeClass) private var sizeClass
+
+    private var isCompact: Bool { sizeClass == .compact }
+    private var fieldHeight: CGFloat { isCompact ? 46 : AppMetrics.textFieldHeight }
+    private var iconSmall:   CGFloat { isCompact ? 17 : AppMetrics.iconSizeSmall }
+    private var iconMedium:  CGFloat { isCompact ? 22 : AppMetrics.iconSizeMedium }
+    private var inputFont:   Font    { isCompact ? AppTypography.phoneBodyMedium : AppTypography.body }
+    private var labelFont:   Font    { isCompact ? AppTypography.phoneCaption : AppTypography.captionBold }
+    private var errorFont:   Font    { isCompact ? AppTypography.phoneCaption : AppTypography.caption }
 
     // MARK: - Body
 
@@ -28,7 +37,7 @@ struct ESecureField: View {
             // Label
             if let label {
                 Text(label)
-                    .font(AppTypography.captionBold)
+                    .font(labelFont)
                     .foregroundStyle(AppColors.textSecondary)
                     .textCase(.uppercase)
                     .tracking(0.5)
@@ -37,14 +46,14 @@ struct ESecureField: View {
             // Input container
             HStack(spacing: AppMetrics.spacing12) {
                 Image(systemName: "lock")
-                    .font(.system(size: AppMetrics.iconSizeSmall, weight: .medium))
+                    .font(.system(size: iconSmall, weight: .medium))
                     .foregroundStyle(iconColor)
-                    .frame(width: AppMetrics.iconSizeMedium)
+                    .frame(width: iconMedium)
 
                 ZStack {
                     // Secure field (password hidden)
                     SecureField(placeholder, text: $text)
-                        .font(AppTypography.body)
+                        .font(inputFont)
                         .foregroundStyle(AppColors.textPrimary)
                         .textContentType(.password)
                         .focused($isSecureFocused)
@@ -52,7 +61,7 @@ struct ESecureField: View {
 
                     // Plain field (password visible)
                     TextField(placeholder, text: $text)
-                        .font(AppTypography.body)
+                        .font(inputFont)
                         .foregroundStyle(AppColors.textPrimary)
                         .textContentType(.password)
                         .autocorrectionDisabled()
@@ -71,7 +80,7 @@ struct ESecureField: View {
                     }
                 } label: {
                     Image(systemName: isRevealed ? "eye.slash" : "eye")
-                        .font(.system(size: AppMetrics.iconSizeSmall, weight: .medium))
+                        .font(.system(size: iconSmall, weight: .medium))
                         .foregroundStyle(AppColors.textSecondary)
                 }
                 .accessibilityLabel(
@@ -81,7 +90,7 @@ struct ESecureField: View {
                 )
             }
             .padding(.horizontal, AppMetrics.spacing16)
-            .frame(height: AppMetrics.textFieldHeight)
+            .frame(height: fieldHeight)
             .background(AppColors.surfaceCard)
             .cornerRadius(AppMetrics.radiusMedium)
             .overlay(
@@ -93,9 +102,9 @@ struct ESecureField: View {
             if let error = errorMessage {
                 HStack(spacing: AppMetrics.spacing4) {
                     Image(systemName: "exclamationmark.circle.fill")
-                        .font(.system(size: 12))
+                        .font(.system(size: isCompact ? 11 : 12))
                     Text(error)
-                        .font(AppTypography.caption)
+                        .font(errorFont)
                 }
                 .foregroundStyle(AppColors.statusCritical)
                 .transition(.opacity.combined(with: .move(edge: .top)))

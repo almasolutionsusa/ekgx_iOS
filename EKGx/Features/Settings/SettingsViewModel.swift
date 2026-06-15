@@ -68,7 +68,15 @@ final class SettingsViewModel {
     // MARK: - Security
 
     var demoDataEnabled: Bool = false {
-        didSet { save(demoDataEnabled, forKey: "app.demoData") }
+        didSet {
+            save(demoDataEnabled, forKey: "app.demoData")
+            guard !isInitializing else { return }
+            if demoDataEnabled {
+                diContainer?.switchToDemo()
+            } else {
+                diContainer?.switchToRealDevice()
+            }
+        }
     }
     var autoLock: AutoLock = .threeMinutes {
         didSet { save(autoLock.rawValue, forKey: "app.autoLock") }
@@ -91,10 +99,12 @@ final class SettingsViewModel {
 
     private let router: AppRouter
     private let authService: AuthServiceProtocol
+    @ObservationIgnored private weak var diContainer: AppDIContainer?
 
-    init(router: AppRouter, authService: AuthServiceProtocol) {
-        self.router      = router
-        self.authService = authService
+    init(router: AppRouter, authService: AuthServiceProtocol, diContainer: AppDIContainer) {
+        self.router       = router
+        self.authService  = authService
+        self.diContainer  = diContainer
         applyServerSettings()
         applyLocalSettings()
         isInitializing = false

@@ -15,7 +15,9 @@ struct ExamCompareView: View {
 
     @Bindable var viewModel: AnalysisViewModel
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.horizontalSizeClass) private var sizeClass
     @State private var showCompareDropdown = false
+    private var isCompact: Bool { sizeClass == .compact }
 
     private var compare: ECGRecording? { viewModel.compareRecording }
 
@@ -29,42 +31,47 @@ struct ExamCompareView: View {
                 Divider()
 
                 GeometryReader { geo in
-                    VStack(spacing: 0) {
-                        // ── Exam headers (Current | Compare) ─────────────
-                        examHeadersRow
-                            .fixedSize(horizontal: false, vertical: true)
+                    let panelWidth: CGFloat = isCompact ? 760 : geo.size.width
+                    ScrollView(isCompact ? [.horizontal] : [], showsIndicators: false) {
+                        VStack(spacing: 0) {
+                            // ── Exam headers (Current | Compare) ─────────────
+                            examHeadersRow
+                                .fixedSize(horizontal: false, vertical: true)
 
-                        // ── Interpretation (70pt, horizontal scroll) ──────
-                        interpretationSection
+                            // ── Interpretation ────────────────────────────────
+                            interpretationSection
 
-                        Divider()
+                            Divider()
 
-                        // ── ECG traces ────────────────────────────────────
-                        HStack(spacing: 0) {
-                            examPanel(
-                                ecgData: viewModel.ecgData,
-                                templateData: viewModel.templateData,
-                                sampleRate: viewModel.sampleRate
-                            )
+                            // ── ECG traces ────────────────────────────────────
+                            HStack(spacing: 0) {
+                                examPanel(
+                                    ecgData: viewModel.ecgData,
+                                    templateData: viewModel.templateData,
+                                    sampleRate: viewModel.sampleRate
+                                )
 
-                            Rectangle()
-                                .fill(AppColors.borderSubtle.opacity(0.6))
-                                .frame(width: 1)
+                                Rectangle()
+                                    .fill(AppColors.borderSubtle.opacity(0.6))
+                                    .frame(width: 1)
 
-                            examPanel(
-                                ecgData: viewModel.compareECGData,
-                                templateData: viewModel.compareECGData,
-                                sampleRate: compare?.sampleRate ?? 660
-                            )
+                                examPanel(
+                                    ecgData: viewModel.compareECGData,
+                                    templateData: viewModel.compareECGData,
+                                    sampleRate: compare?.sampleRate ?? 660
+                                )
+                            }
+                            .frame(height: geo.size.height * 0.6)
+
+                            Divider()
+
+                            // ── Measurement cards (full width) ────────────────
+                            measurementTable
+                                .frame(maxHeight: .infinity)
                         }
-                        .frame(height: geo.size.height * 0.6)
-
-                        Divider()
-
-                        // ── Measurement cards (full width) ────────────────
-                        measurementTable
-                            .frame(maxHeight: .infinity)
+                        .frame(width: panelWidth, height: geo.size.height)
                     }
+                    .frame(width: geo.size.width, height: geo.size.height)
                 }
             }
         }
@@ -325,32 +332,30 @@ struct ExamCompareView: View {
     }
 
     private func interpretationColumn(lines: [String], color: Color) -> some View {
-        HStack(spacing: 5) {
-            if lines.isEmpty {
-                Text(L10n.Compare.noInterpretation)
-                    .font(AppTypography.caption)
-                    .foregroundStyle(AppColors.textSecondary)
-            } else {
-                ForEach(lines.filter { !$0.isEmpty }, id: \.self) { line in
-                    ScrollView {
-                        HStack(alignment: .top, spacing: 5) {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: AppMetrics.spacing10) {
+                if lines.isEmpty {
+                    Text(L10n.Compare.noInterpretation)
+                        .font(AppTypography.caption)
+                        .foregroundStyle(AppColors.textSecondary)
+                } else {
+                    ForEach(lines.filter { !$0.isEmpty }, id: \.self) { line in
+                        HStack(spacing: 4) {
                             Circle()
-                                .fill(color.opacity(0.6))
+                                .fill(color.opacity(0.7))
                                 .frame(width: 5, height: 5)
-                                .padding(.top, 5)
                             Text(line)
                                 .font(AppTypography.caption)
                                 .foregroundStyle(AppColors.textPrimary)
-                                .fixedSize(horizontal: false, vertical: true)
-                            
+                                .fixedSize(horizontal: true, vertical: false)
+                                .lineLimit(1)
                         }
                     }
                 }
             }
-            
-            Spacer(minLength: 0)
+            .padding(.horizontal, AppMetrics.spacing4)
         }
-        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: - Data
@@ -402,54 +407,59 @@ private struct CompareNavBar: View {
 
     let patientName: String
     let onDismiss: () -> Void
-
-    private var backButton: some View {
-        Button(action: onDismiss) {
-            HStack(spacing: AppMetrics.spacing6) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 13, weight: .semibold))
-                Text(L10n.Common.back)
-                    .font(AppTypography.callout)
-            }
-            .foregroundStyle(AppColors.textPrimary)
-            .padding(.horizontal, AppMetrics.spacing12)
-            .padding(.vertical, AppMetrics.spacing6)
-            .background(AppColors.borderSubtle.opacity(0.4))
-            .cornerRadius(AppMetrics.radiusMedium)
-        }
-        .buttonStyle(.plain)
-    }
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var isCompact: Bool { sizeClass == .compact }
 
     var body: some View {
         HStack(spacing: AppMetrics.spacing12) {
-            backButton
+            // Back button
+            Button(action: onDismiss) {
+                if isCompact {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(AppColors.textPrimary)
+                        .frame(width: 34, height: 34)
+                        .background(AppColors.borderSubtle.opacity(0.4))
+                        .clipShape(Circle())
+                } else {
+                    HStack(spacing: AppMetrics.spacing6) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 13, weight: .semibold))
+                        Text(L10n.Common.back)
+                            .font(AppTypography.callout)
+                    }
+                    .foregroundStyle(AppColors.textPrimary)
+                    .padding(.horizontal, AppMetrics.spacing12)
+                    .padding(.vertical, AppMetrics.spacing6)
+                    .background(AppColors.borderSubtle.opacity(0.4))
+                    .cornerRadius(AppMetrics.radiusMedium)
+                }
+            }
+            .buttonStyle(.plain)
 
             Spacer()
 
-            HStack(spacing: 0) {
-                Text(L10n.Compare.title + " - ")
-                    .font(AppTypography.bodyMedium)
+            VStack(spacing: 1) {
+                Text(L10n.Compare.title)
+                    .font(isCompact ? AppTypography.phoneBodyMedium : AppTypography.bodyMedium)
                     .foregroundStyle(AppColors.textPrimary)
                 Text(patientName)
                     .font(AppTypography.caption)
                     .foregroundStyle(AppColors.textSecondary)
+                    .lineLimit(1)
             }
+            .multilineTextAlignment(.center)
 
             Spacer()
 
-            // Mirror spacer to keep title centered
-            HStack(spacing: AppMetrics.spacing6) {
-                Image(systemName: "chevron.left")
-                    .font(.system(size: 13, weight: .semibold))
-                Text(L10n.Common.back)
-                    .font(AppTypography.callout)
-            }
-            .padding(.horizontal, AppMetrics.spacing12)
-            .padding(.vertical, AppMetrics.spacing6)
-            .opacity(0)
+            // Invisible mirror to keep title centered
+            Image(systemName: "chevron.left")
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 34, height: 34)
+                .opacity(0)
         }
-        .padding(.horizontal, AppMetrics.spacing24)
-        .frame(height: 40)
+        .padding(.horizontal, isCompact ? AppMetrics.spacing16 : AppMetrics.spacing24)
+        .frame(height: isCompact ? 52 : 40)
         .background(AppColors.surfaceCard)
         .overlay(Rectangle().fill(AppColors.borderSubtle.opacity(0.6)).frame(height: 1), alignment: .bottom)
     }
