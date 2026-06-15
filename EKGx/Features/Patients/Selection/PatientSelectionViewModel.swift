@@ -177,7 +177,7 @@ final class PatientSelectionViewModel {
             }
         }
 
-        filteredPatients = results
+        withAnimation(.none) { filteredPatients = results }
 
         if !mrn.isEmpty && results.count == 1 {
             selected = results.first

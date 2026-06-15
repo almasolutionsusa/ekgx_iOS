@@ -208,8 +208,12 @@ final class AppDIContainer {
         return vm
     }
 
+    private var _patientSelectionViewModel: PatientSelectionViewModel?
     func makePatientSelectionViewModel(router: AppRouter) -> PatientSelectionViewModel {
-        PatientSelectionViewModel(repository: patientRepository, router: router, diContainer: self)
+        if let existing = _patientSelectionViewModel { return existing }
+        let vm = PatientSelectionViewModel(repository: patientRepository, router: router, diContainer: self)
+        _patientSelectionViewModel = vm
+        return vm
     }
 
     private var _cloudViewModel: CloudViewModel?

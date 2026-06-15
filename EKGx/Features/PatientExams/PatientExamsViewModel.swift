@@ -130,6 +130,7 @@ final class PatientExamsViewModel {
         self.recordingStore = recordingStore
         self.router         = router
         self.diContainer    = diContainer
+        load()
     }
 
     // MARK: - Lifecycle

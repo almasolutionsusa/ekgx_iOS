@@ -345,7 +345,7 @@
 "recording.exit.discardButton"       = "Discard & Exit";
 "recording.done.title"               = "Recording Complete";
 "recording.done.durationLabel"       = "Duration: %@";
-"recording.done.redoButton"          = "Redo Recording";
+"recording.done.redoButton"          = "Redo Test";
 "recording.done.analysisButton"      = "View Analysis";
 "recording.controls.leadLayout"      = "Lead Layout";
 "recording.controls.duration"        = "Duration";
